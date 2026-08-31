@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Template Engine</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#0b0b10;
+  --sidebar-bg:#0e0e13;
+  --surface:#16161d;
+  --surface-2:#1b1b24;
+  --surface-3:#202030;
+  --border:rgba(255,255,255,.09);
+  --border-strong:rgba(255,255,255,.16);
+  --text:#ece9f4;
+  --text-dim:#a6a2b8;
+  --text-faint:#726e85;
+  --violet:#9b87f5;
+  --violet-dim:#7c68d9;
+  --magenta:#f2599e;
+  --amber:#f0a94e;
+  --blue:#5aa9f7;
+  --green:#4cd68a;
+  --red:#f16767;
+  --red-bg:rgba(241,103,103,.09);
+  --green-bg:rgba(76,214,138,.09);
+  --amber-bg:rgba(240,169,78,.09);
+  --blue-bg:rgba(90,169,247,.09);
+  --magenta-bg:rgba(242,89,158,.09);
+  --violet-bg:rgba(155,135,245,.1);
+  --radius:14px;
+  --maxw:860px;
+}
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  direction:rtl;
+  font-family:'Cairo',system-ui,sans-serif;
+  line-height:1.9;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--violet);color:#0b0b10;}
+a{color:var(--blue);text-decoration:none;}
+code, pre, .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
+.app{display:flex;min-height:100vh;align-items:flex-start;}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  width:308px;flex:none;
+  background:var(--sidebar-bg);
+  border-inline-start:1px solid var(--border);
+  height:100vh;position:sticky;top:0;
+  display:flex;flex-direction:column;
+  padding:22px 18px;
+  overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar{width:8px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:8px;}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  font-weight:800;font-size:17px;margin-bottom:16px;padding:0 4px;
+}
+.brand .dot{width:11px;height:11px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);flex:none;}
+.sidebar-link{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:10px;padding:10px 12px;margin-bottom:18px;
+  font-weight:700;font-size:13.5px;color:var(--text);
+  transition:border-color .15s,background .15s;
+}
+.sidebar-link:hover{border-color:var(--violet-dim);background:var(--surface-2);color:var(--text);}
+.sidebar-link-icon{font-size:15px;flex:none;}
+.sidebar-link-text{flex:1;}
+.sidebar-link-arrow{opacity:.5;font-size:13px;flex:none;}
+.searchbox{position:relative;margin-bottom:18px;}
+.searchbox input{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  color:var(--text);border-radius:10px;padding:10px 36px 10px 12px;
+  font-family:'Cairo';font-size:13.5px;outline:none;
+}
+.searchbox input:focus{border-color:var(--violet-dim);}
+.searchbox svg{position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:12px;opacity:.5;pointer-events:none;}
+.navgroup{margin-bottom:6px;}
+.navgroup-title{
+  display:flex;align-items:center;gap:8px;
+  font-size:11.5px;font-weight:800;color:var(--text-faint);
+  text-transform:uppercase;letter-spacing:.06em;
+  padding:14px 8px 6px;cursor:pointer;user-select:none;
+}
+.navgroup-title .chev{margin-inline-start:auto;transition:transform .15s;font-size:10px;opacity:.6;}
+.navgroup.collapsed .navgroup-title .chev{transform:rotate(-90deg);}
+.navgroup.collapsed .navlist{display:none;}
+.navlist{display:flex;flex-direction:column;gap:1px;}
+.navlink{
+  display:block;padding:8px 10px;border-radius:8px;
+  font-size:13.5px;color:var(--text-dim);font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.navlink:hover{background:var(--surface);color:var(--text);}
+.navlink.active{background:var(--violet-bg);color:var(--violet);font-weight:700;}
+.navlink.hidden{display:none;}
+.navgroup.hidden{display:none;}
+.backtop{
+  margin-top:auto;padding-top:14px;text-align:center;
+  font-size:12px;color:var(--text-faint);border-top:1px solid var(--border);
+}
+
+/* ===== Content ===== */
+.content{flex:1;min-width:0;padding:56px 48px 120px;max-width:1100px;}
+.chapter{max-width:var(--maxw);margin:0 auto 110px;scroll-margin-top:24px;}
+.chapter:first-child{margin-top:0;}
+.crumb{
+  color:var(--blue);font-weight:700;font-size:13.5px;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.chapter h1.title{
+  font-size:32px;font-weight:800;margin:0 0 14px;text-wrap:balance;
+}
+.chapter > .lede{color:var(--text-dim);font-size:15.5px;max-width:72ch;margin-bottom:26px;}
+hr.div{border:none;border-top:1px solid var(--border);margin:28px 0 34px;}
+
+.topic{margin-bottom:52px;scroll-margin-top:24px;}
+.topic h2.t-title{
+  font-size:22px;font-weight:800;margin:0 0 18px;
+  padding-inline-start:14px;border-inline-start:4px solid var(--violet);
+}
+h3.s-label{
+  display:flex;align-items:center;gap:8px;
+  font-size:14.5px;font-weight:800;color:var(--amber);
+  margin:26px 0 10px;
+}
+
+.box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;
+}
+.box > .box-h{font-weight:800;font-size:14.5px;margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+.box > p{margin:0 0 10px;color:var(--text);}
+.box > p:last-child{margin-bottom:0;}
+.box ul, .box ol{margin:8px 0;padding-inline-start:22px;}
+.box li{margin-bottom:6px;}
+
+.box--what .box-h{color:var(--magenta);}
+.box--why .box-h{color:var(--amber);}
+.box--how .box-h{color:var(--blue);}
+.box--flowpos .box-h{color:var(--green);}
+.box--note{border-color:var(--border-strong);}
+.box--note .box-h{color:var(--violet);}
+.box--warn{background:var(--amber-bg);border-color:rgba(240,169,78,.35);}
+.box--warn .box-h{color:var(--amber);}
+.box--mistake{background:var(--red-bg);border-color:rgba(241,103,103,.35);}
+.box--mistake .box-h{color:var(--red);}
+.box--correction{background:var(--red-bg);border-color:rgba(241,103,103,.4);}
+.box--correction .box-h{color:var(--red);}
+.box--addition{background:var(--blue-bg);border-color:rgba(90,169,247,.3);}
+.box--addition .box-h{color:var(--blue);}
+.box--mental{background:var(--violet-bg);border-color:rgba(155,135,245,.35);}
+.box--mental .box-h{color:var(--violet);}
+.box--quick{background:linear-gradient(150deg,var(--green-bg),transparent);border-color:rgba(76,214,138,.35);}
+.box--quick .box-h{color:var(--green);}
+.box--confuse{border-color:var(--border-strong);}
+.box--confuse .box-h{color:var(--magenta);}
+
+/* code */
+.codebox{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;}
+.codebox .clabel{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 16px;font-size:11.5px;color:var(--text-faint);
+  border-bottom:1px solid var(--border);font-family:'JetBrains Mono';
+  letter-spacing:.03em;
+}
+.codebox pre{margin:0;padding:16px 18px;overflow-x:auto;font-size:13.6px;line-height:1.75;direction:ltr;text-align:left;}
+.codebox code{color:#dcd9ea;}
+.tok-kw{color:var(--violet);}
+.tok-str{color:var(--green);}
+.tok-com{color:var(--text-faint);font-style:italic;}
+.tok-fn{color:var(--amber);}
+.tok-num{color:var(--blue);}
+.tok-prop{color:#dcd9ea;}
+.flowbox{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;direction:ltr;text-align:center;font-family:'JetBrains Mono';font-size:13.5px;color:var(--text-dim);}
+.flowbox .arrow{color:var(--violet);font-weight:700;padding:0 4px;}
+
+/* line by line explanation */
+.linewalk{margin-bottom:16px;}
+.lw-line{
+  display:flex;gap:14px;padding:12px 0;border-bottom:1px dashed var(--border);
+}
+.lw-line:last-child{border-bottom:none;}
+.lw-code{
+  flex:none;width:auto;min-width:150px;max-width:270px;
+  background:var(--surface-2);border-radius:8px;padding:6px 10px;
+  font-family:'JetBrains Mono';font-size:12.5px;color:var(--amber);
+  direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-word;height:fit-content;
+}
+.lw-text{flex:1;color:var(--text-dim);font-size:14.5px;}
+.lw-text b{color:var(--text);font-weight:700;}
+
+/* function box */
+.fnbox{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);padding:0;margin-bottom:16px;overflow:hidden;}
+.fnbox .fn-head{background:var(--surface-3);padding:11px 18px;font-weight:800;font-family:'JetBrains Mono';font-size:14px;color:var(--amber);}
+.fnbox .fn-row{display:flex;gap:12px;padding:10px 18px;border-top:1px solid var(--border);font-size:14px;}
+.fnbox .fn-row b{flex:none;width:120px;color:var(--violet);font-weight:700;}
+.fnbox .fn-row span{color:var(--text-dim);}
+
+/* tables */
+.tablewrap{overflow-x:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:var(--radius);}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th,td{padding:11px 16px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;}
+thead th{background:var(--surface-3);color:var(--text-faint);font-size:12px;text-transform:uppercase;letter-spacing:.04em;font-weight:800;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--surface);}
+td code{background:var(--surface-2);padding:2px 7px;border-radius:6px;font-size:12.5px;color:var(--amber);}
+
+/* interview */
+.interview{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+.interview summary{
+  cursor:pointer;padding:14px 18px;font-weight:700;font-size:14.5px;
+  display:flex;gap:10px;align-items:flex-start;list-style:none;
+}
+.interview summary::-webkit-details-marker{display:none;}
+.interview summary::before{content:"+";color:var(--blue);font-weight:800;flex:none;width:18px;}
+.interview[open] summary::before{content:"−";}
+.interview[open] summary{border-bottom:1px solid var(--border);}
+.interview .iv-body{padding:6px 18px 16px;font-size:14px;color:var(--text-dim);}
+.interview .iv-body .iv-label{color:var(--amber);font-weight:800;font-size:12.5px;display:block;margin:10px 0 4px;}
+.interview .iv-body .iv-label:first-child{margin-top:0;}
+
+/* mistakes list simple */
+.msistakes-list{list-style:none;padding:0;margin:0;}
+.mistakes-list li{padding:8px 0;border-bottom:1px dashed var(--border);}
+.mistakes-list li:last-child{border-bottom:none;}
+
+/* chapter summary */
+.chsummary{background:var(--surface);border:2px solid var(--violet-dim);border-radius:var(--radius);padding:22px 24px;margin-top:10px;}
+.chsummary h3{margin:0 0 14px;color:var(--violet);font-size:16.5px;}
+.chsummary h4{color:var(--text);font-size:13.5px;margin:14px 0 6px;}
+.chsummary h4:first-of-type{margin-top:0;}
+
+.qbank{background:var(--surface-2);border:1px dashed var(--border-strong);border-radius:var(--radius);padding:20px 22px;margin-top:14px;}
+.qbank ol{margin:0;padding-inline-start:22px;}
+.qbank li{margin-bottom:8px;color:var(--text-dim);}
+.qbank .reveal summary{cursor:pointer;color:var(--blue);font-weight:700;font-size:13.5px;margin-top:14px;}
+
+.needsclar{background:var(--red-bg);border:1px dashed var(--red);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;}
+
+/* compact method/definition entries */
+.defgrid{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.defitem{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 18px;}
+.defitem .dname{font-family:'JetBrains Mono';color:var(--amber);font-weight:700;font-size:14px;margin-bottom:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.defitem .dname .tag{font-family:'Cairo';font-size:10.5px;font-weight:800;background:var(--violet-bg);color:var(--violet);padding:2px 8px;border-radius:99px;}
+.defitem p{margin:0;color:var(--text-dim);font-size:14px;}
+.defitem code.inline-ex{display:block;margin-top:7px;background:var(--surface-2);padding:6px 10px;border-radius:7px;font-size:12.5px;color:#dcd9ea;direction:ltr;text-align:left;}
+
+/* generic small helpers */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:99px;}
+.badge--v{background:var(--violet-bg);color:var(--violet);}
+.badge--g{background:var(--green-bg);color:var(--green);}
+.badge--r{background:var(--red-bg);color:var(--red);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:760px){.grid2{grid-template-columns:1fr;}}
+
+@media (max-width:900px){
+  .sidebar{position:fixed;inset-inline-end:0;top:0;z-index:50;transform:translateX(100%);transition:transform .2s;box-shadow:-10px 0 40px rgba(0,0,0,.5);}
+  body.nav-open .sidebar{transform:translateX(0);}
+  .content{padding:56px 20px 120px;}
+  .navtoggle{display:flex !important;}
+}
+.navtoggle{
+  display:none;position:fixed;top:16px;inset-inline-end:16px;z-index:60;
+  width:44px;height:44px;border-radius:12px;background:var(--surface-3);
+  border:1px solid var(--border-strong);color:var(--text);align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand"><span class="dot"></span> Template Engine</div>
+    <a class="sidebar-link" href="efficient-development.html">
+      <span class="sidebar-link-icon">⚡</span>
+      <span class="sidebar-link-text">Efficient Development</span>
+      <span class="sidebar-link-arrow">↗</span>
+    </a>
+    <div class="searchbox">
+      <input id="searchInput" type="text" placeholder="دوري على تاسك أو موضوع...">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+    <div id="navRoot"></div>
+    <div class="backtop">🖼️ Server-Side Rendering مع EJS وPug وHandlebars</div>
+  </nav>
+
+  <div class="navtoggle" id="navToggle">☰</div>
+
+  <main class="content" id="contentRoot">
+    <section class="chapter" id="te1" data-navlabel="🧩 Templating Engines Basics">
+      <div class="crumb">📗 Chapter 1</div>
+      <h1 class="title">Templating Engines Basics</h1>
+      <p class="lede">قبل ما ندخل في أي Template Engine بالتفصيل، لازم نفهم أصلًا ليه فيه حاجة اسمها Template Engine، وإيه المشكلة اللي بتحلها.</p>
+      <hr class="div">
+
+      <article class="topic" id="t1-whatis" data-navlabel="يعني إيه Template Engine؟">
+        <h2 class="t-title">1) يعني إيه Template Engine؟</h2>
+        <div class="box box--what">
+          <div class="box-h">🟣 إيه ده؟</div>
+          <p>Template Engine هي أداة بتخليكي تكتبي ملف HTML فيه أماكن فاضية (Placeholders)، وبعدين تملأها بـ Data حقيقية جاية من Server قبل ما ترسليها للـ Browser.</p>
+        </div>
+        <div class="flowbox">HTML Template + Data <span class="arrow">↓</span> Template Engine <span class="arrow">↓</span> HTML جاهز فيه القيم الحقيقية</div>
+      </article>
+
+      <article class="topic" id="t1-why" data-navlabel="ليه بنستخدمه؟">
+        <h2 class="t-title">2) ليه بنستخدمه؟</h2>
+        <div class="box box--why">
+          <div class="box-h">🟠 المشكلة</div>
+          <p>لو عايزة تعرضي صفحة بروفايل لكل User، مينفعش تكتبي HTML منفصل لكل واحد فيهم يدويًا. عايزة نفس الـ Structure، بس البيانات تتغير حسب اليوزر.</p>
+        </div>
+        <div class="box box--how">
+          <div class="box-h">🔵 الحل</div>
+          <p>تكتبي Template واحد بس (زي <code>profile.ejs</code>)، وتخليه ياخد Data مختلفة في كل مرة، فيبني HTML مختلف حسب اليوزر من غير ما تكرري الكود.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t1-staticvsdynamic" data-navlabel="Static مقابل Dynamic HTML">
+        <h2 class="t-title">3) Static HTML مقابل Dynamic HTML</h2>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Static HTML</th><th>Dynamic HTML</th></tr></thead>
+          <tbody>
+            <tr><td>محتوى ثابت، متكتب مرة واحدة يدويًا</td><td>محتوى بيتبني وقت الـ Request حسب الـ Data</td></tr>
+            <tr><td>مفيش اتصال بـ Database أو Server Logic</td><td>غالبًا جاي من Database أو منطق في الـ Server</td></tr>
+            <tr><td>نفس الملف لكل الزوار</td><td>ممكن يختلف من زائر للتاني</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="topic" id="t1-ssr" data-navlabel="Server-Side Rendering">
+        <h2 class="t-title">4) Server-Side Rendering (SSR)</h2>
+        <p>SSR يعني إن الـ HTML بيتبني كامل جوه الـ Server الأول، وبعدين بيتبعت جاهز للـ Browser. الـ Browser مش محتاج يعمل حاجة زيادة عشان يبني الصفحة — هي وصلته HTML كامل خلاص.</p>
+        <div class="box box--mental">
+          <div class="box-h">🧠 Mental Model</div>
+          <p>فكري في Template Engine كأنها "خطاب جاهز فيه أماكن فاضية" (Dear ___، عندك ___ رسالة). الـ Server بيملأ الأماكن الفاضية دي بالبيانات الصح قبل ما يبعت الخطاب.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t1-flow" data-navlabel="Template Engine Flow">
+        <h2 class="t-title">5) Template Engine Flow</h2>
+        <div class="flowbox">Request <span class="arrow">↓</span> Route <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Data (من DB أو مباشرة) <span class="arrow">↓</span> res.render() <span class="arrow">↓</span> Template Engine <span class="arrow">↓</span> HTML جاهز <span class="arrow">↓</span> Response للـ Browser</div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>الخلط بين Template Engine ومكتبة Frontend زي React</b> — Template Engine بتبني HTML جاهز على السيرفر، React بتبني الواجهة وتتفاعل معاها في المتصفح.</li>
+        <li><b>الظن إن Template Engine محتاجة Database إجباريًا</b> — ممكن نمرر Data ثابتة أو جاية من أي مصدر، مش شرط Database.</li>
+      </ul>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Template Engine بتملأ Placeholders في HTML بـ Data حقيقية وقت الـ Request، الفرق بين Static وDynamic HTML، وServer-Side Rendering (SSR).</p>
+        <h4>أهم الأخطاء</h4>
+        <p>الخلط بين Template Engine ومكتبات Frontend، افتراض إنها محتاجة Database إجباريًا.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه فايدة Template Engine بدل كتابة HTML يدويًا لكل حالة؟</li>
+            <li>إيه معنى SSR؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) بتخليكي تكتبي Structure واحد بس، وتملأيه بيانات مختلفة كل مرة، بدل ما تكرري نفس الـ HTML يدويًا لكل حالة.</p>
+              <p>2) إن الـ HTML بيتبني كامل جوه الـ Server قبل ما يتبعت للـ Browser، بدل ما الـ Browser هو اللي يبني الصفحة بنفسه.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te2" data-navlabel="🧰 Popular Template Engines">
+      <div class="crumb">📗 Chapter 2</div>
+      <h1 class="title">Popular Template Engines</h1>
+      <p class="lede">في عالم Node.js/Express، فيه كذا Template Engine مشهورة، وكل واحدة ليها Syntax وأسلوب مختلف.</p>
+      <hr class="div">
+
+      <article class="topic" id="t2-ejs" data-navlabel="EJS">
+        <h2 class="t-title">1) EJS</h2>
+        <p>EJS يعني Embedded JavaScript. أشهر وأبسط Template Engine مع Express، لأن Syntax بتاعتها قريبة جدًا من HTML عادي مع شوية JavaScript جواها.</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;h1&gt;&lt;%= name %&gt;&lt;/h1&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t2-pug" data-navlabel="Pug">
+        <h2 class="t-title">2) Pug</h2>
+        <p>Pug (قديمًا Jade) بتستخدم Indentation بدل الـ Tags العادية، فالكود بيبقى أقصر، بس شكله مختلف تمامًا عن HTML العادي:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">h1= name</code></pre></div>
+      </article>
+
+      <article class="topic" id="t2-handlebars" data-navlabel="Handlebars">
+        <h2 class="t-title">3) Handlebars</h2>
+        <p>Handlebars بتستخدم Syntax بالـ <code>{{ }}</code>، وبتفرض شوية قيود على كتابة JavaScript مباشرة جوه الـ Template (بتشجع فصل المنطق عن العرض أكتر):</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">&lt;h1&gt;{{name}}&lt;/h1&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t2-compare" data-navlabel="الفرق بينهم">
+        <h2 class="t-title">4) الفرق بينهم</h2>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Engine</th><th>الشكل</th><th>مميز بإيه</th></tr></thead>
+          <tbody>
+            <tr><td>EJS</td><td>قريب جدًا من HTML عادي</td><td>سهل التعلم، تكتبي JavaScript مباشرة جواه</td></tr>
+            <tr><td>Pug</td><td>Indentation بدل Tags</td><td>كود أقصر، لكن منحنى تعلم أعلى شوية</td></tr>
+            <tr><td>Handlebars</td><td>{{ }} مع قيود منطقية</td><td>بيفصل المنطق عن العرض بشكل أوضح</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="topic" id="t2-whentemplate" data-navlabel="Template Engine مقابل React/Next.js">
+        <h2 class="t-title">5) إمتى نستخدم Template Engine وإمتى React/Next.js؟</h2>
+        <div class="box box--quick">
+          <div class="box-h">⚡ خلي بالك</div>
+          <p>Template Engine مناسبة لمواقع بسيطة/متوسطة، Server-Rendered بالكامل، أو Admin Panels داخلية. React/Next.js أنسب لتطبيقات فيها تفاعل كبير من جانب المستخدم (Client-Side Interactivity) واحتياج لـ State معقدة في المتصفح.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>الأول</th><th>التاني</th><th>الفرق ببساطة</th></tr></thead>
+        <tbody>
+          <tr><td>Template Engine (EJS/Pug/Handlebars)</td><td>React / Next.js</td><td>الأول بيبني HTML جاهز بالكامل من السيرفر (SSR بسيط، مفيش تفاعل معقد بعد التحميل من غير Refresh). التاني مكتبة/Framework لبناء واجهات تفاعلية معقدة تتحدث في المتصفح من غير Refresh كامل للصفحة.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>اختيار Template Engine لمشروع محتاج تفاعل معقد من جانب المستخدم</b> — في الحالة دي React/Next.js أنسب بكتير.</li>
+      </ul>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>الفرق بين EJS وPug وHandlebars، ومتى نختار Template Engine ومتى React/Next.js.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إمتى تختاري Template Engine بدل React؟</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه أبسط Template Engine مع Express وليه؟</li>
+            <li>إمتى تختاري Template Engine بدل React/Next.js؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) EJS، لأن Syntax بتاعتها قريبة جدًا من HTML عادي، فسهلة التعلم بسرعة لمن عندها خلفية HTML/JS.</p>
+              <p>2) لمواقع بسيطة أو متوسطة الحجم، Server-Rendered بالكامل، أو Admin Panels داخلية مش محتاجة تفاعل معقد من جانب المستخدم في المتصفح.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te3" data-navlabel="⚙️ Express Setup with Template Engine">
+      <div class="crumb">📗 Chapter 3</div>
+      <h1 class="title">Express Setup with Template Engine</h1>
+      <p class="lede">إزاي نجهز Express عشان يشتغل بـ Template Engine، ونعرف يلاقي ملفات الـ Views.</p>
+      <hr class="div">
+
+      <article class="topic" id="t3-viewengine" data-navlabel="app.set(view engine)">
+        <h2 class="t-title">1) app.set("view engine", ...)</h2>
+        <p>ده اللي بيقول لـ Express: استخدم الـ Template Engine ده:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const express = require('express');
+const app = express();
+
+app.set('view engine', 'ejs');</code></pre></div>
+      </article>
+
+      <article class="topic" id="t3-viewsfolder" data-navlabel="Views Folder">
+        <h2 class="t-title">2) Views Folder</h2>
+        <p>الافتراضي إن Express بتدور على ملفات الـ Templates جوه فولدر اسمه <code>views/</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">project/
+│
+├── views/
+│   ├── profile.ejs
+│   └── home.ejs
+│
+└── app.js</code></pre></div>
+        <p>لو عايزة تغيّري مكان الفولدر:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.set('views', path.join(__dirname, 'templates'));</code></pre></div>
+      </article>
+
+      <article class="topic" id="t3-render" data-navlabel="res.render()">
+        <h2 class="t-title">3) res.render()</h2>
+        <p>ده اللي بيقول لـ Express: ابني الـ Template ده وابعته كـ Response:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.get('/profile', (req, res) => {
+  res.render('profile');
+});</code></pre></div>
+        <div class="flowbox">res.render('profile') <span class="arrow">↓</span> Express تدور على views/profile.ejs <span class="arrow">↓</span> تبنيه HTML <span class="arrow">↓</span> تبعته Response</div>
+      </article>
+
+      <article class="topic" id="t3-setup" data-navlabel="إعداد EJS / Pug / Handlebars">
+        <h2 class="t-title">4) إعداد EJS / Pug / Handlebars مع Express</h2>
+        <h3 class="s-label">🔹 EJS</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="bash">npm install ejs</code></pre></div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.set('view engine', 'ejs');
+// مفيش محتاجة require('ejs') يدويًا، Express بتكتشفها لوحدها</code></pre></div>
+        <h3 class="s-label">🔹 Pug</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="bash">npm install pug</code></pre></div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.set('view engine', 'pug');</code></pre></div>
+        <h3 class="s-label">🔹 Handlebars</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="bash">npm install express-handlebars</code></pre></div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const { engine } = require('express-handlebars');
+
+app.engine('handlebars', engine());
+app.set('view engine', 'handlebars');</code></pre></div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>نسيان app.set('view engine', ...)</b> — Express مش هتعرف تفسر ملفات الـ Templates أصلًا.</li>
+        <li><b>وضع ملفات الـ Templates في مكان تاني غير views/ من غير ما نغيّر الإعداد</b> — Express مش هتلاقيها وهترمي Error.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه اللي بيحصل بالظبط لما تستخدمي res.render()؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك للخطوات اللي بتحصل بين استدعاء res.render() ووصول الـ Response للـ Browser.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: الملف اللي كتبتيه (.ejs مثلًا) مش HTML خالص، فمين اللي بيحوله؟
+          <span class="iv-label">الإجابة المختصرة</span>Express بتدور على ملف الـ Template المطلوب جوه فولدر views، وتمرره للـ Template Engine المُعرّفة (زي EJS)، اللي بتاخد الملف والـ Data الممررة وتبني منهم HTML كامل، وبعدين Express بتبعت الـ HTML ده كـ Response للمتصفح.
+          <span class="iv-label">بالتفصيل</span>الخطوة دي بتحصل كاملة على السيرفر قبل ما أي حاجة توصل للمتصفح؛ يعني المتصفح مش شايف ملف .ejs خالص، هو شايف بس HTML نهائي جاهز.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه اللي بيحصل لو الملف المطلوب مش موجود في views؟ (Express هترمي Error بتقول إن الـ Template مش موجودة، وده بيبقى غالبًا 500 Internal Server Error لو مفيش Error Handling مخصص).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>app.set('view engine', ...)، فولدر views الافتراضي، res.render()، وطريقة إعداد كل من EJS وPug وHandlebars مع Express.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>app.set('view engine', 'ejs')</code>، <code>res.render('templateName', data?)</code>، <code>app.engine(...)</code> (لـ Handlebars).</p>
+        <h4>أهم الأخطاء</h4>
+        <p>نسيان تحديد view engine، وضع الـ Templates في مكان غير views/ من غير تعديل الإعداد.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إيه اللي بيحصل بالظبط لما نستخدم res.render().</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه اللي بيعمله app.set('view engine', 'ejs')؟</li>
+            <li>فين المكان الافتراضي اللي Express بتدور فيه على الـ Templates؟</li>
+            <li>إيه اللي بيرجعه res.render() للمتصفح فعليًا؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) بيحدد لـ Express إن الـ Template Engine المستخدمة هي EJS، عشان تعرف تفسر ملفات .ejs.</p>
+              <p>2) فولدر views/ في جذر المشروع، إلا لو اتغيّر الإعداد صراحة بـ app.set('views', ...).</p>
+              <p>3) HTML كامل وجاهز، بعد ما الـ Template Engine ملأت الأماكن الفاضية بالـ Data الممررة.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="te4" data-navlabel="📤 Passing Data to Views">
+      <div class="crumb">📗 Chapter 4</div>
+      <h1 class="title">Passing Data to Views</h1>
+      <p class="lede">هنا بيتحدد الفرق الحقيقي بين HTML ثابت وHTML ديناميكي: إزاي نبعت Data من Express للـ Template نفسه.</p>
+      <hr class="div">
+
+      <article class="topic" id="t4-sending" data-navlabel="إرسال Data من Express للـ Template">
+        <h2 class="t-title">1) إرسال Data من Express للـ Template</h2>
+        <p>الـ Object التاني اللي بنمرره لـ <code>res.render()</code> هو اللي بيوصل للـ Template:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">res.render("profile", {
+  name: "Nada",
+  age: 25
+});</code></pre></div>
+        <p>جوه <code>profile.ejs</code>، <code>name</code> و<code>age</code> بقوا متاحين مباشرة كـ Variables.</p>
+      </article>
+
+      <article class="topic" id="t4-variables" data-navlabel="Variables">
+        <h2 class="t-title">2) Variables</h2>
+        <div class="codebox"><div class="clabel">profile.ejs</div><pre><code data-lang="html">&lt;h1&gt;اسمك: &lt;%= name %&gt;&lt;/h1&gt;
+&lt;p&gt;عمرك: &lt;%= age %&gt;&lt;/p&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t4-objects" data-navlabel="Objects">
+        <h2 class="t-title">3) Objects</h2>
+        <p>ممكن كمان تبعتي Object كامل:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">res.render("profile", {
+  user: { name: "Nada", age: 25 }
+});</code></pre></div>
+        <div class="codebox"><div class="clabel">profile.ejs</div><pre><code data-lang="html">&lt;h1&gt;&lt;%= user.name %&gt;&lt;/h1&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t4-arrays" data-navlabel="Arrays">
+        <h2 class="t-title">4) Arrays</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">res.render("products", {
+  products: [
+    { name: "Laptop" },
+    { name: "Phone" }
+  ]
+});</code></pre></div>
+        <p>وهنشوف إزاي نعمل Loop عليها في فصل Loops & Rendering Lists.</p>
+      </article>
+
+      <article class="topic" id="t4-dynamic" data-navlabel="Dynamic Content">
+        <h2 class="t-title">5) Dynamic Content</h2>
+        <div class="box box--why">
+          <div class="box-h">🟠 الفكرة الأساسية</div>
+          <p>نفس ملف <code>profile.ejs</code> ممكن يعرض بيانات مختلفة تمامًا لكل مستخدم، لأن الـ Data اللي بتوصله من <code>res.render()</code> هي اللي بتتغير، مش الـ Template نفسه.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>محاولة استخدام Variable في الـ Template من غير ما تتبعت من res.render()</b> — هيرمي Error زي "name is not defined".</li>
+        <li><b>نسيان إن أسماء الـ Keys في الـ Object لازم تتطابق مع الأسماء المستخدمة جوه الـ Template</b> — أي اختلاف في الاسم يسبب undefined.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي بتوصل الـ Data من الـ Controller للـ Template بالظبط؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك للربط بين الـ Object اللي بتمرريه لـ res.render() والـ Variables المتاحة جوه الـ Template.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لما تكتبي res.render('profile', { name: 'Nada' })، إزاي 'name' تبقى متاحة جوه profile.ejs؟
+          <span class="iv-label">الإجابة المختصرة</span>الـ Object اللي بتمرريه كـ Argument تاني لـ res.render() بيتحول لمتغيرات محلية متاحة مباشرة جوه ملف الـ Template، بنفس أسماء الـ Keys.
+          <span class="iv-label">بالتفصيل</span>لو الـ Object فيه <code>{ name: 'Nada', age: 25 }</code>، الـ Template هيقدر يستخدم <code>name</code> و<code>age</code> مباشرة كـ Variables، من غير ما يحتاج أي Import أو تعريف إضافي.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه اللي بيحصل لو نسيتِ تبعتي Variable الـ Template محتاجاها؟ (هيرمي Error وقت الـ Render بيقول إن المتغير ده مش معرّف، وده بيوقف الـ Response كله لو مفيش Error Handling).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>تمرير Data من الـ Controller للـ Template عبر res.render()، التعامل مع Variables وObjects وArrays جوه الـ Template.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>res.render('name', { key: value })</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>استخدام Variable في الـ Template من غير ما يتبعت، اختلاف أسماء الـ Keys بين الـ Controller والـ Template.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي بتوصل الـ Data من الـ Controller للـ Template بالظبط.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إزاي تبعتي Object كامل للـ Template؟</li>
+            <li>إيه اللي بيحصل لو استخدمتِ Variable في الـ Template من غير ما تبعتيها؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) بتحطيه كـ Value لأي Key جوه الـ Object اللي بتمرريه لـ res.render()، زي res.render('profile', { user: {...} })، وتوصليه جوه الـ Template بـ user.propertyName.</p>
+              <p>2) هيرمي Error وقت الـ Rendering بيقول إن المتغير مش معرّف، وده بيمنع الصفحة من الظهور صح.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te5" data-navlabel="🔤 Template Syntax">
+      <div class="crumb">📗 Chapter 5</div>
+      <h1 class="title">Template Syntax</h1>
+      <p class="lede">هنركز هنا على EJS تحديدًا (الأشهر مع Express)، ونفهم الفرق بين أنواع الـ Tags المختلفة.</p>
+      <hr class="div">
+
+      <article class="topic" id="t5-output" data-navlabel="Output / Variables">
+        <h2 class="t-title">1) Output / Variables</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;h1&gt;&lt;%= name %&gt;&lt;/h1&gt;</code></pre></div>
+        <p><code>&lt;%= %&gt;</code> بتطبع القيمة مباشرة جوه الـ HTML.</p>
+      </article>
+
+      <article class="topic" id="t5-expressions" data-navlabel="Expressions">
+        <h2 class="t-title">2) Expressions</h2>
+        <p>مش لازم تكوني قيمة بسيطة، ممكن تكتبي Expression كامل:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;p&gt;السنة الجاية: &lt;%= year + 1 %&gt;&lt;/p&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t5-jsinside" data-navlabel="JavaScript داخل Template">
+        <h2 class="t-title">3) JavaScript داخل Template</h2>
+        <p><code>&lt;% %&gt;</code> (من غير <code>=</code>) بتنفذ JavaScript عادي من غير ما تطبع حاجة — بتستخدم للـ Logic زي if وfor:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;% const total = price * quantity; %&gt;
+&lt;p&gt;الإجمالي: &lt;%= total %&gt;&lt;/p&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t5-escaped" data-navlabel="Escaped Output">
+        <h2 class="t-title">4) Escaped Output</h2>
+        <p><code>&lt;%= %&gt;</code> بتعمل HTML Escaping تلقائيًا — يعني لو القيمة فيها Tags زي <code>&lt;script&gt;</code>، هتتحول لنص عادي مش هتتنفذ كـ HTML. ده الوضع الآمن الافتراضي.</p>
+      </article>
+
+      <article class="topic" id="t5-unescaped" data-navlabel="Unescaped Output">
+        <h2 class="t-title">5) Unescaped Output</h2>
+        <p><code>&lt;%- %&gt;</code> بتطبع القيمة كما هي من غير Escaping — يعني لو فيها HTML Tags حقيقية، هتتنفذ فعليًا كـ HTML:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;%- htmlContent %&gt;</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>استخدمي <code>&lt;%- %&gt;</code> بس مع محتوى إنتِ واثقة إنه آمن (زي محتوى كتبتيه إنتِ)، وليس مع Input جاي من المستخدم مباشرة — هنرجع للنقطة دي بالتفصيل في فصل Security.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t5-comments" data-navlabel="Comments">
+        <h2 class="t-title">6) Comments</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;%# ده تعليق مش هيظهر في الـ HTML النهائي %&gt;</code></pre></div>
+      </article>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Syntax</th><th>معناها</th></tr></thead>
+        <tbody>
+          <tr><td><code>&lt;%= %&gt;</code></td><td>Output مع HTML Escaping (آمن، الافتراضي).</td></tr>
+          <tr><td><code>&lt;%- %&gt;</code></td><td>Output من غير Escaping (خطير مع Input من المستخدم).</td></tr>
+          <tr><td><code>&lt;% %&gt;</code></td><td>تنفيذ JavaScript logic من غير طباعة أي حاجة.</td></tr>
+          <tr><td><code>&lt;%# %&gt;</code></td><td>Comment، مش بيظهر في الناتج النهائي.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>استخدام &lt;%- %&gt; مع بيانات جاية من المستخدم مباشرة</b> — بيفتح باب لهجوم XSS، هنشرحه بالتفصيل في فصل Security.</li>
+        <li><b>الخلط بين &lt;% %&gt; و&lt;%= %&gt;</b> — الأول بينفذ من غير طباعة، والتاني بيطبع القيمة.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين &lt;%= %&gt; و&lt;%- %&gt; في EJS؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك للفرق الأمني بين Escaped وUnescaped Output.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو مستخدم كتب &lt;script&gt;alert('hi')&lt;/script&gt; في Comment، إيه اللي المفروض يحصل لما نعرضه؟
+          <span class="iv-label">الإجابة المختصرة</span><code>&lt;%= %&gt;</code> بتعمل HTML Escaping تلقائيًا (آمنة، الافتراضية). <code>&lt;%- %&gt;</code> بتطبع القيمة كما هي من غير أي Escaping، فلو القيمة فيها HTML/JavaScript حقيقي، هيتنفذ.
+          <span class="iv-label">بالتفصيل</span>لو استخدمنا <code>&lt;%= comment %&gt;</code> ومحتوى الـ comment فيه &lt;script&gt;، هيتحول لنص عادي معروض على الصفحة (آمن). لو استخدمنا <code>&lt;%- comment %&gt;</code> بنفس المحتوى، الـ script هينفذ فعليًا في متصفح أي زائر — وده باب لهجوم XSS.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إمتى يبقى استخدام &lt;%- %&gt; مقبول؟ (لما تكوني متأكدة إن المحتوى آمن ومش جاي من مستخدم مباشرة، زي HTML ثابت كتبتيه إنتِ نفسك أو جاي من مصدر موثوق تمامًا).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Output العادي والـ Expressions، تنفيذ JavaScript logic من غير طباعة، الفرق بين Escaped وUnescaped Output، والـ Comments.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>&lt;%= value %&gt;</code>، <code>&lt;%- value %&gt;</code>، <code>&lt;% code %&gt;</code>، <code>&lt;%# comment %&gt;</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>استخدام Unescaped Output مع بيانات المستخدم، الخلط بين تاجات التنفيذ والطباعة.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين &lt;%= %&gt; و&lt;%- %&gt;.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين &lt;%= %&gt; و&lt;%- %&gt;؟</li>
+            <li>إمتى تستخدمي &lt;% %&gt; من غير علامة =؟</li>
+            <li>ليه &lt;%- %&gt; خطيرة مع بيانات المستخدم؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) &lt;%= %&gt; بتعمل HTML Escaping تلقائيًا (آمنة). &lt;%- %&gt; بتطبع القيمة كما هي من غير Escaping (ممكن تكون خطيرة).</p>
+              <p>2) لما محتاجة تنفذي JavaScript logic (زي if أو for) من غير ما تطبعي أي Output مباشرة.</p>
+              <p>3) لأن أي HTML أو JavaScript موجود في بيانات المستخدم هيتنفذ فعليًا في متصفح أي زائر يشوف الصفحة، وده باب لهجوم XSS.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te6" data-navlabel="🔀 Conditional Rendering">
+      <div class="crumb">📗 Chapter 6</div>
+      <h1 class="title">Conditional Rendering</h1>
+      <p class="lede">إزاي نعرض جزء من الصفحة أو نخفيه حسب الـ Data اللي وصلت من الـ Server.</p>
+      <hr class="div">
+
+      <article class="topic" id="t6-ifelse" data-navlabel="if / else">
+        <h2 class="t-title">1) if / else</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;% if (isLoggedIn) { %&gt;
+   &lt;button&gt;Logout&lt;/button&gt;
+&lt;% } %&gt;</code></pre></div>
+        <p>ومع else:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;% if (isLoggedIn) { %&gt;
+   &lt;button&gt;Logout&lt;/button&gt;
+&lt;% } else { %&gt;
+   &lt;button&gt;Login&lt;/button&gt;
+&lt;% } %&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t6-conditionalui" data-navlabel="Conditional UI">
+        <h2 class="t-title">2) Conditional UI</h2>
+        <p>ممكن نستخدمها لأي جزء من الواجهة بيتغير حسب الحالة، مش بس تسجيل الدخول — زي إظهار Badge "جديد" لو المنتج مضاف حديثًا، أو رسالة "مفيش نتائج" لو الـ Array فاضية.</p>
+      </article>
+
+      <article class="topic" id="t6-showbasedondata" data-navlabel="إظهار عناصر حسب البيانات">
+        <h2 class="t-title">3) إظهار عناصر حسب البيانات</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;% if (products.length === 0) { %&gt;
+   &lt;p&gt;مفيش منتجات دلوقتي.&lt;/p&gt;
+&lt;% } %&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t6-authui" data-navlabel="Authentication-based UI">
+        <h2 class="t-title">4) Authentication-based UI</h2>
+        <p>من أشهر استخدامات الـ Conditional Rendering: تغيير الواجهة حسب حالة تسجيل الدخول أو دور المستخدم (Role):</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;% if (user && user.role === 'admin') { %&gt;
+   &lt;a href="/admin"&gt;Admin Panel&lt;/a&gt;
+&lt;% } %&gt;</code></pre></div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>نسيان قوس الإغلاق } جوه &lt;% } %&gt;</b> — بيسبب Syntax Error في الـ Template بالكامل.</li>
+        <li><b>الافتراض إن user موجودة دايمًا من غير فحص (زي user.role مباشرة من غير user &&)</b> — لو المستخدم مش مسجل دخول، user ممكن تكون undefined ويحصل Crash.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي تتحكمي في عرض جزء من الصفحة حسب حالة تسجيل الدخول؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لاستخدام الـ Conditional Rendering في سيناريو عملي شائع جدًا.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: الـ Server عارف حالة تسجيل الدخول قبل ما يبعت الصفحة، فمين المفروض يقرر الجزء اللي هيتعرض؟
+          <span class="iv-label">الإجابة المختصرة</span>بنمرر Variable (زي isLoggedIn أو user) من الـ Controller لـ res.render()، وجوه الـ Template بنستخدم &lt;% if (...) { %&gt; عشان نعرض أو نخفي جزء الواجهة المناسب بناءً على القيمة دي.
+          <span class="iv-label">بالتفصيل</span>القرار بيتاخد على السيرفر قبل ما الـ HTML يوصل للمتصفح؛ يعني لو المستخدم مش Admin، الـ HTML بتاع Admin Panel أصلًا مش هيتبعت خالص، مش بس مخفي بـ CSS.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل ده أأمن من إخفاء الزرار بـ CSS بس؟ (أيوة، لأن لو الإخفاء بـ CSS بس، أي حد يقدر يشوف الـ HTML في الـ DevTools ويلاقي الزرار موجود بس مخفي؛ الـ Server-Side Conditional بيمنع إرسال الـ HTML أصلًا).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>استخدام if/else جوه الـ Template لعرض أو إخفاء أجزاء من الواجهة، وربط ده بحالة تسجيل الدخول أو الـ Role.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>&lt;% if (condition) { %&gt; ... &lt;% } else { %&gt; ... &lt;% } %&gt;</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>نسيان قوس الإغلاق، عدم فحص وجود user قبل الوصول لخصائصه.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تتحكمي في عرض جزء من الصفحة حسب حالة تسجيل الدخول.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إزاي تعرضي زرار Admin Panel لليوزر الـ Admin بس؟</li>
+            <li>ليه الفحص على السيرفر (مش CSS بس) أأمن؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) بنمرر بيانات المستخدم (زي user.role) من الـ Controller، وجوه الـ Template نستخدم &lt;% if (user && user.role === 'admin') { %&gt; حوالين الزرار ده.</p>
+              <p>2) لأن الفحص على السيرفر بيمنع إرسال الـ HTML أصلًا للمستخدمين اللي مش مسموحلهم، بينما إخفاء بـ CSS بس بيسيب الـ HTML موجود ويقدر أي حد يشوفه من DevTools.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="te7" data-navlabel="🔁 Loops & Rendering Lists">
+      <div class="crumb">📗 Chapter 7</div>
+      <h1 class="title">Loops & Rendering Lists</h1>
+      <p class="lede">أكتر حاجة هتستخدميها فعليًا: عرض قائمة منتجات، يوزرز، أو أي بيانات جاية من الـ Database على شكل Array.</p>
+      <hr class="div">
+
+      <article class="topic" id="t7-forloop" data-navlabel="for / forEach">
+        <h2 class="t-title">1) for / forEach</h2>
+        <p>جوه <code>&lt;% %&gt;</code> بنكتب JavaScript عادي تمامًا، فممكن نستخدم <code>forEach</code> زي أي كود Node.js عادي:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;% products.forEach(product => { %&gt;
+   &lt;h2&gt;&lt;%= product.name %&gt;&lt;/h2&gt;
+&lt;% }) %&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t7-arrays" data-navlabel="Loop على Arrays">
+        <h2 class="t-title">2) Loop على Arrays</h2>
+        <p>لازم دايمًا نتأكد إن الـ Array مبعوتة من الـ Controller أصلًا قبل ما نعمل Loop عليها، وإلا هيحصل Error زي "Cannot read properties of undefined".</p>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">res.render("products", {
+  products: [
+    { name: "Laptop", price: 15000 },
+    { name: "Phone", price: 8000 }
+  ]
+});</code></pre></div>
+      </article>
+
+      <article class="topic" id="t7-dynamiclists" data-navlabel="Dynamic Lists">
+        <h2 class="t-title">3) Dynamic Lists</h2>
+        <div class="codebox"><div class="clabel">products.ejs</div><pre><code data-lang="html">&lt;ul&gt;
+  &lt;% products.forEach(product => { %&gt;
+    &lt;li&gt;&lt;%= product.name %&gt; - &lt;%= product.price %&gt; جنيه&lt;/li&gt;
+  &lt;% }) %&gt;
+&lt;/ul&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t7-renderdb" data-navlabel="Rendering Database Results">
+        <h2 class="t-title">4) Rendering Database Results</h2>
+        <p>نفس المبدأ بالظبط مع نتايج جاية من Database حقيقية (زي Sequelize) — الـ Query بترجع Array من الـ Rows، وبنمررها زي أي Array عادي:</p>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">const users = await User.findAll();
+res.render("users", { users });</code></pre></div>
+        <div class="box box--mental">
+          <div class="box-h">🧠 Mental Model</div>
+          <p>الـ Template مبيعرفش ولا بيهتم إن البيانات جاية من Database — كل اللي بيشوفه هو Array عادي، ونفس كود الـ Loop شغال سواء البيانات جاية من Array ثابت أو من Query حقيقي.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>عمل Loop على Array من غير ما تتأكدي إنها موجودة أصلًا</b> — لو products undefined، الـ forEach هيرمي Error فورًا.</li>
+        <li><b>نسيان الأقواس المفتوحة/المقفولة الصح حوالين forEach</b> — ده بيسبب Syntax Error صعب نتابعه أحيانًا.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي تعرضي قائمة منتجات جاية من الـ Database في صفحة EJS؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لربط بيانات Database بعرضها كقائمة في الـ Template.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في المسار الكامل: منين البيانات جاية، وإزاي بتوصل للـ Template، وإزاي بتتحول لـ HTML.
+          <span class="iv-label">الإجابة المختصرة</span>بنجيب البيانات من الـ Database في الـ Controller (زي User.findAll())، نمررها كـ Array لـ res.render()، وجوه الـ Template نعمل عليها forEach جوه &lt;% %&gt; عشان نطبع كل عنصر.
+          <span class="iv-label">بالتفصيل</span>الخطوات: Route يستقبل Request، Controller يسأل الـ Database، النتيجة (Array of Rows) بتتبعت لـ res.render() كـ Data، الـ Template بيعمل Loop عليها ويطبع HTML لكل عنصر.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه اللي بيحصل لو الـ Array كانت فاضية؟ (المفروض نتعامل مع الحالة دي بـ if قبل الـ Loop ونعرض رسالة زي "مفيش نتائج" بدل ما تظهر صفحة فاضية تمامًا).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>استخدام forEach جوه &lt;% %&gt; لعرض قوائم، سواء من Array ثابت أو من نتائج Database حقيقية.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>&lt;% array.forEach(item => { %&gt; ... &lt;% }) %&gt;</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>عمل Loop على Array undefined، أخطاء في الأقواس المفتوحة والمقفولة.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تعرضي قائمة منتجات جاية من الـ Database.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إزاي تعملي Loop على Array من المنتجات وتعرضي اسم كل منتج؟</li>
+            <li>ليه لازم تتأكدي إن الـ Array موجودة قبل ما تعملي forEach عليها؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) &lt;% products.forEach(product => { %&gt; &lt;h2&gt;&lt;%= product.name %&gt;&lt;/h2&gt; &lt;% }) %&gt;.</p>
+              <p>2) لأن لو products كانت undefined، استدعاء forEach عليها هيرمي Error فورًا ويوقف الصفحة كلها.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te8" data-navlabel="🧩 Layouts">
+      <div class="crumb">📗 Chapter 8</div>
+      <h1 class="title">Layouts</h1>
+      <p class="lede">إزاي نتجنب تكرار نفس الـ HTML (Header وFooter) في كل صفحة من صفحات الموقع.</p>
+      <hr class="div">
+
+      <article class="topic" id="t8-whatis" data-navlabel="Layout يعني إيه">
+        <h2 class="t-title">1) Layout يعني إيه</h2>
+        <p>الـ Layout هو الهيكل العام المشترك بين كل صفحات الموقع — زي الـ Header وMenu وFooter — واللي بيتغير بس هو المحتوى في النص.</p>
+      </article>
+
+      <article class="topic" id="t8-sharedstructure" data-navlabel="Shared Page Structure">
+        <h2 class="t-title">2) Shared Page Structure</h2>
+        <div class="flowbox">
+Header (ثابت)
+  <span class="arrow">↓</span>
+Main Content (بيتغير حسب الصفحة)
+  <span class="arrow">↓</span>
+Footer (ثابت)
+        </div>
+      </article>
+
+      <article class="topic" id="t8-headermainfooter" data-navlabel="Header / Main Content / Footer">
+        <h2 class="t-title">3) Header / Main Content / Footer</h2>
+        <p>EJS الأساسية معندهاش نظام Layouts جاهز زي بعض الـ Engines التانية، فالطريقة الشائعة هي إننا نستخدم Partials (هنشرحها بالتفصيل في الفصل الجاي) للـ Header وFooter، وندمجهم في كل صفحة.</p>
+      </article>
+
+      <article class="topic" id="t8-reuse" data-navlabel="إعادة استخدام نفس Layout">
+        <h2 class="t-title">4) إعادة استخدام نفس Layout</h2>
+        <div class="codebox"><div class="clabel">home.ejs</div><pre><code data-lang="html">&lt;%- include('partials/header') %&gt;
+
+&lt;h1&gt;الصفحة الرئيسية&lt;/h1&gt;
+
+&lt;%- include('partials/footer') %&gt;</code></pre></div>
+        <div class="box box--note">
+          <div class="box-h">📝 ملاحظة</div>
+          <p>فيه مكتبة اسمها <code>express-ejs-layouts</code> بتضيف نظام Layouts أقرب لحاجات زي Handlebars، لكن الفكرة الأساسية (هيكل مشترك + محتوى متغير) واحدة في الحالتين.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>تكرار نفس الـ Header وFooter يدويًا في كل ملف EJS</b> — أي تعديل بسيط هتحتاجي تعمليه في عشرات الملفات.</li>
+        <li><b>نسيان include بالمسار الصح للـ Partial</b> — بيسبب Error إن الملف مش موجود.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي تتجنبي تكرار نفس الـ Header وFooter في كل صفحة؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لفكرة إعادة الاستخدام (Reusability) في الـ Templates.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو عندك 20 صفحة ونفس الـ Navbar موجود في كل واحدة، وعايزة تغيّري لينك واحد فيه، هتعملي إيه؟
+          <span class="iv-label">الإجابة المختصرة</span>بنعمل ملفات Partials منفصلة للـ Header وFooter (زي partials/header.ejs)، وبنستخدم include عشان ندمجهم جوه أي صفحة محتاجاهم، بدل ما نكررهم يدويًا.
+          <span class="iv-label">بالتفصيل</span>أي تعديل في الـ Header بيحصل مرة واحدة بس في partials/header.ejs، وتلقائيًا بيظهر في كل الصفحات اللي بتعمله include، وده بيوفر وقت ويقلل الأخطاء.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل EJS فيها نظام Layouts رسمي زي Handlebars؟ (مش بشكل مدمج، لكن فيه مكتبات زي express-ejs-layouts بتضيف السلوك ده، أو ممكن نعتمد على Partials بس وهي كفاية في أغلب الحالات).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>الهيكل المشترك بين الصفحات (Header/Footer)، وإزاي نتجنب التكرار عن طريق Partials.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>&lt;%- include('partials/header') %&gt;</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>تكرار الـ HTML يدويًا، مسارات include غلط.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تتجنبي تكرار الـ Header وFooter.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفايدة من فكرة الـ Layout في المواقع اللي فيها أكتر من صفحة؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) إنك تكتبي الهيكل المشترك (Header/Footer) مرة واحدة بس، وأي تعديل عليه بيتطبق تلقائيًا على كل الصفحات اللي بتستخدمه، بدل ما تحتاجي تعدّلي في كل ملف على حدة.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te9" data-navlabel="🧱 Partials / Includes">
+      <div class="crumb">📗 Chapter 9</div>
+      <h1 class="title">Partials / Includes</h1>
+      <p class="lede">أهم أداة عندك عشان تكتبي HTML مرة واحدة وتستخدميه في أي عدد صفحات عايزة.</p>
+      <hr class="div">
+
+      <article class="topic" id="t9-whatis" data-navlabel="Partials يعني إيه">
+        <h2 class="t-title">1) Partials يعني إيه</h2>
+        <p>الـ Partial هو ملف EJS صغير قابل لإعادة الاستخدام — زي Navbar، أو Card منتج، أو Footer — بندمجه جوه أي صفحة تانية بأمر <code>include</code>.</p>
+      </article>
+
+      <article class="topic" id="t9-reusable" data-navlabel="Reusable Templates">
+        <h2 class="t-title">2) Reusable Templates</h2>
+        <div class="codebox"><div class="clabel">views/partials/navbar.ejs</div><pre><code data-lang="html">&lt;nav&gt;
+  &lt;a href="/"&gt;الرئيسية&lt;/a&gt;
+  &lt;a href="/products"&gt;المنتجات&lt;/a&gt;
+&lt;/nav&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t9-navbarheaderfooter" data-navlabel="Navbar / Header / Footer / Sidebar">
+        <h2 class="t-title">3) Navbar / Header / Footer / Sidebar</h2>
+        <p>أشهر استخدام للـ Partials هو الأجزاء المشتركة بين كل صفحات الموقع: Navbar فوق، Footer تحت، وأحيانًا Sidebar جنب.</p>
+        <div class="box box--why">
+          <div class="box-h">🟠 ليه ده مهم</div>
+          <p>بدل تكرار Navbar في 20 صفحة، نعملها مرة ونستخدمها في الكل — وأي تعديل بسيط (زي إضافة لينك جديد) بيحصل في مكان واحد بس.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t9-include" data-navlabel="include">
+        <h2 class="t-title">4) include</h2>
+        <div class="codebox"><div class="clabel">views/home.ejs</div><pre><code data-lang="html">&lt;%- include('partials/navbar') %&gt;
+
+&lt;h1&gt;مرحبًا بيكِ&lt;/h1&gt;
+
+&lt;%- include('partials/footer') %&gt;</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>بنستخدم <code>&lt;%- %&gt;</code> مش <code>&lt;%= %&gt;</code> مع include، عشان الـ HTML الناتج من الـ Partial يتحط كما هو من غير Escaping — لو استخدمنا <code>&lt;%= %&gt;</code> هيظهر الـ HTML كنص عادي بدل ما يتنفذ.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>استخدام &lt;%= include(...) %&gt; بدل &lt;%- include(...) %&gt;</b> — هيظهر الـ HTML كنص عادي مكتوب في الصفحة بدل ما يتنفذ كـ Elements حقيقية.</li>
+        <li><b>مسار غلط للـ Partial</b> — لازم يكون نسبي لمجلد الـ Views، وأي غلطة بسيطة فيه بتسبب Error "failed to lookup view".</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه فايدة الـ Partials وإزاي بتستخدميها؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لمبدأ DRY (Don't Repeat Yourself) مطبّق على الـ Templates.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في مشروع حقيقي فيه 15 صفحة، كلهم محتاجين نفس الـ Navbar بالظبط — هل هتكتبيه 15 مرة؟
+          <span class="iv-label">الإجابة المختصرة</span>الـ Partials بتخليكِ تكتبي جزء من الـ HTML (زي Navbar أو Footer) مرة واحدة في ملف منفصل، وتستخدميه في أي صفحة تانية بأمر include بدل ما تكرريه.
+          <span class="iv-label">بالتفصيل</span>ده بيقلل التكرار بشكل كبير، وبيخلي الصيانة أسهل جدًا — لو عايزة تضيفي لينك جديد في الـ Navbar، بتعدلي في ملف واحد بس وتلقائيًا يظهر في كل الصفحات.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل ممكن تبعتي Data للـ Partial نفسه؟ (أيوة، ممكن تبعتي Object تاني كـ Argument لـ include، زي include('partials/navbar', { activePage: 'home' })).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>الـ Partials كأداة لإعادة استخدام أجزاء HTML مشتركة (Navbar/Header/Footer/Sidebar) بدل التكرار.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>&lt;%- include('partials/name') %&gt;</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>استخدام &lt;%= %&gt; بدل &lt;%- %&gt; مع include، مسارات غلط للملفات.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إيه فايدة الـ Partials وإزاي بتستخدميها.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إزاي تضيفي Navbar مشترك لكل صفحات موقعك من غير تكرار؟</li>
+            <li>ليه بنستخدم &lt;%- %&gt; مع include مش &lt;%= %&gt;؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) بنعمل ملف partials/navbar.ejs مرة واحدة، وبنستدعيه في أي صفحة بـ &lt;%- include('partials/navbar') %&gt;.</p>
+              <p>2) لأن &lt;%- %&gt; بتطبع الـ HTML كما هو (بدون Escaping) عشان يتنفذ كـ Elements حقيقية، بينما &lt;%= %&gt; كانت هتحول الـ HTML لنص عادي ظاهر على الصفحة.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="te10" data-navlabel="📝 Forms with Templates">
+      <div class="crumb">📗 Chapter 10</div>
+      <h1 class="title">Forms with Templates</h1>
+      <p class="lede">إزاي نبني Form جوه صفحة EJS، ونبعت بياناته لـ Express، ونعرض حالته (زي Errors) تاني.</p>
+      <hr class="div">
+
+      <article class="topic" id="t10-htmlforms" data-navlabel="HTML Forms">
+        <h2 class="t-title">1) HTML Forms</h2>
+        <p>الـ Form في Template مبيختلفش عن أي HTML Form عادي — العنصر الأساسي بتاعها <code>&lt;form&gt;</code> بس بيدخل جوه ملف EJS زي أي عنصر تاني.</p>
+      </article>
+
+      <article class="topic" id="t10-getpost" data-navlabel="GET/POST Forms">
+        <h2 class="t-title">2) GET/POST Forms</h2>
+        <p>الفورمات اللي بتضيف أو تعدل بيانات (زي إضافة منتج جديد) بتستخدم <code>POST</code>، والفورمات اللي بتبحث أو تفلتر (زي Search) غالبًا بتستخدم <code>GET</code>.</p>
+      </article>
+
+      <article class="topic" id="t10-actionmethod" data-navlabel="action و method">
+        <h2 class="t-title">3) action و method</h2>
+        <div class="codebox"><div class="clabel">new-product.ejs</div><pre><code data-lang="html">&lt;form action="/products" method="POST"&gt;
+  &lt;input type="text" name="name" placeholder="اسم المنتج"&gt;
+  &lt;input type="number" name="price" placeholder="السعر"&gt;
+  &lt;button type="submit"&gt;إضافة&lt;/button&gt;
+&lt;/form&gt;</code></pre></div>
+        <p><code>action</code> بيحدد الـ Route اللي هيستقبل الـ Form، و<code>method</code> بيحدد نوع الـ Request.</p>
+      </article>
+
+      <article class="topic" id="t10-sendtoexpress" data-navlabel="إرسال Form إلى Express">
+        <h2 class="t-title">4) إرسال Form إلى Express</h2>
+        <div class="codebox"><div class="clabel">routes</div><pre><code data-lang="js">app.post("/products", (req, res) => {
+  const { name, price } = req.body;
+  // هنا نضيف المنتج للـ Database مثلًا
+  res.redirect("/products");
+});</code></pre></div>
+        <div class="box box--note">
+          <div class="box-h">📝 ملاحظة</div>
+          <p>لازم يكون عندك <code>app.use(express.urlencoded({ extended: true }))</code> قبل الـ Routes عشان تقدري تقري قيم الـ Form من <code>req.body</code>.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t10-displayvalues" data-navlabel="عرض القيم داخل Form">
+        <h2 class="t-title">5) عرض القيم داخل Form</h2>
+        <p>لو عايزة تعرضي قيم قديمة (زي في صفحة Edit)، بتحطيها كـ Value للـ Input:</p>
+        <div class="codebox"><div class="clabel">edit-product.ejs</div><pre><code data-lang="html">&lt;input type="text" name="name" value="&lt;%= product.name %&gt;"&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t10-validationerrors" data-navlabel="Validation Errors">
+        <h2 class="t-title">6) Validation Errors</h2>
+        <p>لو فيه غلط في البيانات، بنرجع نفس صفحة الـ Form تاني مع رسالة الخطأ:</p>
+        <div class="codebox"><div class="clabel">routes</div><pre><code data-lang="js">app.post("/products", (req, res) => {
+  const { name, price } = req.body;
+  if (!name) {
+    return res.render("new-product", { error: "اسم المنتج مطلوب" });
+  }
+  res.redirect("/products");
+});</code></pre></div>
+        <div class="codebox"><div class="clabel">new-product.ejs</div><pre><code data-lang="html">&lt;% if (typeof error !== 'undefined') { %&gt;
+   &lt;p class="error"&gt;&lt;%= error %&gt;&lt;/p&gt;
+&lt;% } %&gt;</code></pre></div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>نسيان express.urlencoded() Middleware</b> — req.body هيفضل Object فاضي مهما كتبتِ في الـ Form.</li>
+        <li><b>نسيان name للـ Input</b> — من غير name، القيمة مش هتوصل خالص لـ req.body.</li>
+        <li><b>استخدام Variable في الـ Template (زي error) من غير فحص وجودها الأول</b> — بيسبب Error لو الصفحة اتعرضت من غير error أصلًا.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي بتتعاملي مع Form بيبعت بيانات لـ Express وبيرجع رسالة خطأ لو فيه مشكلة؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك للدورة الكاملة: عرض Form، استقبال بياناته، والتحقق منها، ورجوع رسالة للمستخدم.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في المسار: المستخدم بيدوس Submit، الطلب بيروح فين، ولو فيه غلط، إزاي هيشوف رسالة الخطأ في نفس الصفحة؟
+          <span class="iv-label">الإجابة المختصرة</span>الـ Form بترسل بياناتها بـ POST لـ Route معين عبر action، الـ Route بيقرا البيانات من req.body، ولو فيه مشكلة (زي حقل فاضي)، بيعمل render لنفس صفحة الـ Form تاني مع تمرير رسالة الخطأ كـ Data.
+          <span class="iv-label">بالتفصيل</span>الخطوة الأهم هي إن الـ Server بيرجع نفس صفحة الـ Form (مش صفحة تانية) مع الـ Error، عشان المستخدم يقدر يصلح غلطه من غير ما يضطر يكتب كل حاجة من الأول.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه الفرق بين res.redirect() وres.render() هنا؟ (render بيعرض صفحة مباشرة (زي رجوع لنفس الـ Form مع Error)، وredirect بيبعت المتصفح لـ Request جديد تمامًا لـ URL تاني، زي بعد نجاح الإضافة).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>بناء Forms في EJS، إرسال بياناتها لـ Express، عرض القيم القديمة، والتعامل مع Validation Errors.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>&lt;form action="/path" method="POST"&gt;</code>, <code>req.body</code>, <code>express.urlencoded()</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>نسيان urlencoded Middleware، نسيان name للـ Input، استخدام Variable من غير فحص وجودها.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الدورة الكاملة لمعالجة Form بيها Validation.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه اللي بيخلي req.body يفضل فاضي مهما كتبتِ في الـ Form؟</li>
+            <li>إزاي ترجعي رسالة خطأ لنفس صفحة الـ Form بعد Validation فاشل؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) نسيان app.use(express.urlencoded({ extended: true })) قبل الـ Routes، أو نسيان attribute الـ name على الـ Input.</p>
+              <p>2) بعمل return res.render() لنفس اسم الصفحة، مع تمرير Object فيه رسالة الخطأ (زي { error: "..." })، وجوه الـ Template نعرضها بـ if.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te11" data-navlabel="🗄️ Rendering Database Data">
+      <div class="crumb">📗 Chapter 11</div>
+      <h1 class="title">Rendering Database Data</h1>
+      <p class="lede">إزاي البيانات بتتحرك من الـ Database لحد ما تظهر في المتصفح — المسار الكامل خطوة بخطوة.</p>
+      <hr class="div">
+
+      <article class="topic" id="t11-flow" data-navlabel="Database → Controller → View">
+        <h2 class="t-title">1) Database → Controller → View</h2>
+        <div class="flowbox">
+Request
+  <span class="arrow">↓</span>
+Route
+  <span class="arrow">↓</span>
+Controller
+  <span class="arrow">↓</span>
+Database
+  <span class="arrow">↓</span>
+res.render()
+  <span class="arrow">↓</span>
+Template
+  <span class="arrow">↓</span>
+HTML
+  <span class="arrow">↓</span>
+Browser
+        </div>
+      </article>
+
+      <article class="topic" id="t11-userslist" data-navlabel="عرض Users">
+        <h2 class="t-title">2) عرض Users</h2>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">app.get("/users", async (req, res) => {
+  const users = await User.findAll();
+  res.render("users", { users });
+});</code></pre></div>
+      </article>
+
+      <article class="topic" id="t11-productdetails" data-navlabel="Product Details">
+        <h2 class="t-title">3) Product Details</h2>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">app.get("/products/:id", async (req, res) => {
+  const product = await Product.findByPk(req.params.id);
+  res.render("product-details", { product });
+});</code></pre></div>
+      </article>
+
+      <article class="topic" id="t11-emptystates" data-navlabel="Empty States">
+        <h2 class="t-title">4) Empty States</h2>
+        <p>لازم دايمًا نفكر في حالة إن مفيش بيانات خالص (Array فاضية أو النتيجة null)، ونعرض رسالة واضحة بدل صفحة فاضية أو Error:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;% if (users.length === 0) { %&gt;
+   &lt;p&gt;مفيش مستخدمين لسه.&lt;/p&gt;
+&lt;% } %&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t11-dynamicpages" data-navlabel="Dynamic Pages">
+        <h2 class="t-title">5) Dynamic Pages</h2>
+        <div class="box box--why">
+          <div class="box-h">🟠 الفكرة الأساسية</div>
+          <p>ملف EJS واحد بس (زي product-details.ejs) بيقدر يعرض بيانات آلاف المنتجات المختلفة — لأن المحتوى متغير حسب الـ Data اللي جاية من الـ Database في كل Request.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>عدم التعامل مع حالة النتيجة null أو Array فاضية</b> — بيسبب Crash أو صفحة فاضية محيّرة للمستخدم.</li>
+        <li><b>نسيان await قبل استدعاء الـ Database</b> — بيوصل الـ Promise نفسه للـ Template بدل البيانات الحقيقية.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>اشرحي المسار الكامل من طلب المستخدم لحد ما يشوف بيانات Database في المتصفح؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك الشامل لكل حلقات السلسلة اللي بتوصل بيانات Database لصفحة HTML حقيقية.
+          <span class="iv-label">نفكر إزاي؟</span>حاولي ترسمي المسار بنفسك من غير ما تشوفي الإجابة: مين بيستقبل الطلب؟ مين بيسأل الـ Database؟ مين بيحول البيانات لـ HTML؟
+          <span class="iv-label">الإجابة المختصرة</span>Request بيوصل لـ Route، الـ Route (أو Controller منفصل) بيسأل الـ Database ويجيب البيانات، وبعدين بيبعتها لـ res.render() اللي بيدمجها مع ملف الـ Template عشان ينتج HTML نهائي يترسل للمتصفح.
+          <span class="iv-label">بالتفصيل</span>كل خطوة في السلسلة ليها مسؤولية واحدة واضحة: Route بيوجّه، Controller بيجهّز البيانات، Database بيخزّن ويرجّع، Template بيحول لـ HTML — والفصل ده بيخلي كل جزء سهل الفهم والاختبار لوحده.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه اللي بيحصل لو الـ Database استغرقت وقت طويل في الرد؟ (لازم نستخدم async/await صح عشان الـ Server ينتظر النتيجة قبل ما يعمل render، وإلا هيحاول يعرض بيانات لسه معملتش fetch).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>المسار الكامل من Request لحد HTML: Route → Controller → Database → res.render() → Template → Browser.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>await Model.findAll()</code>, <code>res.render('view', { data })</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>عدم التعامل مع Empty States، نسيان await.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>اشرحي المسار الكامل من الطلب لحد ظهور بيانات Database في المتصفح.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ارسمي المسار الكامل من Request لحد HTML في المتصفح.</li>
+            <li>ليه لازم نتعامل مع حالة الـ Empty State بشكل خاص؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) Request → Route → Controller → Database → res.render() → Template → HTML → Browser.</p>
+              <p>2) عشان المستخدم يشوف رسالة واضحة (زي "مفيش نتائج") بدل صفحة فاضية غامضة أو Error غير متوقع.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te12" data-navlabel="🔗 Dynamic Routes with Templates">
+      <div class="crumb">📗 Chapter 12</div>
+      <h1 class="title">Dynamic Routes with Templates</h1>
+      <p class="lede">إزاي نعرض صفحة مختلفة لكل عنصر (منتج، مستخدم، مقال) باستخدام جزء متغير في الـ URL.</p>
+      <hr class="div">
+
+      <article class="topic" id="t12-routeparams" data-navlabel="Route Parameters">
+        <h2 class="t-title">1) Route Parameters</h2>
+        <p>الـ Route Parameter هو جزء متغير في مسار الـ URL، بيتحدد بـ <code>:</code> قبل الاسم:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.get("/products/:id", (req, res) => {
+  // ...
+});</code></pre></div>
+      </article>
+
+      <article class="topic" id="t12-dynamicpages" data-navlabel="Dynamic Pages">
+        <h2 class="t-title">2) Dynamic Pages</h2>
+        <p>بفضل الـ Route Parameter، عنوان زي <code>/products/1</code> و<code>/products/2</code> و<code>/products/3</code> كلهم بيمروا على نفس الـ Route، وبيختلف بس رقم الـ id.</p>
+      </article>
+
+      <article class="topic" id="t12-reqparams" data-navlabel="req.params">
+        <h2 class="t-title">3) req.params</h2>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">app.get("/products/:id", async (req, res) => {
+  const id = req.params.id;
+  const product = await Product.findByPk(id);
+  res.render("product-details", { product });
+});</code></pre></div>
+        <p>قيمة <code>:id</code> اللي في الـ URL بتوصل جاهزة جوه <code>req.params.id</code>.</p>
+      </article>
+
+      <article class="topic" id="t12-showbyid" data-navlabel="عرض صفحة حسب ID">
+        <h2 class="t-title">4) عرض صفحة حسب ID</h2>
+        <div class="codebox"><div class="clabel">product-details.ejs</div><pre><code data-lang="html">&lt;h1&gt;&lt;%= product.name %&gt;&lt;/h1&gt;
+&lt;p&gt;السعر: &lt;%= product.price %&gt; جنيه&lt;/p&gt;</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>لو الـ id مش موجود في الـ Database، <code>product</code> هتبقى <code>null</code>، وأي محاولة نعمل <code>product.name</code> هترمي Error — لازم نفحص وجودها الأول ونرجع 404 مناسبة.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>عدم التحقق من وجود الـ Record قبل عرضها</b> — بيسبب Crash لو حد فتح رابط لمنتج مش موجود.</li>
+        <li><b>نسيان إن req.params.id دايمًا String</b> — حتى لو شكلها رقم في الـ URL، محتاجة أحيانًا Number() أو parseInt() قبل المقارنة.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي بتبني صفحة تفاصيل منتج واحدة تشتغل مع أي منتج حسب رقمه؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لفكرة Route Parameters وربطها بعرض بيانات Database ديناميكيًا.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو عندك 1000 منتج، هل هتعملي 1000 Route منفصل؟ ولا فيه طريقة أذكى؟
+          <span class="iv-label">الإجابة المختصرة</span>بنعمل Route واحد بس فيه Parameter زي /products/:id، وبنستخدم req.params.id عشان نجيب المنتج المطلوب من الـ Database، وبعدين نعمل render لنفس ملف الـ Template مع بيانات المنتج ده.
+          <span class="iv-label">بالتفصيل</span>الـ Template نفسه (product-details.ejs) ثابت لكل المنتجات، والاختلاف الوحيد هو الـ Data اللي بتتبعت له — ده بيوفر آلاف الأسطر من التكرار.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه اللي المفروض يحصل لو حد فتح /products/9999 ومفيش منتج بالرقم ده؟ (المفروض نتحقق إن product مش null، ولو null نرجع صفحة 404 مناسبة بدل ما نحاول نعرض بيانات مش موجودة).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Route Parameters كطريقة لعمل صفحة واحدة ديناميكية تخدم آلاف العناصر المختلفة.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>app.get('/path/:id', ...)</code>, <code>req.params.id</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>عدم التحقق من وجود الـ Record، التعامل مع req.params كأنه Number مباشرة.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تبني صفحة تفاصيل منتج ديناميكية بـ Route واحد.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إزاي تجيبي منتج معين من الـ Database بناءً على ID في الـ URL؟</li>
+            <li>إيه اللي المفروض يحصل لو الـ ID ده مش موجود في الـ Database؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) بنعمل Route زي app.get('/products/:id', ...)، ونستخدم req.params.id في استعلام زي Product.findByPk(id).</p>
+              <p>2) نتحقق إن النتيجة مش null قبل عمل render، ولو null نرجع صفحة/رسالة 404 مناسبة بدل محاولة عرض بيانات غير موجودة.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="te13" data-navlabel="🚨 Handling Errors in Views">
+      <div class="crumb">📗 Chapter 13</div>
+      <h1 class="title">Handling Errors in Views</h1>
+      <p class="lede">إزاي نعرض رسائل الأخطاء (سواء Validation أو 404 أو 500) للمستخدم بشكل واضح ومفهوم.</p>
+      <hr class="div">
+
+      <article class="topic" id="t13-validationmessages" data-navlabel="Validation Messages">
+        <h2 class="t-title">1) Validation Messages</h2>
+        <p>زي ما شفنا في فصل الـ Forms، بنمرر رسالة الخطأ كـ Data لـ res.render()، ونعرضها بشرط بسيط جوه الـ Template.</p>
+      </article>
+
+      <article class="topic" id="t13-errormessages" data-navlabel="Error Messages">
+        <h2 class="t-title">2) Error Messages</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;% if (typeof error !== 'undefined' && error) { %&gt;
+   &lt;div class="alert"&gt;&lt;%= error %&gt;&lt;/div&gt;
+&lt;% } %&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t13-404page" data-navlabel="404 Page">
+        <h2 class="t-title">3) 404 Page</h2>
+        <p>بنعمل ملف Template مخصص للصفحات غير الموجودة، ونستخدمه في آخر الـ Routes كلها (Catch-all):</p>
+        <div class="codebox"><div class="clabel">app.js</div><pre><code data-lang="js">app.use((req, res) => {
+  res.status(404).render("404");
+});</code></pre></div>
+      </article>
+
+      <article class="topic" id="t13-500page" data-navlabel="500 Page">
+        <h2 class="t-title">4) 500 Page</h2>
+        <p>وده للأخطاء غير المتوقعة (Server Errors)، عادة بنحطه في Error Handling Middleware في آخر السلسلة:</p>
+        <div class="codebox"><div class="clabel">app.js</div><pre><code data-lang="js">app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).render("500");
+});</code></pre></div>
+      </article>
+
+      <article class="topic" id="t13-passingerrordata" data-navlabel="تمرير Error Data للـ Template">
+        <h2 class="t-title">5) تمرير Error Data للـ Template</h2>
+        <div class="box box--note">
+          <div class="box-h">📝 ملاحظة</div>
+          <p>في الإنتاج (Production)، بنعرض رسالة عامة بس ("حصل خطأ، حاولي تاني") من غير تفاصيل تقنية، بينما في التطوير (Development) ممكن نعرض تفاصيل الـ Error عشان يسهل تصليحها — نفس الفكرة اللي شفناها في فصل Development vs Production Configuration في صفحة Efficient Development.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>عدم عمل Catch-all Route لصفحة 404</b> — أي رابط غلط بيرجع رسالة افتراضية غير واضحة من Express بدل صفحة مصممة.</li>
+        <li><b>عرض تفاصيل الـ Error التقنية (Stack Trace) للمستخدم النهائي في الإنتاج</b> — ده بيكشف معلومات حساسة عن السيرفر.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي بتتعاملي مع صفحة غير موجودة (404) في مشروع Express فيه Template Engine؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لكيفية التعامل مع الأخطاء على مستوى الـ Views مش بس الـ API.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو مستخدم كتب رابط غلط في المتصفح، هل عايزاه يشوف رسالة تقنية بيضاء ولا صفحة مصممة بتفهمه إن الصفحة مش موجودة؟
+          <span class="iv-label">الإجابة المختصرة</span>بنعمل Middleware في آخر سلسلة الـ Routes (بعد كل الـ Routes التانية) بيمسك أي طلب مايتطابقش مع حاجة، ويعمل render لصفحة 404 مخصصة بـ status code مناسب.
+          <span class="iv-label">بالتفصيل</span>الترتيب مهم جدًا: الـ Middleware ده لازم يكون آخر حاجة في app.js بعد كل الـ Routes، عشان لو مفيش Route اتطابق قبله، هو اللي هيمسك الطلب.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه الفرق بين صفحة 404 وصفحة 500؟ (404 معناها الصفحة مش موجودة أصلًا (طلب غلط من المستخدم)، بينما 500 معناها حصل خطأ غير متوقع في السيرفر نفسه وقت معالجة طلب صحيح).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>عرض رسائل Validation، صفحات 404 و500 مخصصة، والفرق بين تفاصيل الأخطاء في Development وProduction.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>res.status(404).render('404')</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>عدم عمل Catch-all لصفحة 404، عرض تفاصيل تقنية حساسة للمستخدم في الإنتاج.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تتعاملي مع صفحة غير موجودة (404).</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إزاي تعرضي صفحة 404 مخصصة بدل رسالة Express الافتراضية؟</li>
+            <li>إيه الفرق بين 404 و500؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) بعمل Middleware أخير بعد كل الـ Routes بيعمل res.status(404).render('404').</p>
+              <p>2) 404 = الصفحة/المورد مش موجود أصلًا. 500 = حصل خطأ غير متوقع في السيرفر أثناء معالجة الطلب.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te14" data-navlabel="🗂️ Static Files with Templates">
+      <div class="crumb">📗 Chapter 14</div>
+      <h1 class="title">Static Files with Templates</h1>
+      <p class="lede">إزاي نضيف CSS وJavaScript وصور لصفحات الـ EJS بتاعتنا.</p>
+      <hr class="div">
+
+      <article class="topic" id="t14-cssjsimages" data-navlabel="CSS/JavaScript/Images">
+        <h2 class="t-title">1) CSS / JavaScript / Images</h2>
+        <p>الـ Templates بتنتج HTML، لكن الـ HTML ده لسه محتاج ملفات CSS وJS وصور عشان يكون شكله ووظيفته كاملة — دي بنسميها Static Files.</p>
+      </article>
+
+      <article class="topic" id="t14-expressstatic" data-navlabel="express.static()">
+        <h2 class="t-title">2) express.static()</h2>
+        <div class="codebox"><div class="clabel">app.js</div><pre><code data-lang="js">app.use(express.static("public"));</code></pre></div>
+        <p>السطر ده بيخلي أي ملف جوه مجلد <code>public</code> متاح مباشرة من المتصفح.</p>
+      </article>
+
+      <article class="topic" id="t14-publicfolder" data-navlabel="Public Folder">
+        <h2 class="t-title">3) Public Folder</h2>
+        <div class="codebox"><div class="clabel">folder structure</div><pre><code data-lang="text">public/
+  css/
+    style.css
+  js/
+    app.js
+  images/
+    logo.png</code></pre></div>
+      </article>
+
+      <article class="topic" id="t14-linkinviews" data-navlabel="ربطها جوه الـ Views">
+        <h2 class="t-title">4) ربطها جوه الـ Views</h2>
+        <div class="codebox"><div class="clabel">layout/header.ejs</div><pre><code data-lang="html">&lt;link rel="stylesheet" href="/css/style.css"&gt;
+&lt;img src="/images/logo.png" alt="Logo"&gt;
+&lt;script src="/js/app.js"&gt;&lt;/script&gt;</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>المسار في الـ HTML بيبدأ من جوه <code>public</code> مباشرة، من غير ما نكتب كلمة public نفسها — يعني <code>public/css/style.css</code> بيتكتب <code>/css/style.css</code>.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>نسيان app.use(express.static("public"))</b> — أي رابط لملف CSS أو JS أو صورة هيرجع 404.</li>
+        <li><b>كتابة public/ في مسار الـ href/src داخل الـ HTML</b> — المفروض تبدأي مباشرة من بعد اسم المجلد ده.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي تضيفي ملف CSS لصفحة EJS في مشروع Express؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لإزاي Express بيقدّم الملفات الثابتة (Static Files) للمتصفح.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: HTML وحده مش كفاية عشان الصفحة تبقى شكلها منسق — إيه اللي محتاجة تضيفيه، وإزاي المتصفح هيقدر يوصله؟
+          <span class="iv-label">الإجابة المختصرة</span>بنحط ملفات CSS/JS/الصور جوه مجلد (زي public)، بنفعّل تقديمها بـ app.use(express.static('public'))، وبعدين نربطها جوه ملف الـ EJS بـ &lt;link&gt; أو &lt;script&gt; بمسار نسبي من غير كلمة public نفسها.
+          <span class="iv-label">بالتفصيل</span>الـ Middleware ده بيخلي أي طلب لمسار زي /css/style.css يتحول تلقائيًا لملف public/css/style.css على السيرفر، من غير ما نحتاج Route منفصل لكل ملف.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل ممكن يكون عندك أكتر من مجلد Static؟ (أيوة، ممكن تستخدمي app.use(express.static(...)) أكتر من مرة بمجلدات مختلفة، أو تحطي Prefix معين لكل واحد).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>تقديم ملفات CSS/JS/الصور الثابتة عبر express.static()، وربطها جوه صفحات الـ EJS.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>app.use(express.static('public'))</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>نسيان تفعيل express.static، كتابة public/ زيادة في المسار.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تضيفي ملف CSS لصفحة EJS.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه اللي بيخلي مجلد public متاح للمتصفح؟</li>
+            <li>لو حطيتِ ملف في public/js/app.js، إيه المسار الصح ليه في &lt;script src="..."&gt;؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) app.use(express.static('public')).</p>
+              <p>2) /js/app.js (من غير كلمة public في المسار).</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te15" data-navlabel="🔐 Security in Templates">
+      <div class="crumb">📗 Chapter 15</div>
+      <h1 class="title">Security in Templates</h1>
+      <p class="lede">أهم فصل في الجزء ده — إزاي نتجنب إن صفحاتنا تبقى باب لهجمات على المستخدمين.</p>
+      <hr class="div">
+
+      <article class="topic" id="t15-htmlescaping" data-navlabel="HTML Escaping">
+        <h2 class="t-title">1) HTML Escaping</h2>
+        <p>الـ HTML Escaping معناه تحويل الرموز الخاصة (زي <code>&lt;</code> و<code>&gt;</code>) لنص عادي بدل ما تتفسر كـ HTML Tags حقيقية — وده اللي بيحمينا من إن أي Input خبيث يتحول لكود بيتنفذ فعليًا.</p>
+      </article>
+
+      <article class="topic" id="t15-xss" data-navlabel="XSS">
+        <h2 class="t-title">2) XSS (Cross-Site Scripting)</h2>
+        <p>XSS هو هجوم بيحصل لما مستخدم خبيث يقدر يحقن كود JavaScript جوه صفحة بتتعرض لمستخدمين تانيين، وينفذ في متصفحهم — زي لو مستخدم كتب في Comment نص فيه <code>&lt;script&gt;</code> بيسرق الـ Cookies.</p>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>لو عرضتِ نص المستخدم ده بـ <code>&lt;%- comment %&gt;</code> (من غير Escaping)، الـ Script هينفذ فعليًا عند أي حد يفتح الصفحة.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t15-escapedvsunescaped" data-navlabel="Escaped vs Unescaped Output">
+        <h2 class="t-title">3) Escaped vs Unescaped Output</h2>
+        <p>زي ما اتشرح في فصل Template Syntax: <code>&lt;%= %&gt;</code> بتعمل Escaping تلقائي (آمنة، هي الافتراضية)، و<code>&lt;%- %&gt;</code> بتطبع كما هو من غير Escaping.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>الحالة</th><th>الاستخدام الآمن</th></tr></thead>
+          <tbody>
+            <tr><td>Input جاي من مستخدم (Comment, Username, Search)</td><td>&lt;%= %&gt; دايمًا</td></tr>
+            <tr><td>HTML ثابت كتبتيه إنتِ (زي نتيجة Partial include)</td><td>&lt;%- %&gt; مقبول</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="topic" id="t15-nouserinputraw" data-navlabel="عدم عرض User Input مباشرة بشكل غير آمن">
+        <h2 class="t-title">4) عدم عرض User Input مباشرة بشكل غير آمن</h2>
+        <div class="box box--mistake">
+          <div class="box-h">❌ غلط</div>
+          <p><code>&lt;%- userComment %&gt;</code> — لو userComment جاي من مستخدم مباشرة، ده باب مفتوح لـ XSS.</p>
+        </div>
+        <div class="box box--correction">
+          <div class="box-h">✅ صح</div>
+          <p><code>&lt;%= userComment %&gt;</code> — الـ Escaping التلقائي بيحول أي كود خبيث لنص عادي مش هينفذ.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t15-csrf" data-navlabel="CSRF Basics مع Forms">
+        <h2 class="t-title">5) CSRF Basics مع Forms</h2>
+        <p>CSRF (Cross-Site Request Forgery) هجوم مختلف عن XSS — بيحصل لما موقع خبيث يخلي متصفح المستخدم (وهو لسه Logged in عندك) يبعت Request لموقعك من غير علمه. الحماية الأساسية بتكون بإضافة CSRF Token مخفي جوه كل Form، والتحقق منه في الـ Server قبل قبول أي POST.</p>
+        <div class="box box--note">
+          <div class="box-h">📝 ملاحظة</div>
+          <p>ده موضوع أعمق شوية بيتغطى غالبًا مع مكتبات الـ Authentication والـ Sessions، وهنا بنكتفي بمعرفة إنه موجود وإنه مختلف عن XSS.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>استخدام &lt;%- %&gt; مع أي بيانات جاية من مستخدم</b> — أخطر غلطة أمنية في الـ Templates.</li>
+        <li><b>الافتراض إن كل بيانات الـ Database آمنة تلقائيًا</b> — لو البيانات دي أصلها إدخال مستخدم (زي Comment)، لازم تتعامل معاها بنفس الحذر.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه هجوم XSS، وإزاي الـ Template Engine بيحميكِ منه؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك الأمني الأساسي اللي أي Backend Developer لازم يعرفه قبل ما يعرض بيانات مستخدمين.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو مستخدم كتب &lt;script&gt;alert('hacked')&lt;/script&gt; كـ Comment، وعرضنا الـ Comment ده لمستخدمين تانيين، إيه اللي المفروض يحصل؟
+          <span class="iv-label">الإجابة المختصرة</span>XSS هو هجوم بيحقن كود JavaScript خبيث في صفحة بتتعرض لمستخدمين تانيين. الحماية الأساسية هي HTML Escaping — يعني استخدام &lt;%= %&gt; بدل &lt;%- %&gt; مع أي بيانات جاية من مستخدم، عشان أي كود يتحول لنص عادي مش هينفذ.
+          <span class="iv-label">بالتفصيل</span>الـ Escaping بيحول الرموز الخاصة زي &lt; و&gt; لـ Entities زي &amp;lt; و&amp;gt;، فالمتصفح بيعرضها كنص عادي بدل ما يفسرها كـ Tags حقيقية.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل الحماية دي كفاية لوحدها؟ (بتغطي جزء كبير من الحماية على مستوى العرض، لكن الأمان الكامل بيشمل كمان Validation على المدخلات نفسها، وHeaders أمنية، وCSRF Protection مع الـ Forms).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>HTML Escaping كخط دفاع أساسي ضد XSS، الفرق الأمني بين &lt;%= %&gt; و&lt;%- %&gt;، ومقدمة عن CSRF.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>&lt;%= userInput %&gt;</code> (آمن)، تجنب <code>&lt;%- userInput %&gt;</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>استخدام Unescaped Output مع بيانات مستخدم، الثقة العمياء في بيانات الـ Database.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إيه هجوم XSS وإزاي الـ Template Engine بيحميكِ منه.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين XSS وCSRF؟</li>
+            <li>إزاي تحمي صفحتك من XSS في EJS؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) XSS بيحقن كود خبيث ينفذ في متصفح ضحايا تانيين. CSRF بيخلي متصفح مستخدم مسجل دخول يبعت Request مش هو قاصده لموقعك.</p>
+              <p>2) باستخدام &lt;%= %&gt; (Escaped Output) مع أي بيانات جاية من المستخدم، وتجنب &lt;%- %&gt; إلا مع محتوى إنتِ متأكدة من أمانه.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="te16" data-navlabel="🏛️ Templating Engines with MVC">
+      <div class="crumb">📗 Chapter 16</div>
+      <h1 class="title">Templating Engines with MVC</h1>
+      <p class="lede">إزاي كل حاجة اتعلمناها في الصفحة دي بتترتب جوه بنية MVC كاملة.</p>
+      <hr class="div">
+
+      <article class="topic" id="t16-mvc" data-navlabel="Model / View / Controller">
+        <h2 class="t-title">1) Model / View / Controller</h2>
+        <div class="defgrid">
+          <div class="defitem"><div class="dname">Model</div>بيتعامل مع الـ Database — بيجيب، يضيف، يعدّل، يمسح بيانات.</div>
+          <div class="defitem"><div class="dname">View</div>الـ Template نفسه (EJS) — مسؤول عن العرض بس، مفروض ميعرفش حاجة عن الـ Database.</div>
+          <div class="defitem"><div class="dname">Controller</div>الوسيط اللي بيستقبل الطلب، يكلم الـ Model، ويجهّز البيانات عشان يبعتها للـ View.</div>
+        </div>
+      </article>
+
+      <article class="topic" id="t16-templateasview" data-navlabel="Template كـ View">
+        <h2 class="t-title">2) Template كـ View</h2>
+        <p>في بنية MVC، ملف الـ EJS بيمثّل طبقة الـ View بالظبط — مسؤوليته الوحيدة إنه ياخد Data جاهزة ويحولها لـ HTML، من غير أي Logic خاص بالـ Database أو قواعد العمل (Business Logic).</p>
+      </article>
+
+      <article class="topic" id="t16-controllerprepares" data-navlabel="Controller يجهز البيانات">
+        <h2 class="t-title">3) Controller يجهز البيانات</h2>
+        <div class="codebox"><div class="clabel">controllers/productController.js</div><pre><code data-lang="js">exports.showProduct = async (req, res) => {
+  const product = await Product.findByPk(req.params.id);
+  res.render("product-details", { product });
+};</code></pre></div>
+      </article>
+
+      <article class="topic" id="t16-modeldatabase" data-navlabel="Model يتعامل مع Database">
+        <h2 class="t-title">4) Model يتعامل مع Database</h2>
+        <div class="codebox"><div class="clabel">models/Product.js</div><pre><code data-lang="js">const Product = sequelize.define("Product", {
+  name: DataTypes.STRING,
+  price: DataTypes.FLOAT
+});</code></pre></div>
+        <p>الـ Controller بيستخدم الـ Model (زي <code>Product.findByPk</code>) من غير ما يعرف تفاصيل الـ SQL اللي بيتنفذ ورا الكواليس.</p>
+      </article>
+
+      <article class="topic" id="t16-fullflow" data-navlabel="الـ Flow الكامل">
+        <h2 class="t-title">5) الـ Flow الكامل</h2>
+        <div class="flowbox">
+Request
+  <span class="arrow">↓</span>
+Route
+  <span class="arrow">↓</span>
+Controller
+  <span class="arrow">↓</span>
+Model
+  <span class="arrow">↓</span>
+Database
+  <span class="arrow">↓</span>
+Controller
+  <span class="arrow">↓</span>
+View (EJS)
+  <span class="arrow">↓</span>
+HTML
+  <span class="arrow">↓</span>
+Browser
+        </div>
+        <div class="box box--mental">
+          <div class="box-h">🧠 Mental Model</div>
+          <p>كل طبقة بتعرف بس اللي محتاجاه: الـ View معندهاش أي فكرة عن Database، والـ Model معندهاش أي فكرة عن HTML — والـ Controller هو الوسيط اللي بيربط بينهم.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>كتابة استعلامات Database مباشرة جوه ملف EJS</b> — بيكسر فصل المسؤوليات، ويخلي الكود صعب الصيانة والاختبار.</li>
+        <li><b>حط Business Logic (زي حسابات معقدة) جوه الـ Template</b> — المفروض ده يحصل في الـ Controller أو Model، والـ Template يعرض النتيجة الجاهزة بس.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي الـ Template Engine بيندمج مع بنية MVC في مشروع Express؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لموقع الـ View بالظبط جوه بنية MVC الكاملة، ومسؤولياته المحدودة.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو حطينا استعلام Database جوه ملف EJS مباشرة، إيه المشكلة اللي هتحصل بعد كده لو حبينا نغيّر الـ Database Engine؟
+          <span class="iv-label">الإجابة المختصرة</span>الـ Template (View) بيمثّل طبقة العرض بس — بياخد Data جاهزة من الـ Controller ويحولها لـ HTML. الـ Controller هو المسؤول عن استدعاء الـ Model وتجهيز البيانات، والـ Model هو المسؤول عن التعامل مع الـ Database.
+          <span class="iv-label">بالتفصيل</span>الفصل ده بيخلي كل طبقة قابلة للتغيير لوحدها: ممكن تغيّري شكل الصفحة (View) من غير ما تلمسي كود الـ Database، أو تغيّري الـ Database (Model) من غير ما تلمسي أي HTML.
+          <span class="iv-label">ممكن يسأل Follow-up</span>لو مشروعك REST API بس (مفيش Views خالص)، هل لسه محتاجة MVC؟ (أيوة، بس الـ View بتاعتك بتبقى JSON Response بدل HTML — نفس فكرة الفصل بين Controller وModel لسه موجودة ومهمة).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>مكان الـ Template (View) جوه بنية MVC، وفصل المسؤوليات بين Model وView وController.</p>
+        <h4>أهم Syntax</h4>
+        <p>controllers/*.js تستدعي models/*.js وتعمل res.render() لملفات views/*.ejs.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>كتابة استعلامات Database جوه الـ Template، حط Business Logic جوه الـ View.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي الـ Template Engine بيندمج مع بنية MVC.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه مسؤولية كل طبقة من Model وView وController؟</li>
+            <li>ليه مينفعش نكتب استعلام Database جوه ملف EJS مباشرة؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) Model: التعامل مع الـ Database. View: عرض الـ HTML بناءً على Data جاهزة. Controller: الوسيط اللي بيربط بينهم ويجهّز البيانات.</p>
+              <p>2) لأن ده بيكسر فصل المسؤوليات، ويخلي الكود صعب الصيانة، ويمنع إعادة استخدام نفس منطق الـ Database في أماكن تانية (زي API منفصل).</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="tefinal" data-navlabel="🎯 مسار المذاكرة المختصر">
+      <div class="crumb">📗 الفصل الأخير</div>
+      <h1 class="title">لو بتذاكري Node.js Backend ومش ناوية تشتغلي EJS كتير</h1>
+      <p class="lede">مش كل حد محتاج يتقن الـ Template Engines بعمق — لو تركيزك الأساسي على الـ Backend وREST APIs، فيه Concept واحد أهم من كل التفاصيل.</p>
+      <hr class="div">
+
+      <article class="topic" id="tf-studypath" data-navlabel="مسار المذاكرة المختصر">
+        <h2 class="t-title">1) مسار المذاكرة المختصر</h2>
+        <p>لو وقتك محدود ومش هتستخدمي EJS كتير في شغلك، ركزي على الترتيب ده بس، وسيبي التفاصيل الدقيقة لما تحتاجيها فعليًا في مشروع حقيقي:</p>
+        <div class="flowbox">
+Templating Engine Basics
+  <span class="arrow">↓</span>
+SSR (Server-Side Rendering)
+  <span class="arrow">↓</span>
+EJS
+  <span class="arrow">↓</span>
+res.render()
+  <span class="arrow">↓</span>
+Passing Data
+  <span class="arrow">↓</span>
+Variables
+  <span class="arrow">↓</span>
+Conditions
+  <span class="arrow">↓</span>
+Loops
+  <span class="arrow">↓</span>
+Partials
+  <span class="arrow">↓</span>
+Forms
+  <span class="arrow">↓</span>
+Static Files
+  <span class="arrow">↓</span>
+MVC
+        </div>
+      </article>
+
+      <article class="topic" id="tf-keyconcept" data-navlabel="أهم Concept محتاجة تطلعي بيه">
+        <h2 class="t-title">2) أهم Concept محتاجة تطلعي بيه</h2>
+        <p>الفرق الجوهري بين الاتنين، اللي لازم يفضل عالق في دماغك حتى لو نسيتي كل التفاصيل التانية:</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>النوع</th><th>المسار</th></tr></thead>
+          <tbody>
+            <tr><td>REST API</td><td><code>Express → JSON → React/Next.js</code></td></tr>
+            <tr><td>Template Engine</td><td><code>Express → EJS/Pug → HTML جاهز → Browser</code></td></tr>
+          </tbody>
+        </table></div>
+        <div class="box box--why">
+          <div class="box-h">🟠 ليه ده مهم</div>
+          <p>في REST API، الـ Backend بيرجّع بيانات خام (JSON) والـ Frontend (زي React) هو اللي بيحولها لـ HTML في المتصفح. في Template Engine، الـ Backend نفسه هو اللي بيبني الـ HTML الجاهز ويبعته مباشرة — الفرق ده بيحدد مين المسؤول عن العرض.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tf-whentouse" data-navlabel="إمتى تستخدمي إيه">
+        <h2 class="t-title">3) إمتى تستخدمي إيه</h2>
+        <p>لو بتبني تطبيق فيه Frontend منفصل (React/Vue/Next.js)، غالبًا هتشتغلي REST API بس، ومش هتحتاجي Template Engine خالص. لو بتبني موقع بسيط أو Admin Panel داخلي أو مشروع صغير من غير Frontend منفصل، الـ Template Engine بتكون حل أسرع وأبسط.</p>
+      </article>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>مسار مذاكرة مختصر لمن يركز على Backend، والفرق الجوهري بين REST API وTemplate Engine.</p>
+        <h4>أهم Syntax</h4>
+        <p>لا يوجد — فصل تلخيصي.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>الخلط بين مين المسؤول عن بناء الـ HTML في كل نوع مشروع.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إيه الفرق بين REST API وTemplate Engine.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين مسار REST API ومسار Template Engine؟</li>
+            <li>إمتى تختاري Template Engine بدل REST API؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) REST API: Express يرجّع JSON، وFrontend منفصل (زي React) هو اللي بيبني HTML. Template Engine: Express نفسه بيبني HTML جاهز ويبعته للمتصفح مباشرة.</p>
+              <p>2) لما يكون المشروع بسيط أو Admin Panel داخلي أو موقع من غير Frontend منفصل محتاج سرعة وبساطة في التطوير.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!--CHAPTERS_GO_HERE-->
+  </main>
+</div>
+
+<script>
+// build nav from chapters/topics present in DOM
+function buildNav(){
+  var root=document.getElementById('navRoot');
+  var chapters=document.querySelectorAll('.chapter');
+  var html='';
+  chapters.forEach(function(ch){
+    var label=ch.getAttribute('data-navlabel')||ch.querySelector('h1.title').textContent;
+    html+='<div class="navgroup"><div class="navgroup-title" data-toggle><span>'+label+'</span><span class="chev">▾</span></div><div class="navlist">';
+    ch.querySelectorAll('.topic').forEach(function(t){
+      var tid=t.id;
+      var tlabel=t.getAttribute('data-navlabel')|| (t.querySelector('.t-title')?t.querySelector('.t-title').textContent:tid);
+      html+='<a class="navlink" href="#'+tid+'" data-text="'+tlabel.replace(/"/g,'')+'">'+tlabel+'</a>';
+    });
+    html+='</div></div>';
+  });
+  root.innerHTML=html;
+}
+buildNav();
+
+// collapse toggle
+document.getElementById('navRoot').addEventListener('click',function(e){
+  var t=e.target.closest('[data-toggle]');
+  if(t){ t.parentElement.classList.toggle('collapsed'); }
+});
+
+// search filter
+document.getElementById('searchInput').addEventListener('input',function(e){
+  var q=e.target.value.trim().toLowerCase();
+  document.querySelectorAll('.navgroup').forEach(function(g){
+    var anyVisible=false;
+    g.querySelectorAll('.navlink').forEach(function(a){
+      var match = q==='' || a.getAttribute('data-text').toLowerCase().indexOf(q)>-1;
+      a.classList.toggle('hidden', !match);
+      if(match) anyVisible=true;
+    });
+    g.classList.toggle('hidden', !anyVisible);
+    if(q!=='' && anyVisible){ g.classList.remove('collapsed'); }
+  });
+});
+
+// smooth scroll + active link
+document.getElementById('navRoot').addEventListener('click',function(e){
+  var a=e.target.closest('.navlink');
+  if(a){
+    document.body.classList.remove('nav-open');
+  }
+});
+var navToggle=document.getElementById('navToggle');
+if(navToggle){ navToggle.addEventListener('click',function(){document.body.classList.toggle('nav-open');}); }
+
+// active-link-on-scroll
+var topics=[];
+function refreshTopics(){ topics=Array.prototype.slice.call(document.querySelectorAll('.topic')); }
+refreshTopics();
+function onScroll(){
+  var y=window.scrollY+120;
+  var current=null;
+  topics.forEach(function(t){ if(t.offsetTop<=y) current=t; });
+  document.querySelectorAll('.navlink').forEach(function(a){ a.classList.remove('active'); });
+  if(current){
+    var link=document.querySelector('.navlink[href="#'+current.id+'"]');
+    if(link) link.classList.add('active');
+  }
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+
+// tiny JS syntax highlighter for code blocks
+function highlight(code){
+  code = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  code = code.replace(/(\/\/[^\n]*)/g,'§COM§$1§/COM§');
+  code = code.replace(/('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)/g,'§STR§$1§/STR§');
+  code = code.replace(/\b(const|let|var|function|return|if|else|async|await|require|module|exports|new|try|catch|throw|class|extends|import|export|default|from|typeof|instanceof|for|while|of|in|null|undefined|true|false|this|switch|case|break|continue|static|get|set|yield)\b/g,'§KW§$1§/KW§');
+  code = code.replace(/\b([A-Za-z_$][\w$]*)(?=\()/g,'§FN§$1§/FN§');
+  code = code.replace(/\b(\d+)\b/g,'§NUM§$1§/NUM§');
+  code = code.replace(/§COM§/g,'<span class="tok-com">').replace(/§\/COM§/g,'</span>');
+  code = code.replace(/§STR§/g,'<span class="tok-str">').replace(/§\/STR§/g,'</span>');
+  code = code.replace(/§KW§/g,'<span class="tok-kw">').replace(/§\/KW§/g,'</span>');
+  code = code.replace(/§FN§/g,'<span class="tok-fn">').replace(/§\/FN§/g,'</span>');
+  code = code.replace(/§NUM§/g,'<span class="tok-num">').replace(/§\/NUM§/g,'</span>');
+  return code;
+}
+document.querySelectorAll('code[data-lang]').forEach(function(el){
+  el.innerHTML = highlight(el.textContent);
+});
+</script>
+</body>
+</html>

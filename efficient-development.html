@@ -275,7 +275,6 @@ td code{background:var(--surface-2);padding:2px 7px;border-radius:6px;font-size:
   border:1px solid var(--border-strong);color:var(--text);align-items:center;justify-content:center;
   font-size:18px;cursor:pointer;
 }
-
 </style>
 </head>
 <body>
@@ -286,6 +285,11 @@ td code{background:var(--surface-2);padding:2px 7px;border-radius:6px;font-size:
     <a class="sidebar-link" href="index.html">
       <span class="sidebar-link-icon">📗</span>
       <span class="sidebar-link-text">دفتر مذاكرة Node.js</span>
+      <span class="sidebar-link-arrow">↗</span>
+    </a>
+    <a class="sidebar-link" href="template-engine.html">
+      <span class="sidebar-link-icon">🖼️</span>
+      <span class="sidebar-link-text">Template Engine</span>
       <span class="sidebar-link-arrow">↗</span>
     </a>
     <div class="searchbox">
@@ -2335,6 +2339,5 @@ document.querySelectorAll('code[data-lang]').forEach(function(el){
   el.innerHTML = highlight(el.textContent);
 });
 </script>
-
 </body>
 </html>
