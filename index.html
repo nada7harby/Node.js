@@ -321,8 +321,736 @@ td code{background:var(--surface-2);padding:2px 7px;border-radius:6px;font-size:
       </article>
     </section>
 
-    <section class="chapter" id="ch1" data-navlabel="🧠 Node.js من جوّه">
+    <section class="chapter" id="chjs" data-navlabel="🟨 JavaScript Refresher">
       <div class="crumb">📗 Chapter 1</div>
+      <h1 class="title">JavaScript Refresher</h1>
+      <p class="lede">قبل ما نكمل في Node.js وExpress، مهم جدًا نرجع خطوة ونتأكد إن أساسيات الـ JavaScript الحديثة (ES6+) واضحة عندك 100%. هشرحهم من أول الصفر تقريبًا، وبالعامية جدًا، ومع أمثلة كتير — مش عشان تحفظيهم، لكن عشان تبقي فاهمة كل سطر هتشوفيه في أي كود Node.js بعد كده.</p>
+      <hr class="div">
+
+      <article class="topic" id="tjs-letconst" data-navlabel="let و const">
+        <h2 class="t-title">1) let و const</h2>
+        <p>زمان في JavaScript كان فيه <code>var</code>. لكن دلوقتي في أغلب الكود الحديث هنستخدم <code>let</code> و<code>const</code>.</p>
+        <div class="box box--how">
+          <div class="box-h">🔵 الفرق الأساسي</div>
+          <p><code>let</code> لما القيمة ممكن تتغير:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">let age = 20;
+age = 21;   // عادي</code></pre></div>
+        <p>لكن <code>const</code> لما المتغير نفسه مش هنغيره:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const name = 'Nada';
+
+name = 'Ahmed';   // ❌ Error</code></pre></div>
+        <p>يعني: <code>let</code> → القيمة ممكن تتغير. <code>const</code> → مينفعش نعمل reassign.</p>
+
+        <h3 class="s-label">🔹 طب لو const فيها Object؟</h3>
+        <p>دي نقطة مهمة جدًا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user = {
+  name: 'Nada',
+  age: 20
+};</code></pre></div>
+        <p>ينفع أعمل:</p>
+        <div class="codebox"><div class="clabel">example — ✅ ده شغال</div><pre><code data-lang="js">user.age = 21;</code></pre></div>
+        <div class="box box--why">
+          <div class="box-h">🟠 ليه؟</div>
+          <p>لأن إحنا مغيرناش المتغير <code>user</code> نفسه، إحنا عدّلنا حاجة جوه الـ Object. لكن ده مينفعش:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example — ❌ ده هيرفض</div><pre><code data-lang="js">user = {
+  name: 'Ahmed'
+};</code></pre></div>
+        <p>لأننا كده بنحاول نخلي <code>user</code> تشير لـ Object جديدة تمامًا.</p>
+        <div class="box box--note">
+          <div class="box-h">🟪 يعني احفظيها كده</div>
+          <p><code>const</code> مش معناها إن الـ Object نفسها Immutable (ثابتة تمامًا). <code>const</code> معناها إن الـ Reference (الإشارة) نفسها مينفعش تتغير. وعشان كده غالبًا بنبدأ بـ <code>const</code>، ولو فعلًا محتاجين المتغير يتغير بالكامل، نستخدم <code>let</code>.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tjs-functions" data-navlabel="Functions">
+        <h2 class="t-title">2) Functions</h2>
+        <div class="box box--what">
+          <div class="box-h">🟣 Function ببساطة هي</div>
+          <p>مجموعة أوامر بنحطها تحت اسم، ونقدر نشغلها لما نحتاجها. بدل ما أكتب نفس الأسطر كل مرة، أعمل Function واحدة وأستدعيها براحتي.</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">function greet() {
+  console.log('Hello Nada');
+  console.log('Welcome');
+}
+
+greet();   // تشغيل الـ Function</code></pre></div>
+        <div class="flowbox">تعريف Function: function greet() {...} <span class="arrow">↓</span> تشغيل Function: greet()</div>
+
+        <h3 class="s-label">🔹 Parameters و Arguments</h3>
+        <p>ممكن Function تاخد بيانات:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">function greet(name) {
+  console.log(`Hello ${name}`);
+}
+
+greet('Nada');   // Hello Nada</code></pre></div>
+        <p><code>name</code> هنا اسمه <b>Parameter</b> (في تعريف الـ Function). أما <code>'Nada'</code> وقت الاستدعاء دي اسمها <b>Argument</b>.</p>
+
+        <h3 class="s-label">🔹 Return</h3>
+        <p>Function ممكن ترجع نتيجة:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">function add(a, b) {
+  return a + b;
+}
+
+const result = add(5, 3);
+console.log(result);   // 8</code></pre></div>
+        <p><code>return</code> معناها: اطلعي من الـ Function ورجعيلي القيمة دي.</p>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>أول ما <code>return</code> تتنفذ، الـ Function بتقف فورًا:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">function test() {
+  return 5;
+  console.log('Hello');   // ⛔ ده مش هيشتغل خالص
+}</code></pre></div>
+
+        <h3 class="s-label">🔹 Function Declaration مقابل Function Expression</h3>
+        <div class="codebox"><div class="clabel">example — Function Declaration</div><pre><code data-lang="js">function add(a, b) {
+  return a + b;
+}</code></pre></div>
+        <p>ممكن كمان نحط Function جوه Variable — ودي اسمها <b>Function Expression</b>:</p>
+        <div class="codebox"><div class="clabel">example — Function Expression</div><pre><code data-lang="js">const add = function (a, b) {
+  return a + b;
+};</code></pre></div>
+      </article>
+
+      <article class="topic" id="tjs-arrow" data-navlabel="Arrow Functions">
+        <h2 class="t-title">3) Arrow Functions</h2>
+        <p>الـ Arrow Function هي طريقة أقصر لكتابة Functions. بدل:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">function add(a, b) {
+  return a + b;
+}</code></pre></div>
+        <p>نكتب:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const add = (a, b) => {
+  return a + b;
+};</code></pre></div>
+        <p>لو الـ Function بسيطة جدًا (سطر واحد بس):</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const add = (a, b) => a + b;</code></pre></div>
+        <p>ده معناه تلقائيًا نفس الشكل اللي فات — لو مفيش <code>{}</code>، النتيجة بتترجع تلقائيًا (Implicit Return).</p>
+
+        <h3 class="s-label">🔹 لو Parameter واحدة</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const greet = name => {
+  console.log(name);
+};
+
+// بدل
+const greet2 = (name) => {
+  console.log(name);
+};</code></pre></div>
+        <p>الاتنين صح، لكن ناس كتير بتفضل تحط الأقواس <code>(name) =&gt;</code> دايمًا عشان الشكل يبقى Consistent.</p>
+
+        <h3 class="s-label">🔹 Arrow Function مهمة جدًا في Node وExpress</h3>
+        <p>هتشوفيها طول الوقت:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.get('/users', (req, res) => {
+  res.json([]);
+});</code></pre></div>
+        <p>نفس الفكرة تمامًا لو كتبناها بالشكل القديم بـ <code>function (req, res) {...}</code>.</p>
+
+        <h3 class="s-label">🔹 الفرق المهم: this</h3>
+        <p>دي نقطة Advanced شوية، لكن مهمة. الـ Arrow Function ملهاش <code>this</code> خاص بيها؛ بتاخده من الـ Scope الخارجي. أما الـ Regular Function ممكن يكون عندها <code>this</code> حسب طريقة استدعائها.</p>
+        <div class="codebox"><div class="clabel">example — ده شغال صح</div><pre><code data-lang="js">const user = {
+  name: 'Nada',
+  greet() {
+    console.log(this.name);
+  }
+};
+
+user.greet();   // Nada — this تشير لـ user</code></pre></div>
+        <div class="box box--mistake">
+          <div class="box-h">❌ لكن ده ممكن يعمل نتيجة مش متوقعة</div>
+          <p>استخدام Arrow Function كـ Method جوه Object:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user = {
+  name: 'Nada',
+  greet: () => {
+    console.log(this.name);   // 🤔 this هنا مش بتشير لـ user
+  }
+};</code></pre></div>
+        <div class="box box--quick">
+          <div class="box-h">⚡ القاعدة البسيطة دلوقتي</div>
+          <p>Arrow Functions ممتازة جدًا في Callbacks (زي <code>app.get(url, (req,res)=&gt;{})</code>)، لكن خلي بالك من استخدامها كـ Method مباشر جوه Object لو محتاجة <code>this</code> يشير للـ Object نفسها.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tjs-objects" data-navlabel="Objects">
+        <h2 class="t-title">4) Objects</h2>
+        <p>Object عبارة عن مجموعة <code>key → value</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user = {
+  name: 'Nada',
+  age: 25,
+  isAdmin: false
+};</code></pre></div>
+        <p><code>name</code>، <code>age</code>، <code>isAdmin</code> دول Keys أو Properties، وقيمهم <code>'Nada'</code>، <code>25</code>، <code>false</code>.</p>
+
+        <h3 class="s-label">🔹 الوصول لقيمة</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">user.name        // 'Nada'
+user['name']     // 'Nada' — نفس الحاجة</code></pre></div>
+        <p>الأشهر <code>user.name</code>، لكن Bracket Notation مفيدة لو اسم الـ Property موجود في متغير:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const key = 'name';
+console.log(user[key]);   // 'Nada'</code></pre></div>
+
+        <h3 class="s-label">🔹 تعديل، إضافة، وحذف</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">user.age = 26;                        // تعديل
+user.email = 'nada@example.com';      // إضافة property جديدة
+delete user.isAdmin;                  // حذف</code></pre></div>
+
+        <h3 class="s-label">🔹 Objects ممكن تحتوي Functions</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user = {
+  name: 'Nada',
+  sayHello() {
+    console.log('Hello');
+  }
+};
+
+user.sayHello();</code></pre></div>
+        <p>الـ Function اللي جوه Object بنسميها غالبًا <b>Method</b>.</p>
+
+        <h3 class="s-label">🔹 Nested Objects</h3>
+        <p>Object ممكن جواها Object تانية:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user = {
+  name: 'Nada',
+  address: {
+    city: 'Cairo',
+    country: 'Egypt'
+  }
+};
+
+user.address.city   // 'Cairo'</code></pre></div>
+      </article>
+
+      <article class="topic" id="tjs-arrays" data-navlabel="Arrays">
+        <h2 class="t-title">5) Arrays</h2>
+        <p>Array عبارة عن List من القيم:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const fruits = ['apple', 'banana', 'orange'];</code></pre></div>
+        <p>كل عنصر ليه Index، والـ Index بيبدأ من <code>0</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fruits[0]   // 'apple'
+fruits[1]   // 'banana'</code></pre></div>
+
+        <h3 class="s-label">🔹 Array Methods أساسية</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fruits.push('mango');      // إضافة في الآخر
+fruits.pop();              // إزالة آخر عنصر
+fruits.shift();            // إزالة أول عنصر
+fruits.unshift('mango');   // إضافة في الأول</code></pre></div>
+
+        <h3 class="s-label">🔹 map — بترجع Array جديدة</h3>
+        <p><code>map</code> مهمة جدًا. بتلف على Array وترجع Array جديدة بنفس الطول:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const numbers = [1, 2, 3];
+
+const doubled = numbers.map((number) => {
+  return number * 2;
+});
+// [2, 4, 6]</code></pre></div>
+        <div class="flowbox">Original Array [1, 2, 3] <span class="arrow">↓ map (كل عنصر نعمل عليه حاجة) ↓</span> [2, 4, 6]</div>
+
+        <h3 class="s-label">🔹 filter — بتجيب اللي بيحقق شرط</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const numbers = [1, 2, 3, 4, 5];
+
+const even = numbers.filter((number) => {
+  return number % 2 === 0;
+});
+// [2, 4]</code></pre></div>
+
+        <h3 class="s-label">🔹 find — أول عنصر يحقق الشرط</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const users = [
+  { id: 1, name: 'Nada' },
+  { id: 2, name: 'Ahmed' }
+];
+
+const user = users.find((user) => {
+  return user.id === 2;
+});
+// { id: 2, name: 'Ahmed' }</code></pre></div>
+
+        <h3 class="s-label">🔹 forEach — للف بس، من غير ما ترجع Array جديدة</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">users.forEach((user) => {
+  console.log(user.name);
+});</code></pre></div>
+        <div class="box box--note">
+          <div class="box-h">🟪 الفرق باختصار</div>
+          <p><code>map</code> و<code>filter</code> بيرجعوا Array جديدة تقدري تستخدميها بعد كده. <code>forEach</code> بس بتنفذ حاجة على كل عنصر (زي <code>console.log</code>) من غير ما ترجع حاجة مفيدة ليكي.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tjs-destructuring" data-navlabel="Destructuring">
+        <h2 class="t-title">6) Destructuring</h2>
+        <p>دي مهمة جدًا جدًا في Node وExpress. Destructuring معناها: طلعلي قيم معينة من Object أو Array وحطهم في Variables بسهولة.</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user = {
+  name: 'Nada',
+  age: 25,
+  email: 'nada@example.com'
+};</code></pre></div>
+        <p>بدل:</p>
+        <div class="codebox"><div class="clabel">example — الطريقة الطويلة</div><pre><code data-lang="js">const name = user.name;
+const age = user.age;
+const email = user.email;</code></pre></div>
+        <p>نعمل:</p>
+        <div class="codebox"><div class="clabel">example — Object Destructuring</div><pre><code data-lang="js">const { name, age, email } = user;</code></pre></div>
+        <p>بقى عندي <code>name</code>، <code>age</code>، <code>email</code> مباشرة. وده اللي بنعمله طول الوقت في Express:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const { email, password } = req.body;
+
+// بدل
+const email2 = req.body.email;
+const password2 = req.body.password;</code></pre></div>
+
+        <h3 class="s-label">🔹 تغيير الاسم أثناء Destructuring</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user = { name: 'Nada' };
+
+const { name: userName } = user;
+// دلوقتي المتغير اسمه userName مش name</code></pre></div>
+
+        <h3 class="s-label">🔹 Default Value</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user = { name: 'Nada' };
+
+const { role = 'user' } = user;
+// role مش موجودة في user، فبتاخد القيمة الافتراضية 'user'</code></pre></div>
+
+        <h3 class="s-label">🔹 Array Destructuring</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const colors = ['red', 'green', 'blue'];
+
+const [first, second, third] = colors;
+// first = 'red', second = 'green', third = 'blue'</code></pre></div>
+      </article>
+
+      <article class="topic" id="tjs-spreadrest" data-navlabel="Spread و Rest">
+        <h2 class="t-title">7) Spread Operator وRest Operator (...)</h2>
+        <p>الـ <code>...</code> دي ساعات Spread وساعات Rest — نفس العلامة، لكن المعنى مختلف حسب مكان الاستخدام.</p>
+
+        <h3 class="s-label">🔹 Spread — افرد العناصر اللي عندك</h3>
+        <div class="codebox"><div class="clabel">example — Array</div><pre><code data-lang="js">const numbers = [1, 2, 3];
+
+const newNumbers = [...numbers, 4, 5];
+// [1, 2, 3, 4, 5]</code></pre></div>
+        <div class="codebox"><div class="clabel">example — Copy Array</div><pre><code data-lang="js">const copy = [...numbers];   // Array جديدة</code></pre></div>
+        <div class="codebox"><div class="clabel">example — دمج Arrays</div><pre><code data-lang="js">const a = [1, 2];
+const b = [3, 4];
+
+const result = [...a, ...b];   // [1, 2, 3, 4]</code></pre></div>
+        <div class="codebox"><div class="clabel">example — Spread مع Objects</div><pre><code data-lang="js">const user = { name: 'Nada', age: 25 };
+
+const updatedUser = {
+  ...user,
+  age: 26
+};
+// { name: 'Nada', age: 26 }</code></pre></div>
+        <div class="box box--why">
+          <div class="box-h">🟠 ليه age بقت 26؟</div>
+          <p>لأن <code>...user</code> حطت <code>name: 'Nada'</code> و<code>age: 25</code> الأول، وبعدين <code>age: 26</code> جت بعدها فكتبت فوق القديمة. <b>الترتيب هنا مهم جدًا</b> — آخر قيمة بتكسب.</p>
+        </div>
+
+        <h3 class="s-label">🔹 Rest — اجمعلي الباقي</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user = {
+  name: 'Nada',
+  age: 25,
+  email: 'nada@example.com'
+};
+
+const { name, ...rest } = user;
+// name = 'Nada'
+// rest = { age: 25, email: 'nada@example.com' }</code></pre></div>
+        <p>يعني: خد <code>name</code> لوحدها، واجمع باقي الـ Properties في <code>rest</code>.</p>
+
+        <h3 class="s-label">🔹 Rest مع Functions</h3>
+        <p>ممكن Function تستقبل عدد غير محدد من الـ Arguments:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">function sum(...numbers) {
+  console.log(numbers);
+}
+
+sum(1, 2, 3, 4);   // numbers = [1, 2, 3, 4]</code></pre></div>
+
+        <h3 class="s-label">🔹 Spread مقابل Rest</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Spread</th><th>Rest</th></tr></thead>
+          <tbody>
+            <tr><td>افرد — <code>const copy = [...arr];</code></td><td>اجمع — <code>const [first, ...rest] = arr;</code></td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="topic" id="tjs-classes" data-navlabel="Classes">
+        <h2 class="t-title">8) Classes</h2>
+        <div class="box box--what">
+          <div class="box-h">🟣 Class عبارة عن</div>
+          <p>Blueprint (مخطط) نستخدمه لإنشاء Objects. تخيلي عندك Users كتير، كل واحد عنده <code>name</code>، <code>email</code>، <code>login()</code>. بدل ما نكتب كل Object يدويًا، ممكن نعمل Class.</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">class User {
+  constructor(name, email) {
+    this.name = name;
+    this.email = email;
+  }
+
+  greet() {
+    console.log(`Hello ${this.name}`);
+  }
+}
+
+const user1 = new User('Nada', 'nada@example.com');</code></pre></div>
+        <p>كلمة <code>new</code> معناها: اعملي Instance جديدة من الـ Class دي.</p>
+
+        <h3 class="s-label">🔹 Constructor وthis</h3>
+        <p>الـ <code>constructor</code> بتشتغل وقت <code>new User(...)</code>:</p>
+        <div class="flowbox">new User('Nada', '...') <span class="arrow">↓</span> constructor <span class="arrow">↓</span> this.name = Nada <span class="arrow">↓</span> this.email = ...</div>
+        <p><code>this</code> هنا تشير للـ Object الجديدة — يعني <code>this.name = name;</code> كأننا بنقول "حط الـ name دي جوه الـ Object اللي بننشئها حاليًا".</p>
+
+        <h3 class="s-label">🔹 Methods</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">user1.greet();   // Hello Nada</code></pre></div>
+
+        <h3 class="s-label">🔹 Inheritance — extends</h3>
+        <p>Class ممكن تورث من Class تانية:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">class Admin extends User {
+  deleteUser() {
+    console.log('User deleted');
+  }
+}</code></pre></div>
+        <p>كلمة <code>extends</code> معناها: <code>Admin</code> ترث من <code>User</code>، فتقدر تستخدم <code>greet()</code> وكمان <code>deleteUser()</code> الخاصة بيها.</p>
+      </article>
+
+      <article class="topic" id="tjs-promises" data-navlabel="Promises">
+        <h2 class="t-title">9) Promises</h2>
+        <p>دي من أهم الحاجات جدًا جدًا في Node.js.</p>
+        <div class="box box--what">
+          <div class="box-h">🟣 Promise ببساطة</div>
+          <p>وعد إن عملية Async هتخلص في المستقبل، يا إما تنجح يا إما تفشل. تخيلي طلبتي أكل، المطعم يقول "الطلب اتسجل وهيوصلك بعد شوية" — ده شبه Promise.</p>
+        </div>
+        <div class="flowbox">Promise <span class="arrow">↓</span> Pending (لسه مستنيين) <span class="arrow">↓</span> Fulfilled (نجحت) أو Rejected (فشلت)</div>
+
+        <h3 class="s-label">🔹 مثال Promise</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const promise = new Promise((resolve, reject) => {
+  const success = true;
+
+  if (success) {
+    resolve('Done');
+  } else {
+    reject('Failed');
+  }
+});</code></pre></div>
+        <p>لو نجحت بننادي <code>resolve(...)</code>، لو فشلت بننادي <code>reject(...)</code>.</p>
+
+        <h3 class="s-label">🔹 then() وcatch()</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">promise
+  .then((result) => {
+    console.log(result);   // لما تنجح
+  })
+  .catch((error) => {
+    console.log(error);    // لما تفشل
+  });</code></pre></div>
+        <div class="flowbox">Promise <span class="arrow">↓</span> نجحت؟ → .then() &nbsp;|&nbsp; فشلت؟ → .catch()</div>
+
+        <h3 class="s-label">🔹 مثال واقعي وPromise Chaining</h3>
+        <p>تخيلي <code>findUserById(5)</code> ترجع Promise:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">getUser()
+  .then((user) => {
+    return getOrders(user.id);
+  })
+  .then((orders) => {
+    return calculateTotal(orders);
+  })
+  .then((total) => {
+    console.log(total);
+  })
+  .catch((error) => {
+    console.log(error);
+  });</code></pre></div>
+        <p>الفكرة: <code>getUser</code> ← <code>getOrders</code> ← <code>calculateTotal</code> ← النتيجة. لكن لما العمليات تكتر، الشكل ده يبدأ يبقى تقيل، وعشان كده ظهر <code>async/await</code>.</p>
+      </article>
+
+      <article class="topic" id="tjs-asyncawait" data-navlabel="async / await">
+        <h2 class="t-title">10) async / await</h2>
+        <p><code>async/await</code> طريقة أسهل في الكتابة والتفكير في Promises. بدل:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">getUser()
+  .then((user) => {
+    console.log(user);
+  })
+  .catch((error) => {
+    console.log(error);
+  });</code></pre></div>
+        <p>ممكن:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">async function run() {
+  try {
+    const user = await getUser();
+    console.log(user);
+  } catch (error) {
+    console.log(error);
+  }
+}</code></pre></div>
+        <p>شكلها شبه Synchronous Code، لكن العمليات نفسها لسه Async.</p>
+
+        <h3 class="s-label">🔹 async</h3>
+        <p>لما تحطي <code>async</code> قبل Function، الـ Function دي بترجع Promise تلقائيًا — حتى لو كتبتي:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">async function getNumber() {
+  return 5;
+}
+
+getNumber().then((number) => {
+  console.log(number);   // 5
+});</code></pre></div>
+        <p>فعليًا النتيجة Promise Fulfilled بالقيمة 5.</p>
+
+        <h3 class="s-label">🔹 await</h3>
+        <p><code>await</code> معناها: استنى نتيجة الـ Promise دي جوه الـ async function قبل ما تكمل الأسطر اللي بعدها في نفس الـ Function:</p>
+        <div class="flowbox">getUser() <span class="arrow">↓</span> Promise <span class="arrow">↓</span> استنى نتيجتها هنا <span class="arrow">↓</span> حط النتيجة في user</div>
+        <div class="box box--note">
+          <div class="box-h">🟪 خلي بالك</div>
+          <p>ده مش معناه إن Node كلها وقفت. الـ async function نفسها بتتوقف مؤقتًا عند <code>await</code> لحد ما الـ Promise تستقر، والـ Event Loop يقدر يكمل شغل تاني في الوقت ده.</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">async function getProfile() {
+  const user = await getUser();
+  const orders = await getOrders(user.id);
+
+  return { user, orders };
+}</code></pre></div>
+
+        <h3 class="s-label">🔹 Error Handling مع async/await</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">try {
+  const user = await getUser();
+} catch (error) {
+  console.log(error);
+}</code></pre></div>
+        <p>ده تقريبًا نفس <code>getUser().then(...).catch(...)</code>.</p>
+
+        <h3 class="s-label">🔹 العمليات المستقلة — Promise.all</h3>
+        <p>تخيلي:</p>
+        <div class="codebox"><div class="clabel">example — تسلسلي (أبطأ)</div><pre><code data-lang="js">const users = await getUsers();
+const products = await getProducts();</code></pre></div>
+        <p>لو الاتنين مش معتمدين على بعض، إحنا هنا خليناهم واحد بعد التاني من غير داعي. ممكن نبدأ الاتنين مع بعض:</p>
+        <div class="codebox"><div class="clabel">example — متوازي (أسرع)</div><pre><code data-lang="js">const [users, products] = await Promise.all([
+  getUsers(),
+  getProducts()
+]);</code></pre></div>
+        <div class="flowbox">Start <span class="arrow">├→</span> getUsers() &nbsp;|&nbsp; └→ getProducts() <span class="arrow">↓</span> Promise.all <span class="arrow">↓</span> النتائج</div>
+        <p>وده غالبًا أسرع لو العمليات مستقلة عن بعضها.</p>
+      </article>
+
+      <article class="topic" id="tjs-modules" data-navlabel="Modules">
+        <h2 class="t-title">11) Modules</h2>
+        <p>لما المشروع يكبر، مينفعش نحط كل حاجة في <code>app.js</code> (تخيلي 5000 سطر 😭). فنقسّم المشروع Files:</p>
+        <div class="codebox"><div class="clabel">example — هيكل مشروع</div><pre><code data-lang="text">project/
+│
+├── app.js
+├── routes/
+│   └── userRoutes.js
+├── controllers/
+│   └── userController.js
+├── services/
+│   └── userService.js
+└── models/
+    └── User.js</code></pre></div>
+        <p>كل File يعتبر <b>Module</b> — جزء مستقل من الكود نقدر نصدر منه حاجات ونستخدمها في File تاني.</p>
+
+        <h3 class="s-label">🔹 CommonJS (الطريقة التاريخية لـ Node.js)</h3>
+        <div class="codebox"><div class="clabel">math.js — Export</div><pre><code data-lang="js">const add = (a, b) => {
+  return a + b;
+};
+
+module.exports = add;</code></pre></div>
+        <div class="codebox"><div class="clabel">app.js — Import</div><pre><code data-lang="js">const add = require('./math');
+
+add(5, 3);</code></pre></div>
+        <p>Export أكتر من حاجة:</p>
+        <div class="codebox"><div class="clabel">math.js</div><pre><code data-lang="js">const add = (a, b) => a + b;
+const subtract = (a, b) => a - b;
+
+module.exports = { add, subtract };</code></pre></div>
+        <div class="codebox"><div class="clabel">app.js</div><pre><code data-lang="js">const { add, subtract } = require('./math');</code></pre></div>
+        <p>لاحظي إننا استخدمنا هنا Destructuring اللي شرحناه فوق.</p>
+
+        <h3 class="s-label">🔹 ES Modules (الطريقة الحديثة)</h3>
+        <p>JavaScript الحديثة عندها <code>import</code>/<code>export</code> بدل <code>require</code>/<code>module.exports</code>:</p>
+        <div class="codebox"><div class="clabel">math.js</div><pre><code data-lang="js">export const add = (a, b) => {
+  return a + b;
+};
+
+export const subtract = (a, b) => {
+  return a - b;
+};</code></pre></div>
+        <div class="codebox"><div class="clabel">app.js</div><pre><code data-lang="js">import { add, subtract } from './math.js';</code></pre></div>
+
+        <h3 class="s-label">🔹 Default Export مقابل Named Export</h3>
+        <div class="codebox"><div class="clabel">example — Default Export</div><pre><code data-lang="js">const add = (a, b) => a + b;
+
+export default add;</code></pre></div>
+        <div class="codebox"><div class="clabel">app.js</div><pre><code data-lang="js">import add from './math.js';   // من غير {}</code></pre></div>
+        <div class="tablewrap"><table>
+          <thead><tr><th>النوع</th><th>Export</th><th>Import</th></tr></thead>
+          <tbody>
+            <tr><td>Named Export</td><td><code>export const add = ...</code></td><td><code>import { add } from './math.js'</code></td></tr>
+            <tr><td>Default Export</td><td><code>export default add;</code></td><td><code>import add from './math.js'</code></td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="topic" id="tjs-bigpicture" data-navlabel="إزاي ده كله بيظهر في Express">
+        <h2 class="t-title">12) إزاي كل الحاجات دي بتظهر في Express؟</h2>
+        <p>وده أهم جزء، لأن إحنا مش بندرسهم منفصلين. بصي على Controller حقيقي:</p>
+        <div class="codebox"><div class="clabel">controllers/auth.controller.js</div><pre><code data-lang="js">export const register = async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(409).json({
+        message: 'Email already exists'
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword
+    });
+
+    const response = {
+      id: user._id,
+      name: user.name,
+      email: user.email
+    };
+
+    res.status(201).json(response);
+
+  } catch (error) {
+    next(error);
+  }
+};</code></pre></div>
+        <p>تقريبًا كل الـ JavaScript Refresher موجودة هنا:</p>
+        <div class="linewalk">
+          <div class="lw-line"><div class="lw-code">export const register</div><div class="lw-text"><b>Module</b> — الـ Controller ده اتصدّر بـ Named Export عشان يتستورد في الـ Route.</div></div>
+          <div class="lw-line"><div class="lw-code">async (req, res, next) => {}</div><div class="lw-text"><b>Arrow Function</b> + <b>async</b> مع بعض — Function بترجع Promise وقادرة تستخدم <code>await</code> جواها.</div></div>
+          <div class="lw-line"><div class="lw-code">const { name, email, password } = req.body;</div><div class="lw-text"><b>Object Destructuring</b> — طلعنا القيم اللي محتاجينها من <code>req.body</code> على طول.</div></div>
+          <div class="lw-line"><div class="lw-code">await User.findOne({ email })</div><div class="lw-text"><b>await</b> — استنينا نتيجة الـ <b>Promise</b> اللي Mongoose/Sequelize رجّعته قبل ما نكمل.</div></div>
+          <div class="lw-line"><div class="lw-code">{ message: 'Email already exists' }</div><div class="lw-text"><b>Object</b> عادي بنبنيه كـ Response.</div></div>
+          <div class="lw-line"><div class="lw-code">await bcrypt.hash(password, 12)</div><div class="lw-text">Promise تانية بنستناها بـ <b>await</b>.</div></div>
+          <div class="lw-line"><div class="lw-code">catch (error) { next(error); }</div><div class="lw-text"><b>Error Handling</b> بـ try/catch مع async/await، زي ما شرحنا.</div></div>
+        </div>
+        <p>يعني التوبيكس دي مش حاجات منفصلة عن Node.js — دي فعلًا اللغة اللي بتكتبي بيها Node.js كل يوم.</p>
+
+        <h3 class="s-label">🔹 الصورة الكبيرة</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">JavaScript
+│
+├── Variables            → let, const
+├── Reusable Logic        → Functions, Arrow Functions
+├── Data                  → Objects, Arrays
+├── التعامل مع الداتا بسهولة → Destructuring, Spread, Rest
+├── OOP                   → Classes
+├── Async Programming     → Promises, async/await
+└── تنظيم المشروع          → Modules</code></pre></div>
+        <div class="box box--quick">
+          <div class="box-h">⚡ لو عايزة تركزي على أهم حاجة</div>
+          <p>ركزي خصوصًا على: <code>Objects</code>، <code>Arrays</code>، <code>Functions</code>، <code>Arrow Functions</code>، <code>Destructuring</code>، <code>Spread/Rest</code>، <code>Promises</code>، <code>async/await</code>، <code>Modules</code> — لأن دول هتشوفيهم تقريبًا في كل File في أي مشروع Node.js حقيقي.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>الأول</th><th>التاني</th><th>الفرق ببساطة</th></tr></thead>
+        <tbody>
+          <tr><td><code>let</code></td><td><code>const</code></td><td>الأولى تسمح بتغيير القيمة (Reassign). التانية لأ — بس لو قيمتها Object/Array، محتواها الداخلي لسه ممكن يتغيّر.</td></tr>
+          <tr><td>Spread <code>...</code></td><td>Rest <code>...</code></td><td>نفس العلامة، لكن الأولى "بتفرد" عناصر موجودة (زي نسخ Array). التانية "بتجمع" الباقي في متغير واحد (زي Destructuring أو Function Parameters).</td></tr>
+          <tr><td><code>map()</code></td><td><code>forEach()</code></td><td>الأولى بترجع Array جديدة تقدري تستخدميها. التانية بس بتنفذ كود على كل عنصر من غير ما ترجع حاجة مفيدة.</td></tr>
+          <tr><td>Named Export</td><td>Default Export</td><td>الأولى بتستورد بـ <code>{ }</code> وممكن يكون منها أكتر من واحدة في نفس الملف. التانية من غير <code>{ }</code> وواحدة بس لكل ملف.</td></tr>
+          <tr><td><code>.then()/.catch()</code></td><td><code>async/await</code></td><td>الاتنين بيتعاملوا مع نفس الـ Promise، لكن التانية شكلها أقرب لكود Synchronous عادي وأسهل في القراءة لما العمليات كتير ومتسلسلة.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>محاولة عمل Reassign لمتغير const</b> — لو محتاجة تغيّري المتغير نفسه بعدين، استخدمي <code>let</code> من الأول.</li>
+        <li><b>استخدام Arrow Function كـ Method مباشر جوه Object محتاجة فيها this</b> — الـ Arrow Function بتاخد this من الـ Scope الخارجي مش من الـ Object نفسها.</li>
+        <li><b>نسيان await قبل عملية Async</b> — بتتعاملي مع Promise معلّق (Pending) مش مع النتيجة الحقيقية.</li>
+        <li><b>استخدام await بشكل متسلسل لعمليات مستقلة عن بعضها</b> — بيبطّئ الكود من غير داعي؛ استخدمي <code>Promise.all</code> لما العمليات مش معتمدة على بعض.</li>
+        <li><b>الخلط بين Named Export وDefault Export وقت الـ Import</b> — استخدام <code>{ }</code> غلط مع Default Export، أو نسيانها مع Named Export، بيدّي Error أو <code>undefined</code>.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين let وconst؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك الأساسي للفرق بين Reassignment وMutation.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: هل بنغيّر المتغير نفسه، ولا بنغيّر حاجة جواه؟
+          <span class="iv-label">الإجابة المختصرة</span><code>let</code> بتسمح بتغيير قيمة المتغير بالكامل. <code>const</code> بتمنع تغيير المتغير نفسه، لكن لو كان Object أو Array، محتواها لسه ممكن يتغيّر.
+          <span class="iv-label">بالتفصيل</span><code>const user = {...}</code> يعني <code>user</code> نفسها هتفضل تشير لنفس الـ Object طول الوقت، لكن <code>user.age = 26</code> عادي جدًا لأننا بنعدّل property جوه الـ Object، مش بنغيّر إشارة المتغير. أما <code>user = {...}</code> جديدة كاملة، ده هيرمي Error.
+          <span class="iv-label">ممكن يسأل Follow-up</span>ليه غالبًا بننصح نبدأ بـ const؟ (عشان تقللي احتمال إنك تغيّري متغير بالغلط من غير قصد، وتوضحي نيتك للي بيقرا الكود إن المتغير ده مش المفروض يتغيّر).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>إيه الفرق بين Promise و async/await؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لعلاقة async/await بالـ Promises.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: async/await هل هي حاجة مختلفة تمامًا، ولا طريقة تانية للتعامل مع نفس الحاجة؟
+          <span class="iv-label">الإجابة المختصرة</span>async/await مش بديل عن Promises، هي طريقة أسهل وأوضح في القراءة للتعامل مع نفس الـ Promises.
+          <span class="iv-label">بالتفصيل</span>أي async function بترجع Promise تلقائيًا، وكلمة await بس بتستني نتيجة Promise موجودة قبل ما تكمل باقي الكود. يعني <code>await getUser()</code> تحت الغطا شبه <code>getUser().then(user => ...)</code>، لكن شكل الكود بيبقى أقرب لـ Synchronous وأسهل في القراءة خصوصًا مع عمليات متسلسلة كتير.
+          <span class="iv-label">ممكن يسأل Follow-up</span>لو عندك عمليتين مستقلتين عن بعض، إزاي تخلّيهم يشتغلوا مع بعض بدل ما تستنى واحدة الأول؟ (Promise.all([...])).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>إيه الفرق بين Object Destructuring والوصول العادي بـ dot notation؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لفايدة الـ Destructuring مش بس شكله.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في حالة إنك محتاجة تطلعي 5 قيم من نفس الـ Object.
+          <span class="iv-label">الإجابة المختصرة</span>الاتنين بيوصلوا لنفس القيمة، لكن Destructuring بتخليكي تطلعي أكتر من قيمة في سطر واحد، بأسماء متغيرات مباشرة بدل تكرار اسم الـ Object كل مرة.
+          <span class="iv-label">بالتفصيل</span>بدل <code>const name = req.body.name; const email = req.body.email;</code> (تكرار req.body كل مرة)، بتكتبي <code>const { name, email } = req.body;</code> سطر واحد بس. وكمان بتديكي مرونة زي تغيير الاسم (<code>{ name: userName }</code>) أو قيمة افتراضية (<code>{ role = 'user' }</code>) في نفس السطر.
+          <span class="iv-label">ممكن يسأل Follow-up</span>ينفع نعمل Destructuring لـ Array برضه؟ (أيوة، بس بترتيب العناصر مش بالاسم — <code>const [first, second] = arr;</code>).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>إيه الفرق بين Named Export وDefault Export؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لأنظمة تصدير/استيراد الكود في JavaScript الحديثة.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: هل الملف بيصدّر حاجة واحدة رئيسية، ولا كذا حاجة مسمّاة؟
+          <span class="iv-label">الإجابة المختصرة</span>Named Export بتستورد بـ <code>{ }</code> ومحتاجة تطابق الاسم بالظبط، وممكن يكون منها أكتر من واحدة في نفس الملف. Default Export من غير <code>{ }</code> ومحتاجة تسمّيها إنتِ وقت الاستيراد، وواحدة بس لكل ملف.
+          <span class="iv-label">بالتفصيل</span><code>export const add = ...</code> بتتستورد بـ <code>import { add } from './math.js'</code> — الاسم لازم يطابق. أما <code>export default add;</code> بتتستورد بـ <code>import anyNameYouWant from './math.js'</code> — تقدري تسمّيها أي اسم وقت الاستيراد.
+          <span class="iv-label">ممكن يسأل Follow-up</span>ينفع أخلط الاتنين في نفس الملف؟ (أيوة، ملف ممكن يكون فيه Default Export واحدة، وكذا Named Export مع بعض في نفس الوقت).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>ليه Arrow Function ممكن تسبب مشكلة مع this لما نستخدمها كـ Method؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك العميق لسلوك this في Arrow Functions مقابل Regular Functions.
+          <span class="iv-label">نفكر إزاي؟</span>اسألي نفسك: الـ Arrow Function دي بتاخد this بتاعها منين أصلًا؟
+          <span class="iv-label">الإجابة المختصرة</span>Arrow Function ملهاش this خاص بيها، بتاخده من الـ Scope الخارجي وقت ما اتكتبت، مش وقت ما اتنادت.
+          <span class="iv-label">بالتفصيل</span>Regular Function (<code>greet() {...}</code>) بتحدد this حسب مين نادها (<code>user.greet()</code> يخلي this تشير لـ user). أما Arrow Function (<code>greet: () => {...}</code>) بتاخد this من المكان اللي اتكتبت فيه أصلًا (غالبًا الـ Global Scope أو Module Scope)، فلو استخدمناها كـ Method جوه Object، this مش هتشاور على الـ Object ده خالص.
+          <span class="iv-label">ممكن يسأل Follow-up</span>طب امتى تفضّلي Arrow Function رغم مشكلة this دي؟ (لما تكوني جوه Callback داخل Method تانية ومحتاجة تحافظي على نفس this بتاعة الـ Method الخارجية — دي أشهر استخدام مفيد ليها).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>let وconst، Functions وArrow Functions وthis، Objects وArrays وMethods بتاعتها (map/filter/find/forEach)، Destructuring، Spread وRest، Classes وInheritance، Promises وasync/await، Modules (CommonJS وES Modules).</p>
+        <h4>أهم Syntax</h4>
+        <p><code>const {a,b} = obj</code>، <code>const [a,b] = arr</code>، <code>[...arr, x]</code>، <code>{...obj, key: value}</code>، <code>(a,b) =&gt; a+b</code>، <code>async function(){ await ... }</code>، <code>Promise.all([...])</code>، <code>export</code>/<code>import</code>، <code>module.exports</code>/<code>require</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>Reassign لـ const، استخدام Arrow Function كـ Method محتاج this، نسيان await، تسلسل عمليات مستقلة بدل Promise.all، الخلط بين Named/Default Export.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين let وconst، العلاقة بين Promise وasync/await، فايدة Destructuring، الفرق بين Named وDefault Export، ليه Arrow Function ممكن تسبب مشكلة مع this.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه <code>const user = {}; user.name = 'Nada';</code> شغالة، بينما <code>user = {}</code> مرة تانية هترمي Error؟</li>
+            <li>إيه الفرق بين map() وforEach()؟</li>
+            <li>اكتبي مثال لـ Object Destructuring بقيمة افتراضية.</li>
+            <li>امتى تستخدمي Promise.all بدل ما تستنّي كل عملية لوحدها بـ await؟</li>
+            <li>إيه الفرق بين module.exports/require وexport/import؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) لأن const بتمنع تغيير الـ Reference نفسها (إن المتغير user يشاور على Object تانية)، لكن مسموح تمامًا تعدّلي محتوى الـ Object اللي هو أصلًا بيشاور عليها.</p>
+              <p>2) map() بترجع Array جديدة بنفس عدد العناصر بعد تطبيق تحويل على كل عنصر، وتقدري تخزّني النتيجة. forEach() بس بتنفذ كود على كل عنصر (زي console.log) من غير ما ترجع أي Array مفيدة.</p>
+              <p>3) <code>const { role = 'user' } = someObject;</code> — لو role مش موجودة في someObject، بتاخد القيمة الافتراضية 'user'.</p>
+              <p>4) لما العمليات مش معتمدة على بعضها البعض (زي جلب Users وجلب Products مع بعض) — Promise.all بيخليهم يشتغلوا في نفس الوقت بدل ما تستنى واحدة تخلص الأول.</p>
+              <p>5) module.exports/require هي طريقة CommonJS التقليدية في Node.js. export/import هي طريقة ES Modules الحديثة. الاتنين بيعملوا نفس الوظيفة (تصدير واستيراد كود بين Files) لكن بصيغة مختلفة، ومش بيتخلطوا مع بعض في نفس الملف عادةً.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="chapter" id="ch1" data-navlabel="🧠 Node.js من جوّه">
+      <div class="crumb">📗 Chapter 2</div>
       <h1 class="title">Node.js من جوّه — إيه اللي بيحصل فعلًا لما تشغّليها؟</h1>
       <p class="lede">قبل ما نتكلم عن Express أو أي حاجة، لازم نفهم Node.js نفسها بتشتغل إزاي من جوه. المفاهيم دي هي الأساس اللي كل حاجة تانية هتبنى عليه، وهي كمان من أكتر حاجة بتتسأل في الـ Interviews.</p>
       <hr class="div">
@@ -746,7 +1474,7 @@ console.log('2) رجّعنا Response فورًا: تم استلام طلبك');<
     </section>
 
     <section class="chapter" id="ch2" data-navlabel="🌊 Streams">
-      <div class="crumb">📗 Chapter 2</div>
+      <div class="crumb">📗 Chapter 3</div>
       <h1 class="title">Streams — التعامل مع البيانات الكبيرة</h1>
       <p class="lede">اسم الموضوع وشكل الـ Documentation بتاعه ممكن يخض شوية أول مرة، بس الفكرة نفسها بسيطة جدًا. هنشرحها كأننا قاعدين بنتكلم مع بعض، من غير ما نفترض إنك عارفة حاجة عنها قبل كده.</p>
       <hr class="div">
@@ -1177,8 +1905,1073 @@ res.end();</code></pre></div>
       </div>
     </section>
 
+    <section class="chapter" id="chpath" data-navlabel="🧭 path — File Paths">
+      <div class="crumb">📗 Chapter 4</div>
+      <h1 class="title">path — التعامل مع مسارات الملفات</h1>
+      <p class="lede">قبل ما نكمّل في <code>fs</code> بالتفصيل، لازم نفهم <code>path</code> — الـ Module اللي بتخلينا نبني مسارات الملفات بشكل آمن ومتوافق مع أي نظام تشغيل، بدل ما نلزّق Strings بإيدينا ونتفاجئ إنها بتتكسر على جهاز تاني.</p>
+      <hr class="div">
+
+      <article class="topic" id="tpath-intro" data-navlabel="Path يعني إيه؟">
+        <h2 class="t-title">1) يعني إيه Path أصلًا؟</h2>
+        <div class="box box--what">
+          <div class="box-h">🟣 Path = المكان اللي الملف موجود فيه</div>
+          <p>الـ Path هو عنوان أو مكان ملف أو فولدر على الجهاز. مثلًا عندك مشروع:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">project/
+│
+├── app.js
+├── data/
+│   └── users.json
+│
+└── uploads/
+    └── image.jpg</code></pre></div>
+        <p>الملف <code>users.json</code> مكانه <code>project/data/users.json</code> — وده اسمه Path.</p>
+        <p>في Node عندنا Module جاهزة اسمها <code>path</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const path = require('path');</code></pre></div>
+        <p>مش محتاجة <code>npm install path</code> لأنها Built-in في Node.</p>
+
+        <h3 class="s-label">🔹 ليه محتاجين path أصلًا؟</h3>
+        <div class="box box--why">
+          <div class="box-h">🟠 المشكلة</div>
+          <p>ممكن تقولي: طب ما أنا أكتب Path بإيدي وخلاص، زي <code>'uploads/images/photo.jpg'</code>؟ ممكن، لكن أنظمة التشغيل مش كلها بتتعامل مع Paths بنفس الشكل. Windows غالبًا: <code>C:\projects\app\images\photo.jpg</code>. Linux/macOS غالبًا: <code>/home/user/app/images/photo.jpg</code>.</p>
+        </div>
+        <p>شايفة الفرق؟ Windows بيستخدم غالبًا <code>\</code>، بينما Unix-like systems <code>/</code>. عشان كده الأفضل نخلي Node تتعامل مع الموضوع بدل ما نفترض شكل ثابت.</p>
+      </article>
+
+      <article class="topic" id="tpath-join" data-navlabel="path.join()">
+        <h2 class="t-title">2) path.join() — ركّب أجزاء Path مع بعض</h2>
+        <p>دي من أشهر Methods. وظيفتها: خد أجزاء Path واربطهم ببعض بشكل صحيح:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const path = require('path');
+
+const filePath = path.join('uploads', 'images', 'photo.jpg');
+
+console.log(filePath);
+// Windows: uploads\images\photo.jpg
+// Linux:   uploads/images/photo.jpg</code></pre></div>
+        <p>إنتِ مش محتاجة تقلقي من الـ Separator خالص:</p>
+        <div class="flowbox">uploads + images + photo.jpg <span class="arrow">↓</span> path.join() <span class="arrow">↓</span> Path صحيحة حسب نظام التشغيل</div>
+
+        <h3 class="s-label">🔹 مثال مع __dirname</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const filePath = path.join(__dirname, 'uploads', 'photo.jpg');</code></pre></div>
+        <p>لو <code>__dirname</code> كانت <code>C:\projects\my-app</code>، النتيجة هتبقى <code>C:\projects\my-app\uploads\photo.jpg</code> — وده استخدام شائع جدًا.</p>
+
+        <h3 class="s-label">🔹 ليه مش نكتب __dirname + '/uploads/photo.jpg' يدويًا؟</h3>
+        <div class="codebox"><div class="clabel">example — ممكن تشتغل بس مش الأفضل</div><pre><code data-lang="js">const filePath = __dirname + '/uploads/photo.jpg';</code></pre></div>
+        <p><code>path.join()</code> أفضل لأنه بيتعامل مع الـ Separators صح، وبيظبط <code>.</code> و<code>..</code>، وبيقلل أخطاء تركيب الـ Path:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">path.join('/users/nada', '../images', 'photo.jpg');
+// Node هتفهم .. وتبسّط الناتج تلقائيًا</code></pre></div>
+
+        <h3 class="s-label">🔹 . و .. يعني إيه؟</h3>
+        <p>في الـ Paths: <code>.</code> تعني "المكان الحالي"، و<code>..</code> تعني "ارجع Folder واحدة لفوق". مثلًا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">project/
+│
+├── src/
+│   └── app.js
+│
+└── data/
+    └── users.json</code></pre></div>
+        <p>لو إنتِ جوه <code>src/</code> وعايزة <code>users.json</code>: <code>../data/users.json</code>.</p>
+        <div class="flowbox">src <span class="arrow">↓ .. ↓</span> project <span class="arrow">↓</span> data <span class="arrow">↓</span> users.json</div>
+      </article>
+
+      <article class="topic" id="tpath-resolve" data-navlabel="path.resolve()">
+        <h2 class="t-title">3) path.resolve() — طلعلي Absolute Path كاملة</h2>
+        <p><code>path.resolve()</code> بتاخد Paths وتحاول تطلعلك Absolute Path كاملة:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const result = path.resolve('data', 'users.json');
+console.log(result);
+// لو Current Working Directory: C:\projects\app
+// النتيجة: C:\projects\app\data\users.json</code></pre></div>
+        <div class="flowbox">Relative Path <span class="arrow">↓</span> path.resolve() <span class="arrow">↓</span> Absolute Path</div>
+
+        <h3 class="s-label">🔹 join() مقابل resolve()</h3>
+        <p>دي ناس كتير بتتلخبط فيها. <code>join()</code> هدفها الأساسي: تركب أجزاء Path مع بعض:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">path.join('users', 'images', 'avatar.jpg');
+// users/images/avatar.jpg</code></pre></div>
+        <p>أما <code>resolve()</code>: طلعلي Path نهائية Absolute:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">path.resolve('users', 'images', 'avatar.jpg');
+// C:\project\users\images\avatar.jpg</code></pre></div>
+        <div class="box box--quick">
+          <div class="box-h">⚡ بشكل بسيط</div>
+          <p><code>join</code> = ركّب Path. <code>resolve</code> = وصّلني لعنوان كامل Absolute.</p>
+        </div>
+
+        <h3 class="s-label">🔹 فرق مهم جدًا في resolve</h3>
+        <p>تخيلي:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">path.resolve('/users/nada', '/images', 'photo.jpg');
+// النتيجة غالبًا: /images/photo.jpg</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ نقطة مهمة</div>
+          <p>لما <code>resolve</code> تقابل Absolute Path جديدة زي <code>/images</code> جوه سلسلة الـ Arguments، الأجزاء اللي قبلها ممكن يتم تجاهلها تمامًا — لأن <code>/images</code> نفسها Absolute بالفعل، فـ Node بتبدأ من هناك.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tpath-basedir" data-navlabel="basename() و dirname() و extname()">
+        <h2 class="t-title">4) basename()، dirname()، وextname()</h2>
+        <h3 class="s-label">🔹 path.basename() — اسم آخر جزء من الـ Path</h3>
+        <p>غالبًا اسم الملف:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const filePath = '/users/nada/images/photo.jpg';
+
+console.log(path.basename(filePath));   // 'photo.jpg'</code></pre></div>
+        <p>ممكن نشيل الـ Extension كمان:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">path.basename('/images/photo.jpg', '.jpg');   // 'photo'</code></pre></div>
+
+        <h3 class="s-label">🔹 path.dirname() — الفولدر اللي فيها الملف</h3>
+        <p>عكس الفكرة شوية:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">path.dirname('/users/nada/images/photo.jpg');
+// '/users/nada/images'</code></pre></div>
+
+        <h3 class="s-label">🔹 path.extname() — Extension الملف</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">path.extname('photo.jpg');   // '.jpg'
+path.extname('cv.pdf');      // '.pdf'
+path.extname('app.js');      // '.js'</code></pre></div>
+        <p>ودي مفيدة جدًا في File Uploads، مثلًا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const ext = path.extname(req.file.originalname);   // '.png' مثلًا</code></pre></div>
+        <div class="box box--note">
+          <div class="box-h">🟪 لو الملف اسمها فيه أكتر من نقطة</div>
+          <p>لو الملف <code>archive.tar.gz</code>، <code>path.extname('archive.tar.gz')</code> هترجع غالبًا <code>.gz</code> بس — لأنها بتجيب آخر Extension فقط.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tpath-parseformat" data-navlabel="parse() و format()">
+        <h2 class="t-title">5) path.parse() وpath.format()</h2>
+        <h3 class="s-label">🔹 path.parse() — فكّ الـ Path لأجزاء</h3>
+        <p>دي جميلة جدًا. بتاخد Path كاملة وتفكها أجزاء:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const result = path.parse('/users/nada/photo.jpg');
+console.log(result);
+// {
+//   root: '/',
+//   dir: '/users/nada',
+//   base: 'photo.jpg',
+//   ext: '.jpg',
+//   name: 'photo'
+// }</code></pre></div>
+        <div class="tablewrap"><table>
+          <thead><tr><th>الخاصية</th><th>معناها</th></tr></thead>
+          <tbody>
+            <tr><td><code>root</code></td><td>جذر الـ Path</td></tr>
+            <tr><td><code>dir</code></td><td>الفولدر</td></tr>
+            <tr><td><code>base</code></td><td>اسم الملف كامل</td></tr>
+            <tr><td><code>ext</code></td><td>Extension</td></tr>
+            <tr><td><code>name</code></td><td>اسم الملف بدون Extension</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 class="s-label">🔹 path.format() — عكس parse()</h3>
+        <p><code>parse()</code>: Path ← Object. أما <code>format()</code>: Object ← Path:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const filePath = path.format({
+  dir: '/users/nada',
+  name: 'photo',
+  ext: '.jpg'
+});
+
+console.log(filePath);   // '/users/nada/photo.jpg'</code></pre></div>
+        <div class="flowbox">parse = فك <span class="arrow">↕</span> format = ركّب</div>
+      </article>
+
+      <article class="topic" id="tpath-absoluterelative" data-navlabel="Absolute vs Relative">
+        <h2 class="t-title">6) Absolute مقابل Relative Paths</h2>
+        <p>دي لازم تكون ثابتة جدًا في دماغك.</p>
+        <div class="box box--how">
+          <div class="box-h">🔵 Relative Path</div>
+          <p>Path بالنسبة للمكان الحالي، مثلًا <code>./data/users.json</code> — معناها "من المكان الحالي ادخل data وهات users.json":</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.readFile('./data/users.json', 'utf8', ...);</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ المشكلة</div>
+          <p>"المكان الحالي" ممكن يتغير حسب إنتِ شغلتي Node منين — ودي نقطة مهمة جدًا.</p>
+        </div>
+
+        <h3 class="s-label">🔹 process.cwd() — Current Working Directory</h3>
+        <p>Node عندها <code>process.cwd()</code> ومعناها: Folder اللي شغلتي منها الأمر <code>node app.js</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">console.log(process.cwd());   // C:\projects\my-app مثلًا</code></pre></div>
+
+        <div class="box box--how">
+          <div class="box-h">🔵 Absolute Path</div>
+          <p>دي Path كاملة، مثلًا <code>C:\projects\my-app\data\users.json</code> أو <code>/home/nada/app/data/users.json</code>. الميزة إنها واضحة جدًا: الملف موجود في المكان ده بالضبط، بغض النظر منين شغلتي الكود.</p>
+        </div>
+
+        <h3 class="s-label">🔹 أعرف Path Absolute ولا لأ؟</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">path.isAbsolute('/users/nada/file.txt');   // true (أو حسب النظام)</code></pre></div>
+
+        <h3 class="s-label">🔹 path.sep — Separator النظام</h3>
+        <p><code>path.sep</code> بترجع الـ Separator بتاع النظام: Windows <code>\</code>، Linux/macOS <code>/</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">console.log(path.sep);</code></pre></div>
+        <p>وده سبب من أسباب إن <code>path.join()</code> أفضل من إننا نركب Paths بإيدنا.</p>
+      </article>
+
+      <article class="topic" id="tpath-dirnamefilename" data-navlabel="__filename و __dirname">
+        <h2 class="t-title">7) __filename و __dirname</h2>
+        <h3 class="s-label">🔹 __filename</h3>
+        <p>في CommonJS، <code>__filename</code> بترجع Absolute Path للـ File الحالي:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">console.log(__filename);
+// لو الملف C:\projects\app\src\server.js
+// النتيجة: C:\projects\app\src\server.js</code></pre></div>
+
+        <h3 class="s-label">🔹 __dirname</h3>
+        <p><code>__dirname</code> بترجع الـ Folder اللي الـ File الحالي موجود فيها:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">console.log(__dirname);
+// C:\projects\app\src</code></pre></div>
+        <div class="flowbox">__filename → File الحالي كامل <span class="arrow">↕</span> __dirname → Folder اللي هو جواها</div>
+
+        <h3 class="s-label">🔹 مثال عملي</h3>
+        <p>عندنا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">project/
+│
+├── src/
+│   └── app.js
+│
+└── data/
+    └── users.json</code></pre></div>
+        <p>جوه <code>src/app.js</code>، عايزين نقرأ <code>data/users.json</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const filePath = path.join(__dirname, '..', 'data', 'users.json');</code></pre></div>
+        <p>ليه <code>..</code>؟ لأن <code>__dirname</code> = <code>project/src</code>، فبنطلع Folder (<code>project</code>) وبعدين ندخل <code>data/users.json</code>، فالنتيجة النهائية <code>project/data/users.json</code>.</p>
+
+        <h3 class="s-label">🔹 نقطة مهمة لو مستخدمة ES Modules</h3>
+        <p>في ES Modules (<code>import ...</code>)، <code>__dirname</code> و<code>__filename</code> مش بيكونوا متاحين بنفس الشكل القديم. في Node الحديثة ممكن تستخدمي <code>import.meta.url</code>، وفي إصدارات حديثة فيه APIs أسهل حسب الإصدار:</p>
+        <div class="flowbox">CommonJS <span class="arrow">→</span> __dirname موجود مباشرة <span class="arrow">|</span> ES Modules <span class="arrow">→</span> نستخدم import.meta APIs</div>
+      </article>
+
+      <div class="box box--quick">
+        <div class="box-h">⚡ خريطة path</div>
+        <p><code>join()</code> — ركّب أجزاء Path. <code>resolve()</code> — طلّع Absolute Path. <code>basename()</code> — اسم الملف. <code>dirname()</code> — اسم الفولدر. <code>extname()</code> — Extension. <code>parse()</code> — Path → Object. <code>format()</code> — Object → Path.</p>
+      </div>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>الأول</th><th>التاني</th><th>الفرق ببساطة</th></tr></thead>
+        <tbody>
+          <tr><td><code>path.join()</code></td><td><code>path.resolve()</code></td><td>الأولى بس بتركب الأجزاء مع بعض من غير ما تضمن Absolute Path. التانية بتطلّع Path نهائية Absolute دايمًا.</td></tr>
+          <tr><td><code>path.basename()</code></td><td><code>path.dirname()</code></td><td>الأولى بترجع اسم آخر جزء (غالبًا اسم الملف). التانية بترجع الفولدر اللي فيها الملف.</td></tr>
+          <tr><td><code>path.parse()</code></td><td><code>path.format()</code></td><td>الأولى بتفكّ Path لـ Object بأجزائه. التانية بتركّب Object زي ده مرة تانية لـ Path.</td></tr>
+          <tr><td><code>__dirname</code></td><td><code>process.cwd()</code></td><td>الأولى مكان الملف الحالي دايمًا ثابت بغض النظر منين اتشغل. التانية Folder اللي شغلتي منه الأمر node، وده ممكن يختلف حسب مكان تشغيل السكريبت.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>لزق أجزاء الـ Path بإيدك بـ + و '/' يدويًا</b> — بيتكسر على Windows لأن الـ Separator مختلف؛ استخدمي path.join() دايمًا.</li>
+        <li><b>الخلط بين __dirname وprocess.cwd()</b> — الأول مكان الملف الحالي ثابت، والتاني بيعتمد على مكان تشغيل الأمر وممكن يختلف.</li>
+        <li><b>افتراض إن path.extname() هتجيب كل الـ Extensions في اسم زي archive.tar.gz</b> — هي بترجع آخر جزء بس (.gz).</li>
+        <li><b>استخدام __dirname/__filename في ES Modules زي CommonJS من غير تغيير</b> — مش متاحين بنفس الشكل، محتاجة import.meta.url بدلهم.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين path.join() وpath.resolve()؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك للفرق بين تركيب Path وتحويلها لـ Absolute.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: هل النتيجة مضمون تكون Path كاملة من الجذر، ولا بس أجزاء متلزقة؟
+          <span class="iv-label">الإجابة المختصرة</span>join() بتركب أجزاء الـ Path مع بعض بالـ Separator الصحيح فقط. resolve() بتطلّع Absolute Path نهائية دايمًا، مبنية على process.cwd() لو محدش من الأجزاء كان Absolute من الأول.
+          <span class="iv-label">بالتفصيل</span><code>path.join('data', 'users.json')</code> ممكن ترجع <code>'data/users.json'</code> فقط، بينما <code>path.resolve('data', 'users.json')</code> هترجع مسار كامل زي <code>/home/nada/project/data/users.json</code>. لو أي Argument في resolve كانت Absolute، Node بتبدأ البناء من هناك وتتجاهل اللي قبلها.
+          <span class="iv-label">ممكن يسأل Follow-up</span>ينفع نستخدم join() مع __dirname عشان نضمن Absolute Path؟ (أيوة، لأن __dirname نفسها أصلًا Absolute، فـ path.join(__dirname, ...) بترجع Absolute Path فعليًا من غير ما نحتاج resolve).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>ليه path.join() أفضل من لزق الـ Strings بإيدك؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لمشكلة الـ Cross-Platform Compatibility.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في كود شغال على جهازك (Windows مثلًا) وهيشتغل على سيرفر Linux في Production.
+          <span class="iv-label">الإجابة المختصرة</span>لأن أنظمة التشغيل بتستخدم Separators مختلفة (\ في Windows، / في Linux/macOS)، وpath.join() بتتعامل مع الفرق ده تلقائيًا.
+          <span class="iv-label">بالتفصيل</span>لو كتبتي <code>__dirname + '/uploads/' + fileName</code> يدويًا، ده ممكن يشتغل على جهازك لكن يتكسر لما الكود يتنشر على سيرفر بنظام تشغيل مختلف. path.join() كمان بتظبط أي <code>.</code> أو <code>..</code> زيادة في المسار وتقلل احتمال أخطاء بسيطة في تركيب الـ String.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل فيه فرق في الأداء بين الطريقتين؟ (الفرق مهمل عمليًا؛ السبب الحقيقي لاستخدام path.join مش الأداء، لكن الصحة والتوافق بين الأنظمة).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>إيه الفرق بين __dirname وprocess.cwd()؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك للفرق بين "مكان الملف" و"مكان تشغيل الأمر".
+          <span class="iv-label">نفكر إزاي؟</span>تخيلي شغلتِ node من فولدر مختلف عن فولدر الملف نفسه.
+          <span class="iv-label">الإجابة المختصرة</span>__dirname دايمًا بترجع مكان الملف الحالي نفسه بغض النظر منين شغلتي الأمر. process.cwd() بترجع الفولدر اللي كنتِ واقفة فيه لما نفذتِ الأمر node.
+          <span class="iv-label">بالتفصيل</span>لو عندك ملف في <code>project/src/app.js</code> وشغلتي الأمر من فولدر <code>project</code> نفسه بـ <code>node src/app.js</code>، فـ __dirname هترجع <code>project/src</code> بينما process.cwd() هترجع <code>project</code> — مسارين مختلفين تمامًا حسب مكان التشغيل.
+          <span class="iv-label">ممكن يسأل Follow-up</span>امتى تفضّلي process.cwd() على __dirname؟ (لو عايزة تبني Path بالنسبة لمكان تشغيل السكريبت نفسه، زي قراءة ملف Config من الفولدر اللي المستخدم شغل الأمر منه، مش من مكان الملف البرمجي).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Path، Relative مقابل Absolute Path، Current Working Directory، __filename وdirname، path Module Built-in.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>path.join(...)</code>، <code>path.resolve(...)</code>، <code>path.basename(p, ext?)</code>، <code>path.dirname(p)</code>، <code>path.extname(p)</code>، <code>path.parse(p)</code>، <code>path.format(obj)</code>، <code>path.isAbsolute(p)</code>، <code>path.sep</code>، <code>process.cwd()</code>، <code>__dirname</code>، <code>__filename</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>لزق Strings بإيدك بدل path.join، الخلط بين __dirname وprocess.cwd()، افتراض إن extname بتجيب أكتر من Extension واحد، استخدام __dirname في ES Modules زي CommonJS.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين join وresolve، ليه join أفضل من اللزق اليدوي، الفرق بين __dirname وprocess.cwd().</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين path.join() وpath.resolve()؟</li>
+            <li>ليه مينفعش نعتمد على لزق الـ Strings بإيدنا لبناء Paths؟</li>
+            <li>إيه اللي هترجعه path.extname('archive.tar.gz')؟</li>
+            <li>إيه الفرق بين __dirname وprocess.cwd()؟</li>
+            <li>إيه اللي هيحصل في ES Modules لو حاولتِ تستخدمي __dirname زي CommonJS من غير تعديل؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) join() بترجع Path مركّبة بالـ Separator الصح بس، مش بالضرورة Absolute. resolve() بترجع Absolute Path نهائية دايمًا.</p>
+              <p>2) لأن أنظمة التشغيل المختلفة بتستخدم Separators مختلفة (\ أو /)، فلزق الـ Strings يدويًا ممكن يشتغل على جهاز ويتكسر على تاني.</p>
+              <p>3) '.gz' — لأن extname() بترجع آخر Extension بس، مش كل الأجزاء بعد النقط.</p>
+              <p>4) __dirname بترجع مكان الملف نفسه دايمًا. process.cwd() بترجع الفولدر اللي اتشغل منه أمر node، وده ممكن يختلف حسب مكان التشغيل.</p>
+              <p>5) هيرمي Error أو تكون undefined، لأن __dirname و__filename مش متاحين بنفس الشكل في ES Modules — لازم تستخدمي import.meta.url بدلًا منهم.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="chapter" id="chfs" data-navlabel="📁 fs — File System">
+      <div class="crumb">📗 Chapter 5</div>
+      <h1 class="title">fs — التعامل مع الملفات والفولدرات</h1>
+      <p class="lede"><code>fs</code> من أهم الـ Modules في Node.js، لأنه هو اللي بيخلي Node تتعامل مع الملفات والفولدرات الموجودة على الجهاز أو السيرفر: تقري File، تكتبيه، تعدليه، تمسحيه، تغيري اسمه، تعملي/تمسحي Folder، تعرفي حجمه، تعرفي هل الـ Path ده File ولا Folder، وتتعاملي مع Files كبيرة باستخدام Streams — كل ده بطريقة Sync أو Async. تعالي ناخدها واحدة واحدة من الصفر.</p>
+      <hr class="div">
+
+      <article class="topic" id="tfs-intro" data-navlabel="fs إيه؟ وPaths">
+        <h2 class="t-title">1) يعني إيه fs؟ وPaths قبل ما نبدأ</h2>
+        <div class="box box--what">
+          <div class="box-h">🟣 fs اختصار File System</div>
+          <p>يعني التعامل مع نظام الملفات الموجود على الجهاز. تخيلي عندك المشروع ده:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">my-project/
+│
+├── app.js
+├── users.txt
+├── data/
+│   └── products.json
+│
+└── uploads/
+    ├── image1.jpg
+    └── image2.png</code></pre></div>
+        <p>Node من نفسها مش هتتعامل مع الملفات دي إلا من خلال API مخصصة، من أهمها <code>fs</code> — وهي Module Built-in في Node.js، يعني مش محتاجة <code>npm install fs</code> لأنها جاية أصلًا مع Node.</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">// CommonJS
+const fs = require('fs');
+
+// ES Modules
+import fs from 'fs';
+
+// نسخة مهمة جدًا هنستخدمها بعد شوية — Promise-based API
+import fs from 'fs/promises';</code></pre></div>
+
+        <h3 class="s-label">🔹 الصورة الكبيرة</h3>
+        <p>تخيلي إن <code>fs</code> هي موظف مسؤول عن مكتب الملفات. إنتِ ممكن تقوليله "هاتلي الملف ده"، "اكتبلي الملف ده"، "زوّد كلام فيه"، "غيّر اسمه"، "امسحه"، "اعمل فولدر"، "هاتلي معلومات عنه" — وهو يتعامل مع الـ Operating System نيابة عنك:</p>
+        <div class="flowbox">Your Node.js Code <span class="arrow">↓</span> fs <span class="arrow">↓</span> Operating System <span class="arrow">↓</span> File System <span class="arrow">↓</span> Files / Folders</div>
+
+        <h3 class="s-label">🔹 Path يعني إيه؟</h3>
+        <p><b>Path</b> يعني مكان الملف. عندنا نوعين مشهورين: <b>Relative Path</b> و<b>Absolute Path</b>.</p>
+        <div class="box box--how">
+          <div class="box-h">🔵 Relative Path</div>
+          <p>يعني Path بالنسبة للمكان الحالي — <code>./</code> معناها "من المكان الحالي":</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.readFile('./data/users.txt', ...);</code></pre></div>
+        <div class="box box--how">
+          <div class="box-h">🔵 Absolute Path</div>
+          <p>يعني العنوان الكامل للملف — Windows: <code>C:\projects\my-app\data\users.txt</code>. Linux: <code>/home/nada/project/data/users.txt</code>.</p>
+        </div>
+        <p>في Node غالبًا هنستخدم Module اسمها <code>path</code> عشان نبني Paths بشكل آمن:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const path = require('path');
+
+const filePath = path.join(__dirname, 'data', 'users.txt');
+// C:\project\data\users.txt (أو المسار المناسب على Linux تلقائيًا)</code></pre></div>
+        <div class="box box--why">
+          <div class="box-h">🟠 ليه نستخدم path.join بدل ما نلزّق الـ Strings بنفسنا؟</div>
+          <p>لأن Windows بتستخدم <code>\</code> بين أجزاء الـ Path، وLinux/macOS بتستخدم <code>/</code>. <code>path.join</code> بتتعامل صح مع الاتنين تلقائيًا حسب نظام التشغيل اللي الكود شغال عليه.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tfs-read" data-navlabel="Reading Files">
+        <h2 class="t-title">2) Reading Files — قراءة الملفات</h2>
+        <p>نبدأ بأشهر عملية: عايزة أقرأ File. عندنا <code>fs.readFile()</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const fs = require('fs');
+
+fs.readFile('./data.txt', 'utf8', (error, data) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  console.log(data);
+});</code></pre></div>
+        <div class="linewalk">
+          <div class="lw-line"><div class="lw-code">'./data.txt'</div><div class="lw-text">أول Parameter — مكان الملف.</div></div>
+          <div class="lw-line"><div class="lw-code">'utf8'</div><div class="lw-text">تاني Parameter — معناه "رجعيلي محتوى الملف كـ Text".</div></div>
+          <div class="lw-line"><div class="lw-code">(error, data) => {}</div><div class="lw-text">Callback هتشتغل لما عملية القراءة تخلص.</div></div>
+        </div>
+
+        <h3 class="s-label">🔹 ليه بنستخدم utf8؟</h3>
+        <p>لو عملتي <code>fs.readFile('./data.txt', (error, data) => {...})</code> من غير <code>'utf8'</code>، ممكن النتيجة تطلع <code>&lt;Buffer 48 65 6c 6c 6f ...&gt;</code> — لأن Node رجعت <b>Buffer</b> مش String. لو كتبنا <code>'utf8'</code>، Node تحوّل البيانات لـ String مباشرة.</p>
+
+        <h3 class="s-label">🔹 الـ Flow بتاع readFile</h3>
+        <div class="flowbox">Node Code <span class="arrow">↓</span> fs.readFile() <span class="arrow">↓</span> Operating System <span class="arrow">↓</span> افتح الملف <span class="arrow">↓</span> اقرأ المحتوى <span class="arrow">↓</span> Callback <span class="arrow">↓</span> data</div>
+
+        <h3 class="s-label">🔹 التعامل مع Error — Error-first callback</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.readFile('./not-found.txt', 'utf8', (error, data) => {
+  if (error) {
+    console.log('File error');
+    console.log(error);   // ممكن يكون ENOENT
+    return;
+  }
+  console.log(data);
+});</code></pre></div>
+        <p><code>ENOENT</code> معناها تقريبًا "File or directory not found". وهنا Pattern مشهور جدًا في Node اسمه <b>Error-first callback</b>: أول Parameter للـ Callback دايمًا بيكون الـ Error.</p>
+
+        <h3 class="s-label">🔹 readFileSync</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const data = fs.readFileSync('./data.txt', 'utf8');
+console.log(data);</code></pre></div>
+        <p>لاحظي مفيش Callback — Node هتستنى هنا لحد ما تقرأ الملف كامل قبل ما تكمل باقي الكود. وده هيكون مهم جدًا لما نشرح <b>Sync vs Async</b> بعد شوية.</p>
+      </article>
+
+      <article class="topic" id="tfs-write" data-navlabel="Writing و Appending">
+        <h2 class="t-title">3) Writing Files</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.writeFile('./message.txt', 'Hello Nada', (error) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  console.log('File written');
+});</code></pre></div>
+        <p>لو <code>message.txt</code> مش موجودة، Node هتنشئها. لو موجودة بالفعل؟ غالبًا المحتوى القديم هيتكتب فوقه بالكامل.</p>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>لو File فيها <code>Hello Ahmed</code> وعملنا <code>fs.writeFile('./message.txt', 'Hello Nada', ...)</code>، تبقى <code>Hello Nada</code> — القديم اتمسح واتكتب الجديد مكانه بالكامل.</p>
+        </div>
+
+        <h3 class="s-label">🔹 writeFile مقابل appendFile</h3>
+        <p><code>writeFile</code>: اكتب المحتوى، ولو فيه محتوى قديم استبدله بالكامل. أما <code>fs.appendFile()</code> يعني: زوّد على الملف من غير ما تمسح اللي موجود.</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.appendFile('./logs.txt', 'User logged in\n', (error) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  console.log('Added');
+});</code></pre></div>
+        <p>لو File فيها <code>Server started</code>، بعد <code>appendFile</code> تبقى <code>Server started</code> ثم سطر جديد <code>User logged in</code>. ودي مناسبة جدًا لحاجات زي Logs، History، أو Audit data البسيطة.</p>
+      </article>
+
+      <article class="topic" id="tfs-update" data-navlabel="Updating Files">
+        <h2 class="t-title">4) Updating Files</h2>
+        <div class="box box--note">
+          <div class="box-h">🟪 نقطة مهمة</div>
+          <p><code>fs</code> مفيهاش Method مشهورة اسمها <code>updateFile()</code>، لأن "تحديث File" ممكن يحصل بأكتر من طريقة حسب إنتِ عايزة تعملي إيه.</p>
+        </div>
+        <p>لو عايزة تضيفي كلام، تستخدمي <code>appendFile()</code>. لو عايزة تغيّري محتوى موجود، غالبًا هتقري الملف الأول، تعدّلي المحتوى في JavaScript، وبعدين تكتبيها تاني:</p>
+        <div class="codebox"><div class="clabel">example — من Hello Ahmed لـ Hello Nada</div><pre><code data-lang="js">fs.readFile('./message.txt', 'utf8', (error, data) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  const updatedData = data.replace('Ahmed', 'Nada');
+
+  fs.writeFile('./message.txt', updatedData, (error) => {
+    if (error) {
+      console.log(error);
+      return;
+    }
+    console.log('Updated');
+  });
+});</code></pre></div>
+        <div class="flowbox">Read File <span class="arrow">↓</span> Get Content <span class="arrow">↓</span> Modify Content <span class="arrow">↓</span> Write File Again</div>
+
+        <h3 class="s-label">🔹 مثال JSON File</h3>
+        <p>تخيلي عندنا <code>users.json</code> جواه <code>[{"id":1,"name":"Nada"},{"id":2,"name":"Ahmed"}]</code>. نقرأها:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.readFile('./users.json', 'utf8', (error, data) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  const users = JSON.parse(data);   // JSON Text → JavaScript Array
+  console.log(users);
+});</code></pre></div>
+        <p>ليه <code>JSON.parse()</code>؟ لأن <code>readFile</code> رجّعت String، وإحنا عايزين نحوّل الـ JSON String دي لـ JavaScript Value. بعد كده نعدّل ونرجّع نحوّلها JSON تاني ونكتبها:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user = users.find((user) => user.id === 1);
+user.name = 'Sara';
+
+const updatedJSON = JSON.stringify(users, null, 2);
+
+fs.writeFile('./users.json', updatedJSON, (error) => {
+  // ...
+});</code></pre></div>
+        <div class="flowbox">File <span class="arrow">↓</span> readFile <span class="arrow">↓</span> String <span class="arrow">↓</span> JSON.parse <span class="arrow">↓</span> Array <span class="arrow">↓</span> Modify <span class="arrow">↓</span> JSON.stringify <span class="arrow">↓</span> String <span class="arrow">↓</span> writeFile <span class="arrow">↓</span> File</div>
+      </article>
+
+      <article class="topic" id="tfs-deleterename" data-navlabel="Deleting و Renaming">
+        <h2 class="t-title">5) Deleting Files و Renaming Files</h2>
+        <h3 class="s-label">🔹 fs.unlink() — مسح ملف</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.unlink('./old-file.txt', (error) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  console.log('File deleted');
+});</code></pre></div>
+        <p>اسم الـ Method غريب شوية (<code>unlink</code>)، لكن خليها في دماغك: <code>fs.unlink()</code> = Delete File.</p>
+        <div class="codebox"><div class="clabel">example — التعامل مع ملف مش موجود</div><pre><code data-lang="js">fs.unlink('./file.txt', (error) => {
+  if (error) {
+    if (error.code === 'ENOENT') {
+      console.log('File does not exist');
+      return;
+    }
+    console.log(error);
+    return;
+  }
+  console.log('Deleted');
+});</code></pre></div>
+
+        <h3 class="s-label">🔹 fs.rename() — تغيير اسم ملف</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.rename('./old-name.txt', './new-name.txt', (error) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  console.log('Renamed');
+});</code></pre></div>
+
+        <h3 class="s-label">🔹 rename كمان ممكن تنقل File</h3>
+        <p>دي نقطة لطيفة. عندك <code>temp/image.jpg</code> وعايزة تنقليها <code>uploads/image.jpg</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.rename('./temp/image.jpg', './uploads/image.jpg', (error) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  console.log('Moved');
+});</code></pre></div>
+        <p>يعني <code>rename</code> ممكن تستخدم في Rename + Move مع بعض، حسب الـ Paths اللي بتديهالها.</p>
+      </article>
+
+      <article class="topic" id="tfs-folders" data-navlabel="Folders">
+        <h2 class="t-title">6) Creating و Removing Folders</h2>
+        <h3 class="s-label">🔹 fs.mkdir()</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.mkdir('./uploads', (error) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  console.log('Folder created');
+});</code></pre></div>
+        <p>لو الـ Folder موجودة بالفعل، ممكن يحصل Error. فيه Option مهمة جدًا: <code>recursive: true</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.mkdir(
+  './uploads/images/products',
+  { recursive: true },
+  (error) => {
+    if (error) {
+      console.log(error);
+      return;
+    }
+    console.log('Folders created');
+  }
+);</code></pre></div>
+        <p>لو <code>uploads</code> مش موجودة، يعملها. لو <code>images</code> مش موجودة، يعملها. لو <code>products</code> مش موجودة، يعملها — كلهم يتعملوا مع بعض بأمر واحد.</p>
+
+        <h3 class="s-label">🔹 fs.rm() — مسح Folder</h3>
+        <p>في Node الحديثة الأفضل نستخدم <code>fs.rm()</code>. Folder فاضية:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.rm('./temp', (error) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  console.log('Folder removed');
+});</code></pre></div>
+        <p>لو الـ Folder جواها Files:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.rm(
+  './temp',
+  { recursive: true, force: true },
+  (error) => {
+    if (error) {
+      console.log(error);
+      return;
+    }
+    console.log('Folder removed');
+  }
+);</code></pre></div>
+        <div class="box box--mistake">
+          <div class="box-h">❌ خلي بالك جدًا</div>
+          <p><code>recursive: true</code> يعني "امسح كل اللي جواها كمان" — لو غلطتي في الـ Path، ممكن تمسحي Folder كاملة بمحتواها من غير رجعة.</p>
+        </div>
+
+        <h3 class="s-label">🔹 fs.readdir() — قراءة محتويات Folder</h3>
+        <p>تخيلي عندنا <code>uploads/</code> فيها <code>one.jpg</code>، <code>two.jpg</code>، <code>three.pdf</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const files = await fs.readdir('./uploads');
+console.log(files);
+// ['one.jpg', 'two.jpg', 'three.pdf']</code></pre></div>
+        <p>عايزة أعرف كل واحد File ولا Folder؟</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const entries = await fs.readdir('./uploads', { withFileTypes: true });
+
+for (const entry of entries) {
+  console.log(entry.name);
+  console.log(entry.isFile());
+  console.log(entry.isDirectory());
+}</code></pre></div>
+      </article>
+
+      <article class="topic" id="tfs-syncasync" data-navlabel="Sync vs Async">
+        <h2 class="t-title">7) Sync vs Async Methods</h2>
+        <p>دي من أهم أجزاء fs. تقريبًا هتلاقي Methods كتير ليها نسخة Async ونسخة Sync: <code>readFile</code>/<code>readFileSync</code>، <code>writeFile</code>/<code>writeFileSync</code>، <code>mkdir</code>/<code>mkdirSync</code>، <code>unlink</code>/<code>unlinkSync</code>.</p>
+
+        <h3 class="s-label">🔹 Sync يعني إيه؟</h3>
+        <p>Sync = Synchronous، يعني "خلص العملية دي الأول، وبعدها كمل الكود":</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">console.log('Start');
+const data = fs.readFileSync('./data.txt', 'utf8');
+console.log(data);
+console.log('End');</code></pre></div>
+        <div class="flowbox">Start <span class="arrow">↓</span> اقرأ File <span class="arrow">↓</span> استنى <span class="arrow">↓</span> الملف خلص <span class="arrow">↓</span> اطبع data <span class="arrow">↓</span> End</div>
+
+        <h3 class="s-label">🔹 المشكلة في Sync</h3>
+        <p>لو File كبيرة والقراءة خدت مثلًا 3 ثواني، الـ Main JavaScript Thread مستني طول المدة دي:</p>
+        <div class="flowbox">Request A <span class="arrow">↓</span> readFileSync() <span class="arrow">↓</span> BLOCKED <span class="arrow">↓</span> Request B مستني · Request C مستني · Request D مستني</div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ ده وحش جدًا في Server</div>
+          <p>لأن Node معمولة أساسًا عشان تتعامل بكفاءة مع I/O من غير Blocking للـ Main Thread. لو Request واحدة قفلت الـ Thread، كل الـ Requests التانية بتستنى.</p>
+        </div>
+
+        <h3 class="s-label">🔹 Async يعني إيه؟</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">console.log('Start');
+fs.readFile('./data.txt', 'utf8', (error, data) => {
+  console.log(data);
+});
+console.log('End');
+// النتيجة الغالبة: Start, End, ثم Hello (محتوى الملف)</code></pre></div>
+        <div class="flowbox">Start <span class="arrow">↓</span> readFile بدأت <span class="arrow">↓</span> Node مش هتقف مستنية <span class="arrow">↓</span> End <span class="arrow">↓</span> لما القراءة تخلص <span class="arrow">↓</span> Callback <span class="arrow">↓</span> Hello</div>
+        <p>يعني: Async = ابدأ العملية، ومش لازم توقف كل JavaScript مستنياها.</p>
+
+        <h3 class="s-label">🔹 طيب Sync ممنوعة؟</h3>
+        <p>لأ، مش معنى كده إن Sync غلط دائمًا. ممكن تكون مناسبة في: Startup Scripts، CLI Tools، Build Scripts، قراءة Config مرة وقت بداية البرنامج، وScripts صغيرة:</p>
+        <div class="codebox"><div class="clabel">example — مقبول</div><pre><code data-lang="js">const config = fs.readFileSync('./config.json', 'utf8');</code></pre></div>
+        <p>لكن جوه Request Handler:</p>
+        <div class="codebox"><div class="clabel">example — ❌ مش اختيار كويس لو عندك traffic</div><pre><code data-lang="js">app.get('/users', (req, res) => {
+  const data = fs.readFileSync(...);
+});</code></pre></div>
+      </article>
+
+      <article class="topic" id="tfs-promises" data-navlabel="Promise-based API">
+        <h2 class="t-title">8) Promise-based API — fs/promises</h2>
+        <p>Callback API ممكن تبقى متعبة لما العمليات تدخل في بعضها:</p>
+        <div class="codebox"><div class="clabel">example — Callback nesting</div><pre><code data-lang="js">fs.readFile('./a.txt', 'utf8', (err, a) => {
+  fs.readFile('./b.txt', 'utf8', (err, b) => {
+    fs.writeFile('./result.txt', a + b, (err) => {
+      // ...
+    });
+  });
+});</code></pre></div>
+        <p>فعندنا <code>fs/promises</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">// CommonJS
+const fs = require('fs/promises');
+// أو
+const { readFile, writeFile } = require('fs/promises');
+
+// ES Modules
+import fs from 'fs/promises';
+
+const data = await fs.readFile('./data.txt', 'utf8');   // مفيش Callback</code></pre></div>
+
+        <h3 class="s-label">🔹 مثال كامل</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const fs = require('fs/promises');
+
+async function readData() {
+  try {
+    const data = await fs.readFile('./data.txt', 'utf8');
+    console.log(data);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+readData();</code></pre></div>
+        <div class="flowbox">readData() <span class="arrow">↓</span> fs.readFile() <span class="arrow">↓</span> Promise <span class="arrow">↓</span> await <span class="arrow">↓</span> نجحت؟ → data &nbsp;|&nbsp; فشلت؟ → catch</div>
+
+        <h3 class="s-label">🔹 كل العمليات بنفس الأسلوب</h3>
+        <div class="codebox"><div class="clabel">example — Write</div><pre><code data-lang="js">await fs.writeFile('./hello.txt', 'Hello World');</code></pre></div>
+        <div class="codebox"><div class="clabel">example — Update</div><pre><code data-lang="js">const data = await fs.readFile('./message.txt', 'utf8');
+const updated = data.replace('Ahmed', 'Nada');
+await fs.writeFile('./message.txt', updated);</code></pre></div>
+        <div class="codebox"><div class="clabel">example — mkdir, unlink, rename, rm</div><pre><code data-lang="js">await fs.mkdir('./uploads/images', { recursive: true });
+
+await fs.unlink('./old.txt');
+
+await fs.rename('./old.txt', './new.txt');
+
+await fs.rm('./temp', { recursive: true, force: true });</code></pre></div>
+        <div class="box box--quick">
+          <div class="box-h">⚡ ده غالبًا الشكل اللي هتحبيه أكتر مع Node الحديثة</div>
+          <p><code>async</code> + <code>await</code> + <code>try/catch</code> — نفس قوة Callback API بس أنضف وأسهل في القراءة، خصوصًا لما العمليات مترابطة.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tfs-streams" data-navlabel="Streams with Files">
+        <h2 class="t-title">9) Streams with Files</h2>
+        <p>تخيلي عندك File حجمها 5 GB وعملتي <code>fs.readFile('./big-video.mp4', ...)</code>. هدف <code>readFile</code> إنها تقرأ الملف <b>كله</b> قبل ما تديلك النتيجة:</p>
+        <div class="flowbox">5GB File <span class="arrow">↓</span> اقرأ كمية ضخمة <span class="arrow">↓</span> Memory <span class="arrow">↓</span> بعدها تعامل معاها</div>
+        <p>وده ممكن يكون غير مناسب للملفات الكبيرة. هنا نستخدم <b>Streams</b> (اللي شرحناها بالتفصيل في فصل Streams) بالتطبيق العملي مع <code>fs</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const stream = fs.createReadStream('./big-file.mp4');</code></pre></div>
+        <p>بدل ما نقرا File كلها مرة واحدة، بنقسّمها Chunks:</p>
+        <div class="flowbox">Big File <span class="arrow">↓</span> Chunk <span class="arrow">↓</span> Chunk <span class="arrow">↓</span> Chunk <span class="arrow">↓</span> Chunk</div>
+        <p>وده يوفر Memory بشكل كبير.</p>
+
+        <h3 class="s-label">🔹 قراءة Stream</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const readStream = fs.createReadStream('./big-file.txt', { encoding: 'utf8' });
+
+readStream.on('data', (chunk) => {
+  console.log('Chunk:');
+  console.log(chunk);
+});
+
+readStream.on('end', () => {
+  console.log('Finished');
+});
+
+readStream.on('error', (error) => {
+  console.log(error);
+});</code></pre></div>
+        <div class="flowbox">createReadStream <span class="arrow">↓</span> data <span class="arrow">↓</span> data <span class="arrow">↓</span> data <span class="arrow">↓</span> end</div>
+
+        <h3 class="s-label">🔹 Write Stream</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const writeStream = fs.createWriteStream('./output.txt');
+
+writeStream.write('Hello\n');
+writeStream.write('Nada\n');
+writeStream.write('Welcome\n');
+writeStream.end();</code></pre></div>
+
+        <h3 class="s-label">🔹 Copy File باستخدام pipe</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const readStream = fs.createReadStream('./input.mp4');
+const writeStream = fs.createWriteStream('./copy.mp4');
+
+readStream.pipe(writeStream);</code></pre></div>
+        <p><code>pipe</code> معناها تقريبًا: اللي يطلع من Stream الأولى دخّله في Stream التانية — زي ماسورة توصل بين الاتنين.</p>
+        <div class="flowbox">input.mp4 <span class="arrow">↓</span> Read Stream <span class="arrow">↓</span> Chunks <span class="arrow">↓</span> pipe() <span class="arrow">↓</span> Write Stream <span class="arrow">↓</span> copy.mp4</div>
+
+        <h3 class="s-label">🔹 الأفضل في Production: pipeline</h3>
+        <p>الأفضل استخدام <code>pipeline</code> بدل <code>pipe()</code> العادية، لأنها بتساعد في Error Handling وتنظيف الـ Streams تلقائيًا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const fs = require('fs');
+const { pipeline } = require('stream/promises');
+
+async function copyFile() {
+  await pipeline(
+    fs.createReadStream('./big.mp4'),
+    fs.createWriteStream('./copy.mp4')
+  );
+}</code></pre></div>
+
+        <h3 class="s-label">🔹 إمتى readFile وإمتى Stream؟</h3>
+        <p>ملف صغير زي <code>config.json</code> (5 KB)؟ <code>readFile()</code> مناسبة جدًا. ملف زي <code>movie.mp4</code> (2 GB)؟ الأفضل <code>createReadStream()</code>. تخيلي نقل مياه: <code>readFile</code> يعني "املأ خزان كامل وبعدين اديهولي"، والـ Stream يعني "افتح الحنفية وخلي المياه تمشي تدريجي".</p>
+        <div class="flowbox">Small / manageable files <span class="arrow">↓</span> readFile &nbsp;|&nbsp; Large files <span class="arrow">↓</span> Streams</div>
+      </article>
+
+      <article class="topic" id="tfs-stats" data-navlabel="File Stats / Metadata">
+        <h2 class="t-title">10) File Stats / Metadata</h2>
+        <p>عايزين نعرف معلومات عن File — نستخدم <code>fs.stat()</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const fs = require('fs/promises');
+
+async function getInfo() {
+  const stats = await fs.stat('./data.txt');
+  console.log(stats);
+}</code></pre></div>
+
+        <h3 class="s-label">🔹 الحجم</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">console.log(stats.size);            // بالـ Bytes، مثلًا 2048
+const sizeInKB = stats.size / 1024; // تقريبًا 2 KB</code></pre></div>
+
+        <h3 class="s-label">🔹 File ولا Folder؟</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">if (stats.isFile()) {
+  console.log('This is a file');
+}
+
+if (stats.isDirectory()) {
+  console.log('This is a folder');
+}</code></pre></div>
+
+        <h3 class="s-label">🔹 Dates</h3>
+        <p><code>stats</code> ممكن تحتوي Time Information: <code>stats.mtime</code> (Modification Time — آخر مرة اتعدل فيها المحتوى)، <code>stats.atime</code> (Access Time)، <code>stats.birthtime</code> (وقت الإنشاء). التفاصيل الدقيقة للـ Timestamps ممكن تختلف حسب نظام التشغيل ونظام الملفات.</p>
+        <div class="codebox"><div class="clabel">example — File Info API</div><pre><code data-lang="js">async function getFileInfo(filePath) {
+  try {
+    const stats = await fs.stat(filePath);
+    return {
+      size: stats.size,
+      isFile: stats.isFile(),
+      isDirectory: stats.isDirectory(),
+      modifiedAt: stats.mtime
+    };
+  } catch (error) {
+    console.log(error);
+  }
+}</code></pre></div>
+
+        <h3 class="s-label">🔹 أعرف هل File موجودة؟</h3>
+        <p>ممكن تشوفي ناس تستخدم <code>fs.existsSync()</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">if (fs.existsSync('./data.txt')) {
+  console.log('Exists');
+}</code></pre></div>
+        <div class="box box--mistake">
+          <div class="box-h">❌ لكن في كود Async، الأفضل مش كده</div>
+          <p>الأفضل إنك تحاولي العملية نفسها وتتعاملي مع الـ Error، بدل Pattern "Check ثم Use" — لأن بين الاتنين ممكن حالة الملف تتغير (يتمسح مثلًا في نفس اللحظة):</p>
+        </div>
+        <div class="codebox"><div class="clabel">example — الأسلوب الأفضل</div><pre><code data-lang="js">try {
+  const data = await fs.readFile('./data.txt', 'utf8');
+} catch (error) {
+  if (error.code === 'ENOENT') {
+    console.log('Not found');
+  }
+}</code></pre></div>
+      </article>
+
+      <article class="topic" id="tfs-errorcodes" data-navlabel="Error Codes">
+        <h2 class="t-title">11) File Permissions وأشهر Error Codes</h2>
+        <p>ممكن أوقات <code>fs</code> ترجعلك Error مش لأن File مش موجودة، لكن لأن Node مش عندها Permission — مثلًا <code>EACCES</code> يعني تقريبًا "Permission denied":</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">try {
+  await fs.readFile('/protected/file.txt');
+} catch (error) {
+  console.log(error.code);   // ممكن EACCES
+}</code></pre></div>
+        <p>مش مطلوب تحفظي كل الـ Codes، بس اعرفي الفكرة العامة:</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Code</th><th>معناه</th></tr></thead>
+          <tbody>
+            <tr><td><code>ENOENT</code></td><td>File/Folder مش موجود</td></tr>
+            <tr><td><code>EACCES</code></td><td>مفيش Permission</td></tr>
+            <tr><td><code>EEXIST</code></td><td>حاجة موجودة بالفعل في عملية بتشترط إنها مش موجودة</td></tr>
+            <tr><td><code>ENOTDIR</code></td><td>الـ Path المفروض Folder لكنه مش Folder</td></tr>
+            <tr><td><code>EISDIR</code></td><td>بتحاولي تعملي عملية File على Directory</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="topic" id="tfs-service" data-navlabel="File Service وConcurrency">
+        <h2 class="t-title">12) مثال عملي: File Service وConcurrent Updates</h2>
+        <p>في المشاريع الحقيقية بدل ما كل Controller يتعامل مع <code>fs</code> مباشرة، ممكن نعمل Service:</p>
+        <div class="codebox"><div class="clabel">fileService.js</div><pre><code data-lang="js">const fs = require('fs/promises');
+
+async function readJSON(filePath) {
+  const content = await fs.readFile(filePath, 'utf8');
+  return JSON.parse(content);
+}
+
+async function writeJSON(filePath, data) {
+  const json = JSON.stringify(data, null, 2);
+  await fs.writeFile(filePath, json);
+}
+
+module.exports = { readJSON, writeJSON };</code></pre></div>
+        <div class="flowbox">Controller <span class="arrow">↓</span> File Service <span class="arrow">↓</span> fs <span class="arrow">↓</span> Operating System <span class="arrow">↓</span> File</div>
+
+        <h3 class="s-label">🔹 مثال CRUD كامل على JSON File</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">async function getUsers() {
+  const data = await fs.readFile('./users.json', 'utf8');
+  return JSON.parse(data);
+}
+
+async function addUser(newUser) {
+  const data = await fs.readFile('./users.json', 'utf8');
+  const users = JSON.parse(data);
+
+  users.push(newUser);
+
+  await fs.writeFile('./users.json', JSON.stringify(users, null, 2));
+}</code></pre></div>
+        <div class="box box--note">
+          <div class="box-h">🟪 مهم تعرفي</div>
+          <p>ده مناسب للتعلم أو Applications صغيرة جدًا، لكنه مش بديل حقيقي عن Database في Application فيه Concurrency وعدد Users كبير.</p>
+        </div>
+
+        <h3 class="s-label">🔹 مشكلة مهمة: Concurrent Updates</h3>
+        <p>تخيلي Request A وRequest B في نفس الوقت، الاتنين عملوا <code>readFile</code> وقرأوا <code>Users = 10</code>. A أضافت User وكتبت File بـ 11. B (لسه ماسكة النسخة القديمة اللي فيها 10) أضافت User تانية وكتبت File برضه — تحديث A ممكن يضيع تمامًا:</p>
+        <div class="flowbox">Request A: read (10) → add → write (11) &nbsp;|&nbsp; Request B: read (10) → add → write (11) ← ضاع تحديث A</div>
+        <p>يعني Read → Modify → Write مش عملية آمنة تلقائيًا لما فيه Requests متزامنة — وده أحد أسباب استخدام Database (زي Sequelize أو Mongoose) للبيانات الحقيقية بتاعة التطبيق بدل ملفات JSON عادية.</p>
+
+        <h3 class="s-label">🔹 Encoding وFile Flags</h3>
+        <p>لما نتعامل مع Text غالبًا هنستخدم <code>'utf8'</code>. لو الملف Image أو PDF أو Video، غالبًا مش هنقراه كـ <code>utf8</code> — هنسيبه Buffer أو نستخدم Stream:</p>
+        <div class="flowbox">Text File <span class="arrow">↓</span> utf8 غالبًا &nbsp;|&nbsp; Image / Video / Binary File <span class="arrow">↓</span> Buffer / Stream</div>
+        <p><code>writeFile</code> ممكن تاخد Option <code>flag</code>: <code>w</code> (Writing/Overwrite) و<code>a</code> (Append، شبيهة بفكرة <code>appendFile</code>):</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">await fs.writeFile('./logs.txt', 'New log\n', { flag: 'a' });</code></pre></div>
+
+        <h3 class="s-label">🔹 مثال File Upload — مسح الصورة القديمة</h3>
+        <p>لما كنا بنتكلم عن Multer، ممكن File تتخزن <code>uploads/image.jpg</code>. لو الـ User غيّر الصورة، ممكن نحتاج نمسح القديمة:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">await fs.unlink(oldImagePath);</code></pre></div>
+        <div class="flowbox">User uploads new avatar <span class="arrow">↓</span> Multer saves new file <span class="arrow">↓</span> Database updated <span class="arrow">↓</span> fs.unlink(oldImage) <span class="arrow">↓</span> Old file deleted</div>
+        <p>بس لازم يكون Error Handling مظبوط عشان متلاقيش الداتابيز اتحدثت والملف الجديد فشل، أو العكس.</p>
+
+        <h3 class="s-label">🔹 مثال Download File عبر Stream</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.get('/download', (req, res) => {
+  const stream = fs.createReadStream('./files/video.mp4');
+  stream.pipe(res);
+});</code></pre></div>
+        <p>لأن <code>res</code> نفسها Writable Stream — وده مثال جميل بيربط <code>fs</code> مع Streams مع HTTP مع بعض.</p>
+      </article>
+
+      <article class="topic" id="tfs-eventloop" data-navlabel="fs والEvent Loop">
+        <h2 class="t-title">13) Async fs بتشتغل إزاي مع Node؟</h2>
+        <p>دي نقطة مرتبطة بالـ Event Loop اللي شرحناه في فصل Node.js Core. لما تعملي <code>fs.readFile('./data.txt', callback)</code>، JavaScript مش بتقعد تقرأ Bytes الملف بنفسها على الـ Main Thread. Node/libuv بتتعامل مع العملية Asynchronously، وعمليات File System من أشهر العمليات اللي غالبًا بتستخدم libuv Thread Pool:</p>
+        <div class="flowbox">Main JS Thread <span class="arrow">↓</span> fs.readFile() <span class="arrow">↓</span> Delegate async work <span class="arrow">↓</span> JS تكمل <span class="arrow">↓</span> File operation finishes <span class="arrow">↓</span> Callback scheduled <span class="arrow">↓</span> JS executes callback</div>
+        <p>وده فرق مهم عن <code>fs.readFileSync()</code> اللي بتعمل Blocking للـ JavaScript Thread لحد ما تخلص.</p>
+
+        <h3 class="s-label">🔹 Async Callback مقابل Promise API</h3>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ نقطة ناس كتير بتتلخبط فيها</div>
+          <p><code>await</code> مش معناها Sync. الاتنين دول Asynchronous: <code>fs.readFile(path, callback)</code> Async، وبرضه <code>await fsPromises.readFile(path)</code> Async. يعني <code>const data = await fs.readFile(...);</code> مش زي <code>const data = fs.readFileSync(...);</code> — الأولى Promise-based Async، والتانية Synchronous/Blocking.</p>
+        </div>
+
+        <h3 class="s-label">🔹 مقارنة مهمة جدًا</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Method</th><th>النوع</th><th>Blocking؟</th></tr></thead>
+          <tbody>
+            <tr><td><code>readFile()</code></td><td>Callback Async</td><td>لا</td></tr>
+            <tr><td><code>readFileSync()</code></td><td>Sync</td><td>أيوه</td></tr>
+            <tr><td><code>fs/promises.readFile()</code></td><td>Promise Async</td><td>لا</td></tr>
+            <tr><td><code>createReadStream()</code></td><td>Stream Async</td><td>لا (بالطريقة التقليدية دي)</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 class="s-label">🔹 ملف كبير جدًا: تختاري إيه؟</h3>
+        <p><code>users.json = 20 KB</code>؟ <code>readFile()</code> تمام. <code>movie.mp4 = 4 GB</code>؟ الأفضل <code>createReadStream()</code>، لأن 4GB عبر <code>readFile</code> يعني Memory Pressure كبير، بينما عبر Stream بتتقسم Chunk وراء Chunk وتفضل أوفر في الذاكرة.</p>
+
+        <h3 class="s-label">🔹 مثال يجمع كل حاجة</h3>
+        <p>لو Folder مش موجودة اعمليها، اكتبي File، اقريها، هاتي معلومات عنها، غيّري اسمها، وبعدها امسحيها:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const fs = require('fs/promises');
+
+async function run() {
+  try {
+    await fs.mkdir('./data', { recursive: true });
+    console.log('Folder created');
+
+    await fs.writeFile('./data/message.txt', 'Hello Nada');
+    console.log('File created');
+
+    const content = await fs.readFile('./data/message.txt', 'utf8');
+    console.log('Content:', content);
+
+    const stats = await fs.stat('./data/message.txt');
+    console.log('Size:', stats.size);
+    console.log('Is File:', stats.isFile());
+
+    await fs.rename('./data/message.txt', './data/hello.txt');
+    console.log('File renamed');
+
+    await fs.unlink('./data/hello.txt');
+    console.log('File deleted');
+
+    await fs.rm('./data', { recursive: true, force: true });
+    console.log('Folder deleted');
+
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+run();</code></pre></div>
+        <div class="flowbox">run() <span class="arrow">↓</span> mkdir <span class="arrow">↓</span> writeFile <span class="arrow">↓</span> readFile <span class="arrow">↓</span> stat <span class="arrow">↓</span> rename <span class="arrow">↓</span> unlink <span class="arrow">↓</span> rm</div>
+
+        <div class="box box--quick">
+          <div class="box-h">⚡ الخريطة اللي عايزاكي تحفظيها</div>
+          <p>Files: <code>readFile</code>، <code>writeFile</code>، <code>appendFile</code>، <code>unlink</code>، <code>rename</code>. Folders: <code>mkdir</code>، <code>readdir</code>، <code>rm</code>. Metadata: <code>stat</code> (size، isFile، isDirectory). Streams: <code>createReadStream</code>، <code>createWriteStream</code>. وطريقة التنفيذ: <code>readFileSync</code> = Synchronous وBlocking، <code>readFile(callback)</code> = Asynchronous، <code>fs/promises</code> + <code>async/await</code> = Asynchronous بشكل أنضف وأسهل في الكتابة. وأهم فكرة في الفصل كله: fs هي البوابة اللي Node بتتعامل من خلالها مع File System؛ للملفات الصغيرة غالبًا readFile/writeFile مناسبة، للملفات الكبيرة Streams أفضل، وفي Server code بنفضّل الـ Async/Promise APIs عن الـ Sync methods عشان منعملش Blocking للـ Main JavaScript Thread.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>الأول</th><th>التاني</th><th>الفرق ببساطة</th></tr></thead>
+        <tbody>
+          <tr><td><code>writeFile()</code></td><td><code>appendFile()</code></td><td>الأولى بتستبدل محتوى الملف بالكامل. التانية بتضيف على اللي موجود من غير ما تمسحه.</td></tr>
+          <tr><td><code>readFile()</code></td><td><code>readFileSync()</code></td><td>الأولى Async (Callback) ومش بتوقف باقي الكود. التانية Sync وبتوقف الـ Main Thread لحد ما تخلص.</td></tr>
+          <tr><td><code>fs.readFile</code> (Callback)</td><td><code>fs/promises.readFile</code></td><td>الاتنين Asynchronous فعليًا؛ الفرق بس في الشكل — الأولى بـ Callback، التانية بترجع Promise تقدري تستخدميها مع await.</td></tr>
+          <tr><td><code>unlink()</code></td><td><code>rm()</code></td><td>الأولى لمسح Files تحديدًا. التانية (الحديثة) بتمسح Files وFolders، ومع <code>recursive:true</code> بتمسح Folder بمحتواها كله.</td></tr>
+          <tr><td>readFile</td><td>createReadStream</td><td>الأولى بتقرأ الملف كامل في الذاكرة قبل ما ترجع النتيجة. التانية بتقرأ وتبعت البيانات على هيئة Chunks تدريجيًا، أوفر في الذاكرة للملفات الكبيرة.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>استخدام Sync Methods (زي readFileSync) جوه Route Handler في سيرفر حقيقي</b> — بيوقف الـ Main Thread ويأخر كل الـ Requests التانية.</li>
+        <li><b>قراءة ملف ضخم بالكامل بـ readFile بدل Stream</b> — بيستهلك ذاكرة كبيرة جدًا من غير داعي، والأفضل createReadStream للملفات الكبيرة.</li>
+        <li><b>عمل Check exists ثم عملية منفصلة (Check ثم Use) بدل try/catch مباشر</b> — حالة الملف ممكن تتغير بين اللحظتين.</li>
+        <li><b>الاعتماد على ملفات JSON كـ "قاعدة بيانات" في تطبيق فيه Concurrency حقيقي</b> — عمليات Read-Modify-Write مش آمنة تلقائيًا مع Requests متزامنة، وممكن تحديثات تضيع.</li>
+        <li><b>نسيان recursive:true مع mkdir/rm لما محتاجة تتعاملي مع Folders متداخلة أو غير فاضية</b> — أو استخدامها بإهمال من غير التأكد من الـ Path الصح، وده أخطر لأنه ممكن يمسح بيانات مهمة.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين fs.readFile() وfs.readFileSync()؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لتأثير العمليات الـ Sync على الـ Main Thread في Node.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: هل باقي الكود بيستنى العملية دي، ولا بيكمل شغله؟
+          <span class="iv-label">الإجابة المختصرة</span><code>readFile()</code> Asynchronous وبتاخد Callback، وباقي الكود بيكمل شغله من غير ما يستناها. <code>readFileSync()</code> Synchronous، وبتوقف الـ Main Thread لحد ما تخلص القراءة.
+          <span class="iv-label">بالتفصيل</span>في سيرفر بيخدم Requests كتير في نفس الوقت، استخدام <code>readFileSync()</code> جوه Request Handler بيعني إن أي Request تانية جاية في نفس اللحظة هتستنى لحد ما القراءة تخلص، حتى لو مش متعلقة بالملف ده خالص. <code>readFile()</code> بتسيب الـ Event Loop حر يخدم Requests تانية في نفس الوقت.
+          <span class="iv-label">ممكن يسأل Follow-up</span>امتى يبقى استخدام readFileSync مقبول؟ (في كود بيشتغل مرة واحدة بس زي قراءة Config عند بداية تشغيل السيرفر، أو في CLI Tools وScripts بسيطة).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>إيه الفرق بين writeFile() وappendFile()؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك العملي للفرق في التعامل مع المحتوى الموجود بالفعل.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو الملف فيه محتوى قديم، هيتمسح ولا هيفضل موجود؟
+          <span class="iv-label">الإجابة المختصرة</span><code>writeFile()</code> بتستبدل محتوى الملف بالكامل. <code>appendFile()</code> بتضيف على اللي موجود من غير ما تمسحه.
+          <span class="iv-label">بالتفصيل</span>لو ملف فيه "Server started" واستخدمتِ writeFile("New message")، المحتوى القديم هيضيع تمامًا ويتحط "New message" بس. لو استخدمتِ appendFile("New message") بدلها، هيبقى الملف فيه السطرين مع بعض. عشان كده appendFile مناسبة جدًا لملفات الـ Logs.
+          <span class="iv-label">ممكن يسأل Follow-up</span>ينفع نستخدم writeFile مع flag عشان تتصرف زي appendFile؟ (أيوة، بتمرري Option <code>{ flag: 'a' }</code> لـ writeFile وتاخد نفس سلوك appendFile تقريبًا).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>ليه بنفضّل Streams على readFile للملفات الكبيرة؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لاستهلاك الذاكرة مع الملفات الضخمة.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو الملف 5GB، وذاكرة السيرفر محدودة، إيه اللي هيحصل لو حاولنا نحمّل الملف كله دفعة واحدة؟
+          <span class="iv-label">الإجابة المختصرة</span>readFile بتحمّل الملف بالكامل في الذاكرة قبل ما ترجع النتيجة، وده خطير مع ملفات ضخمة. Streams بتقسّم الملف Chunks صغيرة وتتعامل مع كل جزء لوحده، فالذاكرة المستخدمة تفضل صغيرة نسبيًا طول الوقت.
+          <span class="iv-label">بالتفصيل</span>لو عندك 10 Requests بيحمّلوا فيديو 2GB بـ readFile في نفس الوقت، السيرفر ممكن يحتاج عشرات الـ Gigabytes من الـ RAM فورًا ويقع. باستخدام createReadStream وpipe/pipeline، كل Request بتتعامل مع الملف Chunk وراء Chunk، فاستهلاك الذاكرة يفضل محدود بغض النظر عن حجم الملف الكلي.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه الفرق بين pipe() وpipeline()؟ (pipeline من stream/promises بتتعامل مع الأخطاء وتنظيف الـ Streams تلقائيًا، وده بيخليها الخيار المفضل في كود Production).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>ليه الاعتماد على ملفات JSON كقاعدة بيانات مش آمن مع Requests متزامنة؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لمشكلة الـ Race Conditions في عمليات Read-Modify-Write.
+          <span class="iv-label">نفكر إزاي؟</span>تخيلي Request A وRequest B قرأوا نفس الملف في نفس اللحظة بالظبط.
+          <span class="iv-label">الإجابة المختصرة</span>لأن عملية "اقرأ ثم عدّل ثم اكتب" مش Atomic؛ لو Request B قرأ الملف قبل ما Request A يكتب تحديثه، تحديث A هيضيع لما B يكتب نسخته القديمة فوقه.
+          <span class="iv-label">بالتفصيل</span>Request A بتقرأ users.json (10 users)، وفي نفس اللحظة Request B بتقرأ نفس الملف (برضه 10 users). A بتضيف User وتكتب 11. B برضه بتضيف User على النسخة القديمة اللي عندها (10) وتكتب 11 تانية — لكن الـ User اللي أضافته A ضاع تمامًا لأن B كتبت فوق تحديثه من غير ما تعرف بيه. قواعد البيانات الحقيقية (زي MySQL مع Sequelize أو MongoDB) بتوفر آليات (زي Transactions أو Atomic Operations) بتمنع المشكلة دي.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل فيه حل بسيط لمشكلة الـ Concurrency دي مع ملفات عادية؟ (ممكن File Locking، لكنه معقد ومش موثوق زي قواعد البيانات الحقيقية، وعشان كده الحل العملي في أي تطبيق فيه Traffic حقيقي هو استخدام Database من الأول).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>fs.readFile مع Callback، وfs/promises مع await — هل التانية Synchronous؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك الدقيق لمعنى await، وإنه مش مرادف لـ Synchronous.
+          <span class="iv-label">نفكر إزاي؟</span>اسألي نفسك: هل await بتوقف الـ Event Loop كله، ولا بس بتوقف الـ async function الحالية؟
+          <span class="iv-label">الإجابة المختصرة</span>لأ، الاتنين Asynchronous فعليًا. await بس بتوقف تنفيذ الـ async function الحالية مؤقتًا لحد ما الـ Promise تستقر، لكن الـ Event Loop نفسه فاضي يخدم شغل تاني في نفس الوقت.
+          <span class="iv-label">بالتفصيل</span>الفرق بين <code>fs.readFile(path, callback)</code> و<code>await fs.readFile(path)</code> (من fs/promises) هو شكل الكود بس — الأولى بتستخدم Callback، والتانية بترجع Promise وبتستخدمي await عشان تكتبيها بشكل يشبه Synchronous. لكن الاتنين بيتنفذوا Asynchronously تحت الغطا عن طريق libuv، وعكس ده تمامًا fs.readFileSync اللي فعلًا بتوقف الـ Main Thread بالكامل.
+          <span class="iv-label">ممكن يسأل Follow-up</span>لو عندي عمليتين مستقلتين عن بعض باستخدام fs/promises، إزاي أخليهم يشتغلوا مع بعض بدل التتابع؟ (باستخدام <code>Promise.all([fs.readFile(a), fs.readFile(b)])</code> بدل await منفصل لكل واحدة).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>fs Module Built-in، Relative/Absolute Paths وpath.join، قراءة/كتابة/تحديث/حذف/إعادة تسمية Files، Folders (mkdir/readdir/rm)، Sync مقابل Async، fs/promises، Streams مع fs (createReadStream/createWriteStream/pipe/pipeline)، File Stats/Metadata، Error Codes، Concurrent Updates.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>fs.readFile/writeFile/appendFile/unlink/rename(path, ..., callback)</code>، <code>fs.readFileSync/writeFileSync</code>، <code>fs.mkdir(path,{recursive:true})</code>، <code>fs.rm(path,{recursive:true,force:true})</code>، <code>fs.readdir(path,{withFileTypes:true})</code>، <code>fs.stat(path)</code>، <code>fs/promises</code> مع <code>await</code>، <code>fs.createReadStream/createWriteStream</code>، <code>pipeline()</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>استخدام Sync Methods جوه Request Handler، قراءة ملف ضخم بالكامل بدل Stream، Check-then-Use بدل try/catch، الاعتماد على JSON Files كقاعدة بيانات حقيقية مع Concurrency، إهمال recursive/force مع mkdir/rm.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين readFile وreadFileSync، الفرق بين writeFile وappendFile، ليه Streams أفضل للملفات الكبيرة، مشكلة Concurrent Updates مع ملفات JSON، ليه await لسه Asynchronous.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه استخدام fs.readFileSync جوه Route Handler فكرة سيئة في سيرفر حقيقي؟</li>
+            <li>إيه الفرق بين fs.writeFile وfs.appendFile؟</li>
+            <li>امتى تختاري fs.createReadStream بدل fs.readFile؟</li>
+            <li>إيه المشكلة اللي ممكن تحصل لو استخدمتِ ملف JSON كقاعدة بيانات في تطبيق فيه Requests متزامنة كتير؟</li>
+            <li>إيه الفرق بين fs.unlink() وfs.rm()؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) لأنها بتوقف الـ Main JavaScript Thread بالكامل لحد ما القراءة تخلص، فأي Request تانية جاية في نفس اللحظة (حتى لو مش متعلقة بالملف ده) هتستنى، وده بيبطّئ السيرفر كله.</p>
+              <p>2) writeFile بتستبدل محتوى الملف بالكامل بمحتوى جديد. appendFile بتضيف المحتوى الجديد على اللي موجود بالفعل من غير ما تمسحه.</p>
+              <p>3) لما الملف كبير جدًا (فيديوهات، ملفات ضخمة) وعايزة تتجنبي تحميله بالكامل في الذاكرة دفعة واحدة — الـ Stream بتقسمه Chunks وتتعامل مع كل جزء لوحده فتوفر Memory.</p>
+              <p>4) عملية Read-Modify-Write مش Atomic؛ لو Request تانية قرأت نفس الملف قبل ما الأولى تكتب تحديثها، تحديث الأولى ممكن يضيع لما التانية تكتب نسخة قديمة فوقه.</p>
+              <p>5) unlink مخصوصة لمسح Files. rm (الحديثة والأشمل) بتمسح Files وFolders، ومع الـ Option recursive:true بتقدر تمسح Folder كاملة بمحتواها.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+
     <section class="chapter" id="ch3" data-navlabel="🌐 HTTP Module">
-      <div class="crumb">📗 Chapter 3</div>
+      <div class="crumb">📗 Chapter 6</div>
       <h1 class="title">HTTP Module — إزاي Node.js بتتكلم مع العالم؟</h1>
       <p class="lede">قبل Express، لازم تفهمي موديول الـ HTTP الأساسي اللي جوه Node.js نفسها، لأن Express في الآخر مبني فوقه، وهو اللي بيوضح ليكي معنى كل الكلمات اللي هتقابليها بعد كده زي req وres.</p>
       <hr class="div">
@@ -1276,8 +3069,30 @@ User-Agent: Chrome</code></pre></div>
         <div class="flowbox">Request<br>├── method → GET<br>├── url → /products<br>├── headers → Authorization, Content-Type, ...<br>└── body → ...</div>
       </article>
 
+      <article class="topic" id="t3-querystring" data-navlabel="Query String مع req.url">
+        <h2 class="t-title">4) Query String — لما الـ URL فيه بيانات إضافية</h2>
+        <p>لو الـ Client طلب <code>/products?page=2&amp;limit=10</code>، قيمة <code>req.url</code> هتبقى النص الكامل <code>'/products?page=2&amp;limit=10'</code> — يعني لو عملتِ <code>req.url === '/products'</code> هتلاقيها مش هتساوي أبدًا، لأن الـ Query String (اللي بعد <code>?</code>) بتفضل جزء من <code>req.url</code>.</p>
+        <div class="box box--how">
+          <div class="box-h">🔵 الحل — new URL()</div>
+          <p>في Raw Node، ممكن نستخدم <code>new URL()</code> عشان نفصل الـ Path عن الـ Query String بشكل مريح:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const url = new URL(req.url, `http://${req.headers.host}`);
+
+console.log(url.pathname);       // '/products'
+console.log(url.searchParams);  // URLSearchParams { 'page' => '2', 'limit' => '10' }</code></pre></div>
+        <div class="linewalk">
+          <div class="lw-line"><div class="lw-code">new URL(req.url, base)</div><div class="lw-text"><code>URL</code> constructor محتاج عنوان كامل (Absolute) عشان يفهمه، لكن <code>req.url</code> جاي Relative بس (زي <code>/products?page=2</code>)، فبنديله <code>base</code> وهمي (host بتاع نفس السيرفر) عشان يقدر يبني الـ URL الكاملة ويفكها صح.</div></div>
+          <div class="lw-line"><div class="lw-code">url.pathname</div><div class="lw-text">الجزء بتاع الـ Path لوحده، من غير الـ Query String — وده اللي هنقارنه في الـ Routing.</div></div>
+          <div class="lw-line"><div class="lw-code">url.searchParams.get('page')</div><div class="lw-text">بترجع <code>'2'</code> — قيمة الـ Query Parameter المطلوب كـ String (زي كل حاجة جاية من الـ URL).</div></div>
+        </div>
+        <div class="box box--note">
+          <div class="box-h">🟪 فاكرة Express؟</div>
+          <p>في Express، <code>req.query.page</code> بترجعلك نفس الفكرة دي جاهزة (Object فيه كل الـ Query Params) بدون ما تكتبي <code>new URL()</code> بنفسك — Express بيعمل الفك ده تلقائيًا وراء الكواليس.</p>
+        </div>
+      </article>
+
       <article class="topic" id="t3-response" data-navlabel="ServerResponse و res">
-        <h2 class="t-title">4) ServerResponse — الرد (res)</h2>
+        <h2 class="t-title">5) ServerResponse — الرد (res)</h2>
         <div class="box box--what">
           <div class="box-h">🟣 إيه ده؟</div>
           <p>تمام، الـ Request وصل، دلوقتي عايزين نرد. هنا بتيجي <code>res</code> في <code>(req, res)</code>، وهي نسخة من <b>ServerResponse</b>، يعني الرد اللي السيرفر هيبعته للـ Client. عندها methods (دوال) كتير زي <code>setHeader()</code>، <code>write()</code>، <code>end()</code>، <code>writeHead()</code>، وخصائص (properties) زي <code>statusCode</code> و<code>headersSent</code>. تعالي نفهم أهمهم واحدة واحدة.</p>
@@ -1331,6 +3146,7 @@ server.listen(3000);</code></pre></div>
           <tbody>
             <tr><td><code>200</code></td><td>تمام، الطلب نجح</td></tr>
             <tr><td><code>201</code></td><td>اتعمل Resource جديد (زي إنشاء عنصر جديد)</td></tr>
+            <tr><td><code>204</code></td><td>العملية نجحت لكن مفيش Body يترجع (زي حذف ناجح)</td></tr>
             <tr><td><code>400</code></td><td>الـ Request نفسه فيه مشكلة (بيانات غلط من الـ Client)</td></tr>
             <tr><td><code>401</code></td><td>لسه معملتيش Authentication (يعني السيرفر مش عارف مين إنتِ أصلًا)</td></tr>
             <tr><td><code>403</code></td><td>عارف مين إنتِ، بس معندكيش Permission تعملي كده</td></tr>
@@ -1340,8 +3156,136 @@ server.listen(3000);</code></pre></div>
         </table></div>
       </article>
 
+      <article class="topic" id="t3-routing" data-navlabel="Basic Routing يدوي">
+        <h2 class="t-title">6) Basic Routing — إزاي نوجّه الطلبات المختلفة يدويًا</h2>
+        <p>بما إننا مش مستخدمين Express، مفيش <code>app.get()</code> جاهزة. لازم نعمل الـ Routing بإيدينا، بالتحقق من <code>req.method</code> و<code>req.url</code> مع بعض لكل حالة:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const server = http.createServer((req, res) => {
+  if (req.method === 'GET' && req.url === '/') {
+    res.end('Home Page');
+    return;
+  }
+
+  if (req.method === 'GET' && req.url === '/users') {
+    res.end('Users Page');
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/users') {
+    res.end('Create User');
+    return;
+  }
+
+  if (req.method === 'DELETE' && req.url === '/users') {
+    res.end('Delete User');
+    return;
+  }
+
+  res.statusCode = 404;
+  res.end('Not Found');
+});</code></pre></div>
+        <div class="flowbox">GET / <span class="arrow">↓</span> Home Page &nbsp;|&nbsp; GET /users <span class="arrow">↓</span> Users Page &nbsp;|&nbsp; أي حاجة تانية <span class="arrow">↓</span> 404</div>
+        <div class="box box--mistake">
+          <div class="box-h">❌ المشكلة هنا</div>
+          <p>كل ما الـ Routes تكتر، الكود بيتحول لسلسلة طويلة من <code>if / else / if / else</code>، وبيبقى صعب نلاقي فيها Route معينة أو نضيف واحدة جديدة من غير ما نكسر حاجة.</p>
+        </div>
+        <div class="box box--quick">
+          <div class="box-h">✅ عشان كده ظهر Express</div>
+          <p>بدل الـ <code>if</code> الطويلة دي، Express بيدّيكي <code>app.get('/users', handler)</code>، <code>app.post('/users', handler)</code>، <code>app.delete('/users/:id', handler)</code> — نفس الفكرة بالظبط (Method + Path)، بس بشكل أبسط وأنظف بكتير ومنظم في جدول Routes واضح.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t3-reqbody" data-navlabel="Request Body Basics">
+        <h2 class="t-title">7) Request Body Basics — قراءة الـ Body يدويًا</h2>
+        <p>لو الـ Client بعت POST ومعاها Body (زي <code>{"name": "Sara"}</code>)، السؤال: نجيب الـ Body دي منين؟</p>
+        <div class="box box--what">
+          <div class="box-h">🟣 req نفسها Readable Stream</div>
+          <p>فاكرة فصل Streams؟ الـ Body مش شرط توصلك مرة واحدة كاملة — ممكن توصلك على هيئة Chunks. مثلًا Body <code>{"name":"Nada","age":25}</code> ممكن توصل Chunk 1 <code>{"name":</code>، وبعدها Chunk 2 <code>"Nada",</code>، وبعدها Chunk 3 <code>"age":25}</code>. عشان كده بنسمع الـ Event <code>'data'</code>:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">let body = '';
+
+req.on('data', (chunk) => {
+  body += chunk;
+});
+
+req.on('end', () => {
+  console.log(body);
+});</code></pre></div>
+        <div class="flowbox">Request Body <span class="arrow">↓</span> Chunk → data event <span class="arrow">↓</span> Chunk → data event <span class="arrow">↓</span> خلصت → end event</div>
+        <p>بعد ما نجمعها كـ String كاملة، لو كانت JSON نحولها:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">req.on('end', () => {
+  const data = JSON.parse(body);
+  console.log(data);
+});</code></pre></div>
+        <div class="flowbox">Chunks <span class="arrow">↓</span> String <span class="arrow">↓</span> JSON.parse() <span class="arrow">↓</span> JavaScript Object</div>
+
+        <h3 class="s-label">🔹 مثال POST كامل</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const users = [];
+
+if (req.method === 'POST' && req.url === '/users') {
+  let body = '';
+
+  req.on('data', (chunk) => {
+    body += chunk.toString();
+  });
+
+  req.on('end', () => {
+    try {
+      const user = JSON.parse(body);
+      users.push(user);
+
+      res.statusCode = 201;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ message: 'User created', user }));
+
+    } catch (error) {
+      res.statusCode = 400;
+      res.end('Invalid JSON');
+    }
+  });
+
+  return;
+}</code></pre></div>
+        <div class="flowbox">POST /users <span class="arrow">↓</span> req.on('data') جمع Chunks <span class="arrow">↓</span> req.on('end') <span class="arrow">↓</span> JSON.parse() <span class="arrow">↓</span> users.push() <span class="arrow">↓</span> 201 Created</div>
+        <div class="box box--why">
+          <div class="box-h">🟠 ليه try/catch هنا مهم جدًا؟</div>
+          <p>لو الـ Client بعت Body مش JSON صحيح (Typo مثلًا)، <code>JSON.parse(body)</code> هترمي Exception. من غير <code>try/catch</code>، السيرفر كله ممكن يقع. بالـ <code>catch</code>، بنرد 400 برسالة واضحة بدل ما نكسر السيرفر.</p>
+        </div>
+
+        <h3 class="s-label">🔹 Body Size Limit — حماية من Body ضخمة</h3>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ من غير حماية</div>
+          <p>لو عملنا <code>req.on('data', (chunk) => { body += chunk; })</code> من غير أي حد أقصى، الـ Client ممكن يبعت Body ضخمة جدًا (ميجابايتات أو أكتر) وتستهلك ذاكرة السيرفر:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">let body = '';
+let size = 0;
+
+req.on('data', (chunk) => {
+  size += chunk.length;
+
+  if (size > 1_000_000) {   // ~1 MB
+    req.destroy();
+    return;
+  }
+
+  body += chunk;
+});</code></pre></div>
+        <div class="box box--note">
+          <div class="box-h">🟪 فاكرة Express؟</div>
+          <p>ده بالظبط اللي <code>express.json()</code> (وMiddleware زي Multer للملفات) بتعمله نيابة عنك — جمع الـ Chunks، فحص الحجم، وتحويل الـ JSON — كله في سطر <code>app.use(express.json())</code> بدل الكود اليدوي ده كله.</p>
+        </div>
+
+        <h3 class="s-label">🔹 req وres كـ Streams — الصورة الكاملة</h3>
+        <p><code>req</code> هي <b>Readable Stream</b> (عشان كده بنسمعها بـ <code>on('data')</code>)، و<code>res</code> هي <b>Writable Stream</b> (عشان كده بنكتب فيها بـ <code>write()</code>). وده سبب إننا نقدر نربطهم مباشرة بـ <code>fs</code>:</p>
+        <div class="codebox"><div class="clabel">example — إرسال ملف كبير مباشرة</div><pre><code data-lang="js">if (req.method === 'GET' && req.url === '/file') {
+  const stream = fs.createReadStream('./big-file.txt');
+  stream.pipe(res);
+  return;
+}</code></pre></div>
+        <div class="flowbox">File <span class="arrow">↓</span> fs.createReadStream() <span class="arrow">↓</span> Readable Stream <span class="arrow">↓</span> pipe <span class="arrow">↓</span> res (Writable Stream) <span class="arrow">↓</span> Client</div>
+      </article>
+
       <article class="topic" id="t3-clientrequest" data-navlabel="ClientRequest">
-        <h2 class="t-title">5) ClientRequest — لما Node تكون هي اللي بتطلب</h2>
+        <h2 class="t-title">8) ClientRequest — لما Node تكون هي اللي بتطلب</h2>
         <div class="box box--what">
           <div class="box-h">🟣 إيه ده؟</div>
           <p>دي الناحية التانية. بدل ما Node يستقبل Request، Node نفسه ممكن يبعت Request. مثلًا لما السيرفر بتاعنا محتاج يكلم API خارجي (زي بوابة دفع):</p>
@@ -1367,7 +3311,7 @@ server.listen(3000);</code></pre></div>
       </article>
 
       <article class="topic" id="t3-agent" data-navlabel="http.Agent وSocket">
-        <h2 class="t-title">6) 🔥 http.Agent — إدارة الاتصالات المتكررة</h2>
+        <h2 class="t-title">9) 🔥 http.Agent — إدارة الاتصالات المتكررة</h2>
         <div class="box box--why">
           <div class="box-h">🟠 المشكلة اللي Agent جاي يحلها</div>
           <p>اسمها شكله يخوف شوية، بس فكرتها حلوة جدًا. تخيلي Node بيكلم نفس السيرفر (مثلًا <code>api.example.com</code>) 100 مرة. ممكن كل Request نعمل اتصال (Connection) جديد بالكامل:</p>
@@ -1401,7 +3345,7 @@ server.listen(3000);</code></pre></div>
       </article>
 
       <article class="topic" id="t3-close" data-navlabel="server.close() وTimeout وEvents">
-        <h2 class="t-title">7) إقفال السيرفر، Timeout، والـ Events</h2>
+        <h2 class="t-title">10) إقفال السيرفر، Timeout، والـ Events</h2>
         <div class="defgrid">
           <div class="defitem">
             <div class="dname">server.close()</div>
@@ -1443,7 +3387,7 @@ request.on('close', () => {
       </article>
 
       <article class="topic" id="t3-flow" data-navlabel="أهم Flow: Server وClient">
-        <h2 class="t-title">8) الصورة اللي لازم تربط بيها كل حاجة فاتت</h2>
+        <h2 class="t-title">11) الصورة اللي لازم تربط بيها كل حاجة فاتت</h2>
         <div class="box box--how">
           <div class="box-h">🔵 لو Node هو الـ Server</div>
         </div>
@@ -1487,7 +3431,7 @@ request.on('close', () => {
       </article>
 
       <article class="topic" id="t3-outgoing" data-navlabel="http.OutgoingMessage بالتفصيل">
-        <h2 class="t-title">9) http.OutgoingMessage — الأساس المشترك لأي رسالة خارجة من Node</h2>
+        <h2 class="t-title">12) http.OutgoingMessage — الأساس المشترك لأي رسالة خارجة من Node</h2>
         <div class="box box--what">
           <div class="box-h">🟣 إيه ده؟</div>
           <p>قلنا قبل كده إن فيه رسالة داخلة واسمها <b>IncomingMessage</b>. فبالتالي منطقي جدًا إن <b>OutgoingMessage</b> يعني "رسالة خارجة من Node". لو Node Server بيرد على Client، فالرد اللي خارج (res) يعتبر Outgoing Message. ولو Node نفسه Client وبيبعت Request لسيرفر تاني، فالطلب اللي خارج (request) برضه Outgoing Message.</p>
@@ -1597,7 +3541,7 @@ stream.pipe(res);</code></pre></div>
       </article>
 
       <article class="topic" id="t3-statics" data-navlabel="أدوات HTTP إضافية">
-        <h2 class="t-title">10) أدوات ومتغيرات إضافية في موديول http</h2>
+        <h2 class="t-title">13) أدوات ومتغيرات إضافية في موديول http</h2>
         <div class="defgrid">
           <div class="defitem">
             <div class="dname">http.METHODS</div>
@@ -1658,7 +3602,7 @@ req.end();</code></pre></div>
       </article>
 
       <article class="topic" id="t3-websocket" data-navlabel="WebSocket">
-        <h2 class="t-title">11) WebSocket — لما الاتصال يفضل مفتوح</h2>
+        <h2 class="t-title">14) WebSocket — لما الاتصال يفضل مفتوح</h2>
         <div class="box box--why">
           <div class="box-h">🟠 المشكلة اللي WebSocket جاي يحلها</div>
           <p>الـ HTTP العادي غالبًا فكرته: <code>Client → Request → Server → Response → خلصت</code>. يعني كل تبادل بيقفل بعد ما يخلص. لكن تخيلي تطبيق Chat: إنتِ مش عايزة كل ثانية تسألي "فيه رسالة؟ فيه رسالة؟ فيه رسالة؟" (الأسلوب ده اسمه Polling وهو مكلف ومش عملي). عايزة الاتصال (Connection) يفضل مفتوح طول الوقت، والاتنين (Client وServer) يقدروا يبعتوا لبعض في أي لحظة من غير ما يفتحوا اتصال جديد كل مرة.</p>
@@ -1672,7 +3616,7 @@ req.end();</code></pre></div>
       </article>
 
       <article class="topic" id="t3-bigpicture" data-navlabel="الصورة الكبيرة النهائية">
-        <h2 class="t-title">12) الصورة الكبيرة النهائية لموديول http</h2>
+        <h2 class="t-title">15) الصورة الكبيرة النهائية لموديول http</h2>
         <div class="flowbox">HTTP Module<br>├── Server → createServer(), Server, ServerResponse, IncomingMessage<br>├── Client → request(), get(), ClientRequest, Agent<br>└── Common → METHODS, STATUS_CODES, globalAgent, validation</div>
         <p>وفي النص عندنا مفهوم <b>OutgoingMessage</b>، وده الأساس المشترك للحاجات اللي خارجة من Node:</p>
         <div class="flowbox">Node Server → ServerResponse → Outgoing Message<br>Node Client → ClientRequest → Outgoing Message</div>
@@ -1890,7 +3834,7 @@ function chargeCustomer(orderId, amount) {
     </section>
 
     <section class="chapter" id="ch4" data-navlabel="🚂 أساسيات Express">
-      <div class="crumb">📗 Chapter 4</div>
+      <div class="crumb">📗 Chapter 7</div>
       <h1 class="title">أساسيات Express — Routing وRequest/Response</h1>
       <p class="lede">دلوقتي وإحنا فاهمين HTTP الخام، هنشوف إزاي Express بيخلي حياتنا أسهل بكتير، وإزاي نتعامل مع req وres بشكل عملي في مشروع حقيقي.</p>
       <hr class="div">
@@ -2373,7 +4317,7 @@ module.exports = router;</code></pre></div>
     </section>
 
     <section class="chapter" id="ch5" data-navlabel="🛂 Middleware">
-      <div class="crumb">📗 Chapter 5</div>
+      <div class="crumb">📗 Chapter 8</div>
       <h1 class="title">Middleware — نقطة التفتيش قبل ما الطلب يوصل هدفه</h1>
       <p class="lede">الـ Middleware من أهم مفاهيم Express كله. لو فهمتيها كويس، هتفهمي إزاي Authentication وValidation والـ Error Handling وأي حاجة تانية بتتحط "في النص" شغالة بالظبط.</p>
       <hr class="div">
@@ -2788,7 +4732,7 @@ module.exports = router;</code></pre></div>
     </section>
 
     <section class="chapter" id="ch6" data-navlabel="📦 التعامل مع Request Body">
-      <div class="crumb">📗 Chapter 6</div>
+      <div class="crumb">📗 Chapter 9</div>
       <h1 class="title">التعامل مع Request Body</h1>
       <p class="lede">لما الـ Client (مثلًا الـ Frontend) عايز يبعتلنا بيانات (مش بس يطلب بيانات)، البيانات دي بتتحط في حاجة اسمها الـ Body. الفصل ده هيوضح إزاي Express بيقرأ الـ Body ده بأشكاله المختلفة.</p>
       <hr class="div">
@@ -3035,7 +4979,7 @@ app.post('/contact', (req, res) => {
     </section>
 
     <section class="chapter" id="ch7" data-navlabel="🧩 REST API وCRUD">
-      <div class="crumb">📗 Chapter 7</div>
+      <div class="crumb">📗 Chapter 10</div>
       <h1 class="title">تصميم REST API و CRUD</h1>
       <p class="lede">الفصل ده بيوضح إزاي نصمم شكل الـ API بطريقة منظمة ومتفق عليها عالميًا، بدل ما كل حد يخترع أسماء URLs بطريقته الخاصة.</p>
       <hr class="div">
@@ -3431,7 +5375,7 @@ module.exports = router;</code></pre></div>
     </section>
 
     <section class="chapter" id="chdb" data-navlabel="🗄️ Sequelize و SQL Databases">
-      <div class="crumb">📗 Chapter 8</div>
+      <div class="crumb">📗 Chapter 11</div>
       <h1 class="title">Sequelize و SQL Databases</h1>
       <p class="lede">لحد دلوقتي كل الأمثلة اللي شفناها كانت بتحاكي التعامل مع قاعدة بيانات بجمل زي <code>// save to database</code> أو Array عادي في الذاكرة، من غير ما نوضح إزاي بنوصل فعليًا لقاعدة بيانات حقيقية. الفصل ده هيوريكي إزاي تستخدمي <b>Sequelize</b> — مكتبة ORM بتخليكي تتعاملي مع قواعد بيانات SQL (زي MySQL أو PostgreSQL) باستخدام JavaScript Objects وMethods، بدل ما تكتبي SQL يدويًا في كل عملية.</p>
       <hr class="div">
@@ -4241,7 +6185,7 @@ try {
 
 
     <section class="chapter" id="ch8" data-navlabel="🚨 Error Handling">
-      <div class="crumb">📗 Chapter 9</div>
+      <div class="crumb">📗 Chapter 12</div>
       <h1 class="title">Error Handling — التعامل الصح مع الأخطاء</h1>
       <p class="lede">أي سيرفر حقيقي هيقابل أخطاء، سواء من غلط في الكود أو من مشكلة في قاعدة البيانات أو من طلب غلط من المستخدم. الفصل ده هيوريكي إزاي تتعاملي مع الأخطاء دي بشكل منظم من غير ما السيرفر يقع أو يسرّب معلومات حساسة.</p>
       <hr class="div">
@@ -4727,7 +6671,7 @@ app.listen(3000);</code></pre></div>
     </section>
 
     <section class="chapter" id="ch9" data-navlabel="⏳ Async Express">
-      <div class="crumb">📗 Chapter 10</div>
+      <div class="crumb">📗 Chapter 13</div>
       <h1 class="title">Async Express — التعامل مع async/await بشكل نظيف</h1>
       <p class="lede">أي مشروع حقيقي هتحتاجي فيه تكلمي قاعدة بيانات أو API خارجي، وده كله عمليات async. الفصل ده هيوضحلك إزاي تتعاملي معاها بشكل نظيف من غير ما تكرري نفس كود try/catch في كل Route.</p>
       <hr class="div">
@@ -5048,7 +6992,7 @@ router.post('/', asyncHandler(async (req, res) => {
     </section>
 
     <section class="chapter" id="ch10" data-navlabel="🔎 API Features">
-      <div class="crumb">📗 Chapter 11</div>
+      <div class="crumb">📗 Chapter 14</div>
       <h1 class="title">مميزات إضافية على الـ API — Pagination, Filtering, Sorting, Search</h1>
       <p class="lede">لحد دلوقتي كان الـ API بتاعنا بيرجّع كل البيانات مرة واحدة. لكن في تطبيق حقيقي، البيانات ممكن تكون آلاف أو مئات الآلاف من الـ Records، ومحتاجين طرق ذكية نتحكم بيها في اللي بيترجع، ونرتبه، ونبحث فيه. ده بالظبط موضوع الفصل ده.</p>
       <hr class="div">
@@ -5551,7 +7495,7 @@ app.use('/api/v2/products', productRoutesV2); // الشكل الجديد: price 
     </section>
 
     <section class="chapter" id="ch11" data-navlabel="🪵 Logging & Debugging">
-      <div class="crumb">📗 Chapter 12</div>
+      <div class="crumb">📗 Chapter 15</div>
       <h1 class="title">Logging & Debugging</h1>
       <p class="lede">ندخل بقى على حاجة مهمة جدًا في الشغل الحقيقي. لما حاجة تقع في الـ Production، مش هتقدري تفتحي الكود وتتفرجي عليه وهو شغال لحظة بلحظة. اللي هيساعدك تفهمي إيه اللي حصل هو الـ Logs، والـ Debugging هو إزاي تستخدمي المعلومات دي (وأدوات تانية) عشان توصلي لسبب المشكلة.</p>
       <hr class="div">
@@ -5989,7 +7933,7 @@ console.log('product from db:', product);</code></pre></div>
     </section>
 
     <section class="chapter" id="ch12" data-navlabel="🔐 Authentication">
-      <div class="crumb">📗 Chapter 13</div>
+      <div class="crumb">📗 Chapter 16</div>
       <h1 class="title">Authentication — إثبات هوية المستخدم</h1>
       <p class="lede">هنمشيها سوا خطوة خطوة من أول ما الـUser يعمل Register لحد ما يقدر يدخل Route محمية. احفظي الجملتين دول من الأول، لأنهم أساس الفصل ده والفصل اللي بعده: <b>Authentication = إنت مين؟</b> و <b>Authorization = بعد ما عرفتك، مسموحلك تعمل إيه؟</b></p>
       <hr class="div">
@@ -6676,7 +8620,7 @@ Controller</code></pre></div>
     </section>
 
     <section class="chapter" id="ch13" data-navlabel="🛂 Authorization">
-      <div class="crumb">📗 Chapter 14</div>
+      <div class="crumb">📗 Chapter 17</div>
       <h1 class="title">Authorization — تحديد الصلاحيات</h1>
       <p class="lede">دلوقتي عندنا نقطة مختلفة تمامًا عن الفصل اللي فات. بعد ما عرفنا "مين الشخص ده" في فصل الـ Authentication، جاي دور سؤال جديد: "مسموحله يعمل إيه بالظبط؟". هنمشي من الأساسيات (Roles) لحد مواضيع أعمق زي Permissions وRBAC وحتى ملكية الـ Resource.</p>
       <hr class="div">
@@ -7364,7 +9308,7 @@ Authorization SECOND</code></pre></div>
     </section>
 
     <section class="chapter" id="ch14" data-navlabel="🍪 Cookies & Sessions">
-      <div class="crumb">📗 Chapter 15</div>
+      <div class="crumb">📗 Chapter 18</div>
       <h1 class="title">Cookies & Sessions</h1>
       <p class="lede">اتعلمنا قبل كده إن السيرفر ممكن يخزن الـ Access Token في Cookie. دلوقتي هنفهم الـ Cookie نفسها إيه بالظبط، وهنتعرف على طريقة تانية شائعة جدًا لعمل Authentication اسمها Session، وهنقارن بينها وبين JWT، وهنشوف إعدادات الأمان المهمة اللي بتتحط على أي Cookie حساسة.</p>
       <hr class="div">
@@ -7682,7 +9626,7 @@ const session = sessionsStore[sessionId]; // { userId: 3, role: 'customer' }</co
     </section>
 
     <section class="chapter" id="ch15" data-navlabel="✅ Validation & Sanitization">
-      <div class="crumb">📗 Chapter 16</div>
+      <div class="crumb">📗 Chapter 19</div>
       <h1 class="title">Validation & Sanitization</h1>
       <p class="lede">لحد دلوقتي كنا بنفترض إن البيانات اللي جاية في req.body دايمًا كويسة وشكلها صح. لكن الحقيقة إن أي حد يقدر يبعتلك أي حاجة، غلط عمدًا أو من غير قصد. الفصل ده هيعلمك إزاي "تحرسي الباب" قبل ما أي بيانات تدخل نظامك أصلًا.</p>
       <hr class="div">
@@ -8299,7 +10243,7 @@ module.exports.listProductsQuerySchema = listProductsQuerySchema;</code></pre></
     </section>
 
     <section class="chapter" id="ch16" data-navlabel="📎 File Upload — Multer">
-      <div class="crumb">📗 Chapter 17</div>
+      <div class="crumb">📗 Chapter 20</div>
       <h1 class="title">File Upload with Multer</h1>
       <p class="lede">لحد دلوقتي كل البيانات اللي اتعاملنا معاها كانت نصوص وأرقام وObjects. لكن إيه اللي بيحصل لو اليوزر عايز يرفع صورة Profile أو ملف PDF؟ ده موضوع مختلف تمامًا محتاج أدوات مختلفة، وهنتعرف عليه بالتفصيل في الفصل ده.</p>
       <hr class="div">
