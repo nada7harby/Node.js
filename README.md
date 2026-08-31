@@ -47,9 +47,16 @@ npx serve .
 
 ```text
 .
-├── index.html   # المحتوى والتنسيق والوظائف التفاعلية
+├── index.html                  # مرجع Node.js
+├── efficient-development.html  # مرجع Efficient Development
+├── template-engine.html        # مرجع Template Engine
+├── styles/
+│   ├── variables.css   # متغيرات التصميم (ألوان، مسافات) المشتركة بين الصفحات
+│   └── shared.css      # التنسيقات المشتركة بين الصفحات الثلاث
 └── README.md    # توثيق المشروع
 ```
+
+الصفحات الثلاث تشترك في نفس التصميم، فكل التنسيقات (CSS) المشتركة موجودة مرة واحدة فقط في `styles/`، وكل صفحة بتعمل لينك ليها بدل ما تكررها جوه نفسها.
 
 ## تعديل المحتوى
 
