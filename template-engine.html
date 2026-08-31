@@ -17,8 +17,8 @@
   --text:#ece9f4;
   --text-dim:#a6a2b8;
   --text-faint:#726e85;
-  --violet:#9b87f5;
-  --violet-dim:#7c68d9;
+  --violet:#4f8fbf;
+  --violet-dim:#1b3c53;
   --magenta:#f2599e;
   --amber:#f0a94e;
   --blue:#5aa9f7;
@@ -29,7 +29,7 @@
   --amber-bg:rgba(240,169,78,.09);
   --blue-bg:rgba(90,169,247,.09);
   --magenta-bg:rgba(242,89,158,.09);
-  --violet-bg:rgba(155,135,245,.1);
+  --violet-bg:rgba(79,143,191,.1);
   --radius:14px;
   --maxw:860px;
 }
@@ -43,7 +43,7 @@ body{
   font-size:16px;
   -webkit-font-smoothing:antialiased;
 }
-::selection{background:var(--violet);color:#0b0b10;}
+::selection{background:var(--violet);color:var(--bg);}
 a{color:var(--blue);text-decoration:none;}
 code, pre, .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
 .app{display:flex;min-height:100vh;align-items:flex-start;}
@@ -87,11 +87,14 @@ code, pre, .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
 .navgroup{margin-bottom:6px;}
 .navgroup-title{
   display:flex;align-items:center;gap:8px;
-  font-size:11.5px;font-weight:800;color:var(--text-faint);
+  font-size:11.5px;font-weight:800;color:var(--violet);
   text-transform:uppercase;letter-spacing:.06em;
-  padding:14px 8px 6px;cursor:pointer;user-select:none;
+  margin:14px 0 6px;padding:9px 10px;cursor:pointer;user-select:none;
+  background:var(--violet-bg);border:1px solid rgba(79,143,191,.28);
+  border-radius:9px;transition:background .15s,border-color .15s;
 }
-.navgroup-title .chev{margin-inline-start:auto;transition:transform .15s;font-size:10px;opacity:.6;}
+.navgroup-title:hover{background:rgba(79,143,191,.18);border-color:rgba(79,143,191,.45);}
+.navgroup-title .chev{margin-inline-start:auto;transition:transform .15s;font-size:10px;opacity:.75;color:var(--violet-dim);}
 .navgroup.collapsed .navgroup-title .chev{transform:rotate(-90deg);}
 .navgroup.collapsed .navlist{display:none;}
 .navlist{display:flex;flex-direction:column;gap:1px;}
@@ -158,7 +161,7 @@ h3.s-label{
 .box--correction .box-h{color:var(--red);}
 .box--addition{background:var(--blue-bg);border-color:rgba(90,169,247,.3);}
 .box--addition .box-h{color:var(--blue);}
-.box--mental{background:var(--violet-bg);border-color:rgba(155,135,245,.35);}
+.box--mental{background:var(--violet-bg);border-color:rgba(79,143,191,.35);}
 .box--mental .box-h{color:var(--violet);}
 .box--quick{background:linear-gradient(150deg,var(--green-bg),transparent);border-color:rgba(76,214,138,.35);}
 .box--quick .box-h{color:var(--green);}
@@ -1765,6 +1768,961 @@ Browser
             <div class="iv-body" style="padding-top:10px">
               <p>1) Model: التعامل مع الـ Database. View: عرض الـ HTML بناءً على Data جاهزة. Controller: الوسيط اللي بيربط بينهم ويجهّز البيانات.</p>
               <p>2) لأن ده بيكسر فصل المسؤوليات، ويخلي الكود صعب الصيانة، ويمنع إعادة استخدام نفس منطق الـ Database في أماكن تانية (زي API منفصل).</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te17" data-navlabel="🖥️ SSR وres.send() مقابل res.render()">
+      <div class="crumb">📗 Chapter 17</div>
+      <h1 class="title">SSR وres.send() مقابل res.render()</h1>
+      <p class="lede">الفكرة الأساسية اللي عايزاكي تخرجي بيها من الفصل ده: الباك إند مش لازم يرجّع JSON بس. ممكن يرجّع HTML جاهز، وممكن يولّد HTML كـ String ويبعتها في Email، وممكن يستخدم Template واحدة ويحط فيها Data مختلفة كل مرة.</p>
+      <hr class="div">
+
+      <article class="topic" id="t17-whatisssr" data-navlabel="يعني إيه SSR أصلًا">
+        <h2 class="t-title">1) يعني إيه Server-Side Rendering (SSR) أصلًا</h2>
+        <p>SSR معناها: السيرفر نفسه هو اللي بيجهز الـHTML قبل ما يبعتها للـBrowser.</p>
+        <p>تعالي نقارن. لو عندك صفحة Profile، في React SPA مثلًا ممكن يحصل:</p>
+        <div class="flowbox">
+Browser
+  <span class="arrow">↓</span>
+GET /api/profile
+  <span class="arrow">↓</span>
+Backend
+  <span class="arrow">↓</span>
+JSON
+  <span class="arrow">↓</span>
+React
+  <span class="arrow">↓</span>
+React تعمل HTML/UI
+        </div>
+        <p>يعني Backend رجعت:</p>
+        <div class="codebox"><div class="clabel">JSON response</div><pre><code data-lang="json">{
+  "name": "Nada",
+  "email": "nada@example.com"
+}</code></pre></div>
+        <p>وبعدين React تعمل: <code>&lt;h1&gt;{user.name}&lt;/h1&gt;</code></p>
+        <p>لكن في SSR باستخدام Express + EJS:</p>
+        <div class="flowbox">
+Browser
+  <span class="arrow">↓</span>
+GET /profile
+  <span class="arrow">↓</span>
+Backend
+  <span class="arrow">↓</span>
+Database
+  <span class="arrow">↓</span>
+EJS Template
+  <span class="arrow">↓</span>
+HTML جاهز
+  <span class="arrow">↓</span>
+Browser
+        </div>
+        <p>يعني Backend نفسها ترجع: <code>&lt;h1&gt;Nada&lt;/h1&gt;&lt;p&gt;nada@example.com&lt;/p&gt;</code> — الـBrowser هنا مش محتاجة React عشان تركب الصفحة.</p>
+      </article>
+
+      <article class="topic" id="t17-generatehtml" data-navlabel="يعني إيه الباك يولّد HTML">
+        <h2 class="t-title">2) يعني إيه "الباك يولّد HTML"</h2>
+        <p>عندك Template: <code>&lt;h1&gt;Hello &lt;%= name %&gt;&lt;/h1&gt;</code>، والBackend عندها <code>name = "Nada"</code>. الـTemplate Engine بتعمل:</p>
+        <div class="flowbox">
+Template + Data
+  <span class="arrow">↓</span>
+Render
+  <span class="arrow">↓</span>
+HTML
+        </div>
+        <p>وتطلع: <code>&lt;h1&gt;Hello Nada&lt;/h1&gt;</code> — ده معنى Generate HTML.</p>
+        <p>الـFlow الكاملة لأي Request بيرجع صفحة من الباك:</p>
+        <div class="flowbox">
+Request
+  <span class="arrow">↓</span>
+Express Route
+  <span class="arrow">↓</span>
+Controller
+  <span class="arrow">↓</span>
+Get Data
+  <span class="arrow">↓</span>
+Template Engine
+  <span class="arrow">↓</span>
+Template + Data
+  <span class="arrow">↓</span>
+HTML
+  <span class="arrow">↓</span>
+Response
+  <span class="arrow">↓</span>
+Browser
+        </div>
+      </article>
+
+      <article class="topic" id="t17-sendvsrender" data-navlabel="res.send() مقابل res.render()">
+        <h2 class="t-title">3) res.send() مقابل res.render()</h2>
+        <p>دي مهمة جدًا.</p>
+        <div class="box box--note">
+          <div class="box-h">📝 res.send()</div>
+          <p>ابعت Response جاهزة زي ما هي. ممكن تكتبي <code>res.send("Hello")</code>، أو حتى تبعتي HTML كامل كـString، وده يرجع HTML — لكن إنتِ كتبتي الـHTML بنفسك جوه الكود، وده مش عملي لو الصفحة كبيرة.</p>
+        </div>
+        <div class="codebox"><div class="clabel">res.send()</div><pre><code data-lang="js">res.send("Hello");
+// أو
+res.send(`
+  &lt;html&gt;
+    &lt;body&gt;
+      &lt;h1&gt;Hello Nada&lt;/h1&gt;
+    &lt;/body&gt;
+  &lt;/html&gt;
+`);</code></pre></div>
+        <p><code>res.render()</code> معناها: افتح Template، حط فيها Data، طلع HTML، وابعتها للـBrowser.</p>
+        <div class="codebox"><div class="clabel">res.render()</div><pre><code data-lang="js">res.render("profile", {
+  name: "Nada"
+});</code></pre></div>
+        <p>لو عندك <code>views/profile.ejs</code> جواها <code>&lt;h1&gt;&lt;%= name %&gt;&lt;/h1&gt;</code>، Express + EJS تطلع <code>&lt;h1&gt;Nada&lt;/h1&gt;</code>.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Function</th><th>معناها</th></tr></thead>
+          <tbody>
+            <tr><td><code>res.send()</code></td><td>إنتِ عندك Response جاهزة بالفعل.</td></tr>
+            <tr><td><code>res.render()</code></td><td>إنتِ عندك Template + Data وعايزة تولّدي HTML.</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="topic" id="t17-jsonvshtml" data-navlabel="إمتى JSON وإمتى HTML">
+        <h2 class="t-title">4) إمتى أرجع JSON وإمتى HTML؟</h2>
+        <p>اسألي: مين اللي هيستهلك الـResponse؟</p>
+        <div class="flowbox">
+لو React App: Frontend محتاجة Data <span class="arrow">→</span> JSON (res.json(user))
+لو Browser داخل صفحة Backend-rendered: Browser عايز صفحة <span class="arrow">→</span> HTML (res.render(...))
+        </div>
+        <p>مثال: <code>GET /api/products</code> ترجع <code>[{"name": "iPhone"}]</code>، لكن <code>GET /products</code> ممكن ترجع <code>&lt;h1&gt;Products&lt;/h1&gt;&lt;div&gt;iPhone&lt;/div&gt;</code> — فممكن في نفس المشروع يبقى عندك الاتنين.</p>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>كتابة HTML كامل جوه res.send() لصفحات حقيقية</b> — مش عملي لو الصفحة فيها منطق أو حجم كبير، والصح هو res.render() مع Template منفصل.</li>
+        <li><b>الخلط بين الحالتين: مشروع REST API خالص وعايزة تضيفي صفحة HTML من غير سبب واضح</b> — قرري الأول مين اللي هيستهلك الـResponse قبل ما تختاري JSON ولا HTML.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين res.send() وres.render()، وإمتى تستخدمي كل واحدة؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك للفرق العملي بين إرسال Response جاهزة وتوليد HTML من Template.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو عندك صفحة فيها 100 سطر HTML، هل معقول تكتبيها كلها جوه String في الكود؟
+          <span class="iv-label">الإجابة المختصرة</span>res.send() بتبعت Response جاهزة زي ما هي (نص، أو HTML مكتوب يدويًا). res.render() بتاخد اسم Template وData، تولّد HTML منهم، وتبعته كـResponse.
+          <span class="iv-label">بالتفصيل</span>res.send() مناسبة لردود بسيطة أو مؤقتة، أما res.render() هي الأنسب لأي صفحة حقيقية فيها Structure وData متغيرة، لأنها بتفصل الـHTML (في ملف Template) عن الـLogic (في الـController).
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل ممكن نستخدم الاتنين في نفس المشروع؟ (أيوة، ممكن يبقى عندك res.json() لـAPI Routes، وres.render() لصفحات الـBrowser، في نفس الـExpress App).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>SSR كفكرة (الباك بيجهز HTML قبل ما يوصل للBrowser)، والفرق بين res.send() وres.render()، وإمتى نرجع JSON وإمتى HTML.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>res.send(...)</code>, <code>res.render('view', data)</code>, <code>res.json(data)</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>كتابة HTML كبيرة يدويًا جوه res.send()، عدم تحديد مين المستهلك الفعلي للـResponse.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين res.send() وres.render() وإمتى تستخدمي كل واحدة.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق الجوهري بين res.send() وres.render()؟</li>
+            <li>إمتى ترجعي JSON بدل HTML؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) res.send() بتبعت Response جاهزة (مكتوبة يدويًا)، بينما res.render() بتولّد HTML من Template + Data وتبعته.</p>
+              <p>2) لما المستهلك يكون Frontend App منفصل (زي React) محتاج بيانات خام يشتغل عليها، مش HTML جاهز.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te18" data-navlabel="📧 Email Templates">
+      <div class="crumb">📗 Chapter 18</div>
+      <h1 class="title">Email Templates</h1>
+      <p class="lede">أهم نقطة في استخدام الـTemplates خارج صفحات الويب — إزاي نبني رسائل HTML ديناميكية ونبعتها بالـEmail.</p>
+      <hr class="div">
+
+      <article class="topic" id="t18-whyemailtemplates" data-navlabel="ليه محتاجين Email Templates">
+        <h2 class="t-title">1) ليه محتاجين Email Templates</h2>
+        <p>تخيلي إن User سجل، وإنتِ عايزة تبعتيله رسالة فيها ترحيب ولينك تفعيل. ممكن تكتبي الـHTML يدويًا جوه الكود بـ Template Literals، لكن لو الـEmail كبيرة 100 سطر، الكود هيبقى بشع. فعشان كده بنعمل ملف Template منفصل (زي <code>emails/verify.ejs</code>) بدل ما نكتب الـHTML جوه الـController.</p>
+      </article>
+
+      <article class="topic" id="t18-htmlemail" data-navlabel="HTML Email">
+        <h2 class="t-title">2) HTML Email</h2>
+        <p>الـEmail ممكن تبقى HTML فعلًا، ونستخدم Nodemailer عشان نبعتها كـHTML:</p>
+        <div class="codebox"><div class="clabel">emails/verify.ejs</div><pre><code data-lang="html">&lt;h1&gt;Verify Your Email&lt;/h1&gt;
+&lt;p&gt;Hello &lt;%= name %&gt;&lt;/p&gt;
+&lt;a href="&lt;%= verifyUrl %&gt;"&gt;Verify Email&lt;/a&gt;</code></pre></div>
+        <p>لو User Nada، النتيجة "Hello Nada"؛ لو Ahmed، النتيجة "Hello Ahmed" — نفس الملف بيرجّع محتوى مختلف حسب الـData.</p>
+      </article>
+
+      <article class="topic" id="t18-buttons" data-navlabel="Buttons وInline CSS في Email">
+        <h2 class="t-title">3) Buttons وInline CSS في Email</h2>
+        <p>Email Button غالبًا مش <code>&lt;button&gt;</code> بالشكل المعتاد — الأضمن غالبًا Link متصممة كزرار:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;a href="..." style="display:inline-block;padding:12px 20px;text-decoration:none;border-radius:6px;"&gt;
+  Verify Email
+&lt;/a&gt;</code></pre></div>
+        <div class="box box--why">
+          <div class="box-h">🟠 ليه Inline CSS؟</div>
+          <p>في Web Page ممكن نستخدم <code>&lt;link rel="stylesheet" href="/css/style.css"&gt;</code>، لكن Email Clients (Gmail، Outlook، وغيرهم) مش كلها بتتعامل مع CSS بنفس كفاءة الـBrowser، وليهم قيود واختلافات. فعشان كده بنستخدم Inline CSS زي <code>&lt;p style="font-size:16px;"&gt;</code> بدل ملف خارجي.</p>
+        </div>
+        <p>Flexbox وGrid وSelectors المتقدمة والـJavaScript وCSS خارجية ممكن متشتغلش أو تبقى غير موثوقة حسب الـEmail Client — فعشان كده الـHTML Emails غالبًا تكون أبسط، وتعتمد على Tables وInline styles وLayout بسيط.</p>
+      </article>
+
+      <article class="topic" id="t18-emailpartials" data-navlabel="Partials في الإيميلات">
+        <h2 class="t-title">4) Partials في الإيميلات</h2>
+        <p>نفس فكرة الـPartials اللي شفناها في فصل Partials/Includes، بس هنا لأجزاء الإيميل المشتركة (Header/Footer/Button) بين رسائل زي Verify Email وReset Password وWelcome Email وOTP Email:</p>
+        <div class="codebox"><div class="clabel">folder structure</div><pre><code data-lang="text">emails/
+├── partials/
+│   ├── header.ejs
+│   ├── footer.ejs
+│   └── button.ejs
+├── verify.ejs
+└── reset-password.ejs</code></pre></div>
+        <div class="codebox"><div class="clabel">emails/partials/header.ejs</div><pre><code data-lang="html">&lt;table width="100%"&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;img src="&lt;%= logoUrl %&gt;" alt="Logo"&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t18-staticassetsemail" data-navlabel="Static Assets في الإيميلات">
+        <h2 class="t-title">5) Static Assets في الإيميلات</h2>
+        <p>صفحات الويب بتستخدم <code>express.static("public")</code> ومسارات نسبية زي <code>/images/logo.png</code>، لكن لو كتبتِ نفس المسار ده في Email Template، المشكلة إن Gmail مش عارفة <code>/images/logo.png</code> دي موجودة فين — دي مسار نسبي يخص السيرفر بتاعك.</p>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>Email محتاجة غالبًا URL كامل Public، زي <code>https://cdn.example.com/logo.png</code>، أو استخدام Attachments وCID للصور Inline (Nodemailer بتدعم ده).</p>
+        </div>
+        <div class="tablewrap"><table>
+          <thead><tr><th>السياق</th><th>طريقة الصور</th></tr></thead>
+          <tbody>
+            <tr><td>Web Page</td><td>Local static assets عادي (/images/logo.png)</td></tr>
+            <tr><td>Email</td><td>Absolute public URL / CDN، أو Embedded Attachment</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="topic" id="t18-nodemailerejs" data-navlabel="Nodemailer + EJS مثال كامل">
+        <h2 class="t-title">6) Nodemailer + EJS: مثال كامل</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const path = require("path");
+const ejs = require("ejs");
+
+const templatePath = path.join(__dirname, "../emails/verify.ejs");
+
+const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${token}`;
+
+const html = await ejs.renderFile(templatePath, {
+  name: user.name,
+  verifyUrl
+});
+
+await transporter.sendMail({
+  from: process.env.EMAIL_FROM,
+  to: user.email,
+  subject: "Verify your email",
+  html
+});</code></pre></div>
+        <p>الـFlow الكاملة:</p>
+        <div class="flowbox">
+User registered
+  <span class="arrow">↓</span>
+Generate token
+  <span class="arrow">↓</span>
+Build verify URL
+  <span class="arrow">↓</span>
+ejs.renderFile()
+  <span class="arrow">↓</span>
+Generate HTML string
+  <span class="arrow">↓</span>
+Nodemailer
+  <span class="arrow">↓</span>
+Email Provider
+  <span class="arrow">↓</span>
+User Inbox
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>استخدام مسارات نسبية (زي /images/logo.png) في Email Template</b> — Email Client مش هيقدر يوصلها؛ لازم URL كامل عام أو Attachment.</li>
+        <li><b>الاعتماد على CSS خارجي أو Flexbox/Grid في Email</b> — كتير من Email Clients مش بتدعمها؛ الأضمن Inline CSS وTables.</li>
+        <li><b>كتابة HTML الإيميل كله جوه الـController بـ Template Literals</b> — بيصعب الصيانة؛ الأفضل ملف Template منفصل زي أي صفحة تانية.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي تبني رسالة Email ديناميكية باستخدام EJS وNodemailer؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لاستخدام Template Engine خارج سياق صفحات الويب العادية.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: HTML الإيميل بيتبعت فين، ومين المفروض يحوله لـString قبل ما يوصل لـNodemailer؟
+          <span class="iv-label">الإجابة المختصرة</span>بنكتب ملف EJS منفصل للإيميل، بنستخدم ejs.renderFile() عشان نحوله لـHTML String مع الـData (زي الاسم ولينك التفعيل)، وبعدين نبعت الـString ده كـhtml في Nodemailer.sendMail().
+          <span class="iv-label">بالتفصيل</span>الفرق عن صفحات الويب إن الإيميل محتاج Inline CSS بدل ملفات خارجية، وSpsolute URLs بدل مسارات نسبية للصور، لأن Email Clients بيئة مختلفة تمامًا عن الـBrowser.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل ممكن نستخدم Partials في الإيميلات؟ (أيوة، بالظبط زي صفحات الويب — بنعمل partials/header.ejs وfooter.ejs وbutton.ejs ونستخدمهم بـinclude في أي رسالة).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>بناء رسائل HTML ديناميكية بـEJS، قيود Email Clients (Inline CSS، Absolute URLs)، وربطها بـNodemailer.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>await ejs.renderFile(path, data)</code>, <code>transporter.sendMail({ html })</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>مسارات نسبية للصور، الاعتماد على CSS متقدم غير مدعوم، كتابة HTML الإيميل يدويًا في الـController.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تبني رسالة Email ديناميكية باستخدام EJS وNodemailer.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه بنستخدم Inline CSS في الإيميلات بدل ملف خارجي؟</li>
+            <li>ليه المسار /images/logo.png مش هيشتغل في Email لكنه يشتغل في صفحة ويب؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) لأن Email Clients زي Gmail وOutlook مش بتدعم CSS خارجي أو المتقدم بشكل موثوق دايمًا؛ الـInline CSS أكتر توافقًا.</p>
+              <p>2) لأن المسار النسبي ده بيخص السيرفر بتاعك، وEmail Client (زي Gmail) معندهاش سياق يعرف بيه يكمل المسار ده؛ محتاجة URL كامل عام.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="te19" data-navlabel="✅ Verification Pages">
+      <div class="crumb">📗 Chapter 19</div>
+      <h1 class="title">Verification Pages</h1>
+      <p class="lede">دلوقتي User وصلها Email فيها لينك تفعيل — نتابع إيه اللي بيحصل من لحظة الضغط على اللينك لحد تفعيل الحساب.</p>
+      <hr class="div">
+
+      <article class="topic" id="t19-linkclick" data-navlabel="ضغط اللينك والقراءة">
+        <h2 class="t-title">1) ضغط اللينك وقراءة الـToken</h2>
+        <p>جوه الإيميل لينك زي <code>https://example.com/verify-email?token=abc123</code>. لما User تضغط عليه، الـBrowser تعمل <code>GET /verify-email?token=abc123</code>:</p>
+        <div class="codebox"><div class="clabel">route + controller</div><pre><code data-lang="js">router.get("/verify-email", verifyEmail);
+
+async function verifyEmail(req, res, next) {
+  try {
+    const token = req.query.token;
+    // verify token
+  } catch (error) {
+    next(error);
+  }
+}</code></pre></div>
+        <p>لأن الـURL <code>/verify-email?token=abc123</code>، قيمة <code>req.query.token</code> بتساوي <code>abc123</code>.</p>
+      </article>
+
+      <article class="topic" id="t19-checktoken" data-navlabel="التحقق من الـToken">
+        <h2 class="t-title">2) التحقق من الـToken</h2>
+        <p>يعتمد على تصميمك — غالبًا الـToken (أو نسخة Hash منه) مخزنة في الـDatabase مع الـUser:</p>
+        <div class="codebox"><div class="clabel">User model</div><pre><code data-lang="js">{
+  email: "...",
+  emailVerified: false,
+  verificationToken: "...",
+  verificationTokenExpiresAt: "..."
+}</code></pre></div>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">const user = await User.findOne({
+  verificationToken: hashedToken
+});</code></pre></div>
+        <p>وتتأكدي إنها مش Expired قبل ما تكملي.</p>
+      </article>
+
+      <article class="topic" id="t19-successfail" data-navlabel="النجاح والفشل">
+        <h2 class="t-title">3) لو Token صح ولو فشل</h2>
+        <p>لو صح:</p>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">user.emailVerified = true;
+user.verificationToken = undefined;
+user.verificationTokenExpiresAt = undefined;
+await user.save();
+
+res.render("verification-success");</code></pre></div>
+        <div class="codebox"><div class="clabel">verification-success.ejs</div><pre><code data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+  &lt;h1&gt;Email Verified&lt;/h1&gt;
+  &lt;p&gt;Your email has been verified successfully.&lt;/p&gt;
+  &lt;a href="/login"&gt;Login&lt;/a&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre></div>
+        <p>لو فشل:</p>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">res.status(400).render("verification-failed", {
+  message: "Verification link is invalid or expired."
+});</code></pre></div>
+        <div class="codebox"><div class="clabel">verification-failed.ejs</div><pre><code data-lang="html">&lt;h1&gt;Verification Failed&lt;/h1&gt;
+&lt;p&gt;&lt;%= message %&gt;&lt;/p&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t19-fullflow" data-navlabel="الـFlow الكامل">
+        <h2 class="t-title">4) الـFlow الكامل</h2>
+        <div class="flowbox">
+Register
+  <span class="arrow">↓</span>
+Create User
+  <span class="arrow">↓</span>
+Generate Verification Token
+  <span class="arrow">↓</span>
+Store safe token representation + expiry
+  <span class="arrow">↓</span>
+Create Verification URL
+  <span class="arrow">↓</span>
+Render Email Template
+  <span class="arrow">↓</span>
+Send Email
+  <span class="arrow">↓</span>
+User clicks link
+  <span class="arrow">↓</span>
+GET /verify-email?token=...
+  <span class="arrow">↓</span>
+Backend reads token
+  <span class="arrow">↓</span>
+Validate token
+  <span class="arrow">↓</span>
+Find user
+  <span class="arrow">↓</span>
+Check expiry
+  <span class="arrow">↓</span>
+Mark emailVerified = true
+  <span class="arrow">↓</span>
+Invalidate token
+  <span class="arrow">↓</span>
+Render success page
+        </div>
+      </article>
+
+      <article class="topic" id="t19-tokensecurity" data-navlabel="أمان الـToken">
+        <h2 class="t-title">5) نقطة أمان مهمة جدًا في الـTokens</h2>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>متخليش Verification Token صالحة للأبد — اعملي Expiration (15 دقيقة، 30 دقيقة، ساعة، أو 24 ساعة حسب الـUse Case).</p>
+        </div>
+        <p>وكمان الأفضل تخزني Hash للـToken في الـDatabase بدل الـRaw Token نفسها:</p>
+        <div class="flowbox">
+Raw token <span class="arrow">→</span> يتبعت للـUser فقط
+Hash(token) <span class="arrow">→</span> يتخزن في DB
+        </div>
+        <p>لما User يرجع الـToken، بنعمل <code>Hash(receivedToken)</code> ونقارنها باللي في الـDB. فلو الـDatabase اتسربت، الـTokens الخام مش موجودة أصلًا.</p>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>خزّن الـToken الخام (Raw) في الـDatabase</b> — لو الـDatabase اتسربت، أي حد يقدر يستخدم الـTokens دي مباشرة؛ الأفضل تخزين Hash فقط.</li>
+        <li><b>Verification Token من غير تاريخ انتهاء</b> — لينك التفعيل يفضل شغال للأبد حتى لو المستخدم مسجلش أصلًا خلال دقائق.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي بتصممي Flow آمن لتفعيل البريد الإلكتروني؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك الشامل لـFlow التفعيل، مش بس كود الـRoute، وكمان الاعتبارات الأمنية.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: إيه اللي بيمنع أي حد يخمّن Token ويفعّل حساب مش بتاعه؟
+          <span class="iv-label">الإجابة المختصرة</span>بنولّد Token عشوائي طويل، نخزّن Hash منه بس في الـDatabase مع تاريخ انتهاء، ونبعت الـToken الخام في لينك الإيميل. لما User يضغط اللينك، بنعمل Hash للـToken اللي وصل ونقارنه، ونتأكد إنه لسه صالح قبل ما نفعّل الحساب.
+          <span class="iv-label">بالتفصيل</span>بعد التفعيل الناجح، لازم نلغي الـToken (نخليه undefined) عشان محدش يقدر يستخدمه تاني — ده بيمنع إعادة استخدام نفس اللينك أكتر من مرة.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه اللي بيحصل لو الـUser فتحت اللينك بعد ما انتهت مدته؟ (المفروض الـController يتأكد من تاريخ الانتهاء، ولو منتهي يرجع صفحة verification-failed برسالة واضحة بدل ما يفعّل الحساب).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Flow تفعيل البريد الإلكتروني الكامل، وأهمية Hash + Expiry للـTokens الحساسة.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>req.query.token</code>, <code>res.render('verification-success')</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>تخزين Token خام بدل Hash، عدم وضع تاريخ انتهاء للـToken.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تصممي Flow آمن لتفعيل البريد الإلكتروني.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه نخزن Hash للـToken بدل الـToken نفسه؟</li>
+            <li>إيه اللي المفروض يحصل بعد تفعيل الحساب بنجاح بخصوص الـToken؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) عشان لو الـDatabase اتسربت، محدش يقدر يستخدم الـTokens الخام لأنها أصلًا مش متخزنة.</p>
+              <p>2) نلغي الـToken (نخليه undefined) عشان مايتستخدمش تاني، وده بيمنع إعادة استخدام نفس اللينك.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te20" data-navlabel="🔑 Reset Password Pages">
+      <div class="crumb">📗 Chapter 20</div>
+      <h1 class="title">Reset Password Pages</h1>
+      <p class="lede">دي Flow أكبر شوية من التفعيل — فيها مرحلتين: طلب الـReset، وبعدين تنفيذه فعليًا.</p>
+      <hr class="div">
+
+      <article class="topic" id="t20-requeststep" data-navlabel="Step 1: طلب الـReset">
+        <h2 class="t-title">1) Step 1: User تطلب Reset</h2>
+        <div class="codebox"><div class="clabel">forgot-password.ejs</div><pre><code data-lang="html">&lt;form action="/forgot-password" method="POST"&gt;
+  &lt;input type="email" name="email"&gt;
+  &lt;button&gt;Send Reset Link&lt;/button&gt;
+&lt;/form&gt;</code></pre></div>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">const user = await User.findOne({
+  email: req.body.email
+});</code></pre></div>
+      </article>
+
+      <article class="topic" id="t20-generatetoken" data-navlabel="توليد الـToken وحفظه">
+        <h2 class="t-title">2) توليد الـToken وحفظه</h2>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">const crypto = require("crypto");
+
+const token = crypto.randomBytes(32).toString("hex");
+
+const tokenHash = crypto
+  .createHash("sha256")
+  .update(token)
+  .digest("hex");
+
+user.resetPasswordToken = tokenHash;
+user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+await user.save();</code></pre></div>
+      </article>
+
+      <article class="topic" id="t20-sendemail" data-navlabel="بناء اللينك وإرسال الإيميل">
+        <h2 class="t-title">3) بناء اللينك وإرسال الإيميل</h2>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
+
+const html = await ejs.renderFile(resetTemplatePath, {
+  name: user.name,
+  resetUrl
+});
+
+await transporter.sendMail({
+  to: user.email,
+  subject: "Reset your password",
+  html
+});</code></pre></div>
+      </article>
+
+      <article class="topic" id="t20-resetform" data-navlabel="فتح الفورم وتقديمها">
+        <h2 class="t-title">4) User تضغط اللينك وتملأ الفورم</h2>
+        <p>Backend تتحقق من الـToken، ولو صح:</p>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">res.render("reset-password", { token });</code></pre></div>
+        <div class="codebox"><div class="clabel">reset-password.ejs</div><pre><code data-lang="html">&lt;form action="/reset-password" method="POST"&gt;
+  &lt;input type="hidden" name="token" value="&lt;%= token %&gt;"&gt;
+  &lt;input type="password" name="password" placeholder="New password"&gt;
+  &lt;input type="password" name="confirmPassword" placeholder="Confirm password"&gt;
+  &lt;button&gt;Reset Password&lt;/button&gt;
+&lt;/form&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t20-submitvalidation" data-navlabel="Submit والـValidation">
+        <h2 class="t-title">5) Submit والـValidation</h2>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">const { token, password, confirmPassword } = req.body;
+
+if (password !== confirmPassword) {
+  return res.status(400).render("reset-password", {
+    token,
+    error: "Passwords do not match"
+  });
+}</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>مجرد إن GET اتفتحت بنجاح مش معناها إن POST نثق فيها — لازم نتحقق من الـToken تاني وقت تغيير الـPassword فعليًا.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t20-updatepassword" data-navlabel="تحديث الـPassword">
+        <h2 class="t-title">6) التحقق من الـToken تاني وتحديث الـPassword</h2>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">const hashedToken = crypto
+  .createHash("sha256")
+  .update(token)
+  .digest("hex");
+
+const user = await User.findOne({
+  resetPasswordToken: hashedToken,
+  resetPasswordExpires: { $gt: Date.now() }
+});
+
+if (!user) {
+  return res.status(400).render("reset-password-failed");
+}
+
+user.password = await bcrypt.hash(password, 12);
+user.resetPasswordToken = undefined;
+user.resetPasswordExpires = undefined;
+await user.save();
+
+res.render("reset-password-success");</code></pre></div>
+      </article>
+
+      <article class="topic" id="t20-fullflow" data-navlabel="الـFlow الكامل">
+        <h2 class="t-title">7) الـFlow الكامل</h2>
+        <div class="flowbox">
+Forgot Password Form
+  <span class="arrow">↓</span>
+POST email
+  <span class="arrow">↓</span>
+Find User
+  <span class="arrow">↓</span>
+Generate Token
+  <span class="arrow">↓</span>
+Store Hash + Expiry
+  <span class="arrow">↓</span>
+Send Email
+  <span class="arrow">↓</span>
+User clicks link
+  <span class="arrow">↓</span>
+GET /reset-password?token=...
+  <span class="arrow">↓</span>
+Verify token
+  <span class="arrow">↓</span>
+Render HTML Form
+  <span class="arrow">↓</span>
+User enters new password
+  <span class="arrow">↓</span>
+POST form
+  <span class="arrow">↓</span>
+Verify token again
+  <span class="arrow">↓</span>
+Validate password
+  <span class="arrow">↓</span>
+Hash password
+  <span class="arrow">↓</span>
+Update DB
+  <span class="arrow">↓</span>
+Invalidate reset token
+  <span class="arrow">↓</span>
+Render success page
+        </div>
+      </article>
+
+      <article class="topic" id="t20-security" data-navlabel="اعتبارات أمان إضافية">
+        <h2 class="t-title">8) اعتبارات أمان إضافية</h2>
+        <div class="box box--note">
+          <div class="box-h">📝 Account Enumeration</div>
+          <p>لو الإيميل مش موجودة، متقوليش بالضرورة "This email doesn't exist" — لأن حد ممكن يستخدم الـEndpoint ده عشان يعرف مين عنده Account ومين لأ. الأفضل رسالة عامة زي "If an account exists for this email, we've sent a reset link" حتى لو مفيش User أصلًا — ده بيقلل Account Enumeration.</p>
+        </div>
+        <p>ولو الـForm بتستخدم Session/Cookie-based auth، لازم CSRF Protection على الـForm:</p>
+        <div class="codebox"><div class="clabel">reset-password.ejs</div><pre><code data-lang="html">&lt;input type="hidden" name="_csrf" value="&lt;%= csrfToken %&gt;"&gt;</code></pre></div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>الاعتماد على الـToken اللي اتحقق منه في GET بس، من غير إعادة تحقق في POST</b> — لازم تتحققي من الـToken مرة تانية وقت تحديث الـPassword فعليًا.</li>
+        <li><b>الإفصاح إن الإيميل مش موجود</b> — بيفتح باب لـAccount Enumeration؛ الأفضل رسالة عامة في كل الحالات.</li>
+        <li><b>نسيان CSRF Protection على Form بيغيّر بيانات حساسة</b> — خصوصًا مع Session-based Auth.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>اشرحي Flow نسيان كلمة السر (Forgot Password) من البداية للنهاية، وإيه الاعتبارات الأمنية فيه؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لـFlow متعدد المراحل، وقدرتك تحددي كل نقطة أمان محتاجة اهتمام فيه.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في كل خطوة لوحدها: إيه اللي ممكن يستغلها حد خبيث لو معمولاش صح؟
+          <span class="iv-label">الإجابة المختصرة</span>User تطلب Reset بإيميلها، بنولّد Token عشوائي ونخزن Hash منه مع Expiry، نبعت لينك فيه الـToken الخام، User تفتح الفورم وتكتب Password جديد، وبنتحقق من الـToken تاني قبل ما نحدّث الـPassword فعليًا ونلغي الـToken.
+          <span class="iv-label">بالتفصيل</span>أهم نقاط الأمان: تخزين Hash مش Raw Token، Expiry قصيرة، إعادة التحقق من الـToken في الـPOST مش بس الـGET، رسالة عامة لو الإيميل مش موجود (Account Enumeration)، وCSRF Protection على الفورم.
+          <span class="iv-label">ممكن يسأل Follow-up</span>ليه لازم نتحقق من الـToken تاني في الـPOST مع إنه اتحقق منه في الـGET؟ (لأن الـGET وPOST طلبين منفصلين، وممكن يكون فيه وقت طويل بينهم أو محاولة تلاعب؛ التحقق مرة واحدة بس مش كافي أمنيًا).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Flow نسيان كلمة السر بمرحلتيه، وأهم اعتبارات الأمان: Hash+Expiry، إعادة التحقق، Account Enumeration، وCSRF.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>crypto.randomBytes()</code>, <code>crypto.createHash('sha256')</code>, <code>bcrypt.hash()</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>عدم إعادة التحقق من الـToken في POST، الإفصاح عن وجود/عدم وجود الإيميل، نسيان CSRF.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>اشرحي Flow نسيان كلمة السر والاعتبارات الأمنية فيه.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه محتاجين نتحقق من الـToken مرتين (GET وPOST)؟</li>
+            <li>إيه هو Account Enumeration وإزاي نتجنبه في صفحة Forgot Password؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) عشان نضمن إن الـToken لسه صالح ومطابق لحظة التحديث الفعلي للـPassword، مش بس لحظة فتح الفورم.</p>
+              <p>2) هجوم بيكشف مين عنده Account في نظامك بناءً على اختلاف الرد؛ نتجنبه برسالة عامة واحدة بغض النظر عن وجود الإيميل من عدمه.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="te21" data-navlabel="📮 Passing Data & Forms المتقدمة">
+      <div class="crumb">📗 Chapter 21</div>
+      <h1 class="title">Passing Data & Forms المتقدمة</h1>
+      <p class="lede">تفاصيل إضافية مهمة في تمرير أنواع مختلفة من الـData للـTemplate، والتعامل مع Forms جاية من الباك بشكل احترافي أكتر.</p>
+      <hr class="div">
+
+      <article class="topic" id="t21-datatypes" data-navlabel="أنواع الـData اللي ممكن تتبعت">
+        <h2 class="t-title">1) أنواع الـData اللي ممكن تتبعت للـTemplate</h2>
+        <p>ممكن تبعتي أي Data مناسبة للـView — String، Number، Object، Array، URLs، وحتى Tokens ورسائل Error/Success:</p>
+        <div class="codebox"><div class="clabel">أمثلة</div><pre><code data-lang="js">res.render("page", { message: "Hello" });       // String
+res.render("page", { attempts: 3 });             // Number
+res.render("profile", { user: { name: "Nada" } }); // Object
+res.render("products", { products });             // Array
+res.render("email", { verifyUrl });               // URL
+res.render("reset", { token });                   // Token
+res.render("login", { error: "Invalid credentials" });   // Error
+res.render("success", { message: "Password updated successfully" }); // Success</code></pre></div>
+      </article>
+
+      <article class="topic" id="t21-tokencaution" data-navlabel="الحذر مع الـTokens">
+        <h2 class="t-title">2) الحذر مع الـTokens في الـTemplate</h2>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>الـToken بيتعتبر Sensitive Credential مؤقتة — متعمليش Log ليها، ومتعرضيهاش في الصفحة إلا لو محتاجة فعليًا، وغالبًا تبقى Hidden Input (زي ما شفنا في فورم Reset Password) أو تبقى في URL حسب الـFlow.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t21-errorsuccess" data-navlabel="رسائل Error وSuccess">
+        <h2 class="t-title">3) رسائل Error وSuccess</h2>
+        <div class="codebox"><div class="clabel">controller + template</div><pre><code data-lang="js">res.render("login", { error: "Invalid credentials" });</code></pre></div>
+        <div class="codebox"><div class="clabel">login.ejs</div><pre><code data-lang="html">&lt;% if (error) { %&gt;
+  &lt;div&gt;&lt;%= error %&gt;&lt;/div&gt;
+&lt;% } %&gt;</code></pre></div>
+      </article>
+
+      <article class="topic" id="t21-getform" data-navlabel="GET Forms (Search)">
+        <h2 class="t-title">4) GET Forms (زي Search)</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="html">&lt;form action="/products" method="GET"&gt;
+  &lt;input name="search"&gt;
+  &lt;button&gt;Search&lt;/button&gt;
+&lt;/form&gt;</code></pre></div>
+        <p>لو User كتبت "iphone"، الـBrowser تروح لـ <code>/products?search=iphone</code>، وفي Express بتوصلك في <code>req.query.search</code>.</p>
+      </article>
+
+      <article class="topic" id="t21-postform" data-navlabel="POST Forms">
+        <h2 class="t-title">5) POST Forms</h2>
+        <p>عشان Express تفهم Form URL-encoded، لازم:</p>
+        <div class="codebox"><div class="clabel">app.js</div><pre><code data-lang="js">app.use(express.urlencoded({ extended: true }));</code></pre></div>
+        <p>وبعدها البيانات بتوصل في <code>req.body</code>.</p>
+      </article>
+
+      <article class="topic" id="t21-valueretention" data-navlabel="الاحتفاظ بالقيم بعد فشل Validation">
+        <h2 class="t-title">6) الاحتفاظ بالقيم بعد فشل Validation</h2>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">if (!email) {
+  return res.status(400).render("register", {
+    error: "Email is required",
+    values: req.body
+  });
+}</code></pre></div>
+        <div class="codebox"><div class="clabel">register.ejs</div><pre><code data-lang="html">&lt;input name="email" value="&lt;%= values?.email || '' %&gt;"&gt;</code></pre></div>
+        <p>فلو الـValidation فشلت، الـUser متضطرش تكتب كل حاجة من الأول.</p>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ استثناء مهم</div>
+          <p>متعمليش نفس الشيء مع Password — يعني متكتبيش <code>value="&lt;%= values.password %&gt;"</code>. خلي حقل الـPassword فاضي بعد أي Error لأسباب أمنية وUX.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>عمل Log لأي Token بيتبعت للـTemplate</b> — الـTokens بيانات حساسة مؤقتة، ظهورها في الـLogs بيعتبر تسريب أمني.</li>
+        <li><b>الاحتفاظ بقيمة الـPassword وإعادة عرضها في input بعد فشل Validation</b> — خطر أمني وتجربة استخدام سيئة؛ سيبيها فاضية دايمًا.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي تحافظي على تجربة استخدام كويسة لما فورم التسجيل يفشل في الـValidation؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك للتوازن بين UX جيد والأمان عند إعادة عرض بيانات Form بعد فشل.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو المستخدم كتب 10 حقول وغلط في واحد بس، هل من المعقول تخليها تكتب الكل تاني؟
+          <span class="iv-label">الإجابة المختصرة</span>بنمرر req.body تاني للـTemplate كـvalues، ونحط قيمة كل input بـ values?.fieldName || ''، ما عدا حقول الـPassword اللي بتفضل فاضية دايمًا لأسباب أمنية.
+          <span class="iv-label">بالتفصيل</span>استخدام <code>?.</code> و<code>|| ''</code> بيحمينا من Error لو values أصلًا مش موجودة (زي أول ما الصفحة تتفتح من غير أي Submit قبل كده).
+          <span class="iv-label">ممكن يسأل Follow-up</span>ليه بالتحديد ميصحش نعيد عرض الـPassword؟ (لأن ده بيزود فرصة تسريبه لو الشاشة اتشافت أو Screenshot اتاخد، وده مش سلوك متوقع من المستخدم أصلًا).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>أنواع البيانات المختلفة اللي بتتبعت للـTemplate، الحذر مع الـTokens، وأنماط متقدمة في التعامل مع Forms (GET Search، الاحتفاظ بالقيم).</p>
+        <h4>أهم Syntax</h4>
+        <p><code>values?.field || ''</code>, <code>req.query.search</code>, <code>express.urlencoded()</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>Log للـTokens، إعادة عرض الـPassword بعد فشل Validation.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تحافظي على UX كويس مع الحفاظ على الأمان بعد فشل Validation.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إزاي تحتفظي بقيم الفورم بعد فشل الـValidation من غير الـPassword؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) بتمرري req.body كـvalues لـres.render()، وتحطي كل input بـ value="&lt;%= values?.field || '' %&gt;"، وتسيبي حقل الـPassword فاضي دايمًا.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="te22" data-navlabel="🧬 Template Engine خارج res.render()">
+      <div class="crumb">📗 Chapter 22</div>
+      <h1 class="title">Template Engine خارج res.render()</h1>
+      <p class="lede">من أهم النقاط في الصفحة كلها: EJS نفسها Library تقدر تولّد HTML String من غير أي علاقة بـHTTP Response — دي اللي بتفتح الباب لاستخدامها في الإيميلات وPDF وأكتر.</p>
+      <hr class="div">
+
+      <article class="topic" id="t22-notjustrender" data-navlabel="EJS مش بس res.render()">
+        <h2 class="t-title">1) EJS مش بس res.render()</h2>
+        <p>ناس كتير تتخيل إن EJS معناها res.render() بس — لأ. EJS نفسها Library تقدر تولّد HTML String، بغض النظر عن استخدامها جوه Express Response ولا لأ.</p>
+      </article>
+
+      <article class="topic" id="t22-rendervsrenderfile" data-navlabel="res.render() مقابل ejs.renderFile()">
+        <h2 class="t-title">2) res.render() مقابل ejs.renderFile()</h2>
+        <p><code>res.render()</code> بتستخدم لما عندك HTTP Response — Express بتلاقي الـTemplate، تعمل Render، وتبعت HTTP Response على طول:</p>
+        <div class="flowbox">
+Find Template
+  <span class="arrow">↓</span>
+Render
+  <span class="arrow">↓</span>
+Send HTTP Response
+        </div>
+        <p><code>ejs.renderFile()</code> مختلفة — بترجعلك HTML String بس، مش بتبعتها لأي حد، وإنتِ تقرري تعملي بيها إيه:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const html = await ejs.renderFile(templatePath, data);</code></pre></div>
+        <div class="box box--mental">
+          <div class="box-h">🧠 احفظي الفرق ده</div>
+          <p><code>res.render() = Render Template + Send HTTP Response</code>. أما <code>ejs.renderFile() = Render Template + Return HTML String</code>.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t22-usecases" data-navlabel="استخدامات ejs.renderFile()">
+        <h2 class="t-title">3) استخدامات ejs.renderFile()</h2>
+        <p>الـHTML String الناتج ممكن يروح لأي حتة — مش بس Browser:</p>
+        <div class="flowbox">
+ejs.renderFile()
+  <span class="arrow">↓</span>
+HTML String
+├─ Email (Nodemailer)
+├─ PDF (HTML-to-PDF tool)
+├─ HTML response يدوي (res.send(html))
+└─ أي استخدام تاني
+        </div>
+        <p>مثال Email (زي ما شفنا في فصل Email Templates):</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const html = await ejs.renderFile(templatePath, { name, verifyUrl });
+
+await transporter.sendMail({ to: email, subject: "Verify your email", html });</code></pre></div>
+        <p>مثال HTML Response يدوي:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const html = await ejs.renderFile(templatePath, data);
+res.send(html);</code></pre></div>
+        <p>ده شبه res.render(...)، لكن إنتِ عملتي الـRender بنفسك.</p>
+        <p>مثال PDF (زي Invoice):</p>
+        <div class="codebox"><div class="clabel">invoice.ejs</div><pre><code data-lang="html">&lt;h1&gt;Invoice #&lt;%= invoice.id %&gt;&lt;/h1&gt;
+&lt;p&gt;Total: &lt;%= invoice.total %&gt;&lt;/p&gt;</code></pre></div>
+        <div class="flowbox">
+Render HTML
+  <span class="arrow">↓</span>
+Generate PDF
+  <span class="arrow">↓</span>
+Download / Email
+        </div>
+        <p>وحتى ممكن نستخدم Template System لرسائل Notification (مش لازم HTML حتى، حسب الـEngine والـUse Case) — زي "Hello {{name}}, your order {{orderId}} is ready."</p>
+      </article>
+
+      <article class="topic" id="t22-emailservicearch" data-navlabel="تنظيم الكود: Email Service">
+        <h2 class="t-title">4) تنظيم الكود: Email Service منفصل</h2>
+        <p>بدل Controller فيها كل حاجة (Generate Token, Build URL, Render Template, Create Transport, Send Mail)، نظمي الملفات:</p>
+        <div class="codebox"><div class="clabel">folder structure</div><pre><code data-lang="text">src/
+├── services/
+│   ├── authService.js
+│   └── emailService.js
+├── emails/
+│   ├── verify.ejs
+│   └── reset-password.ejs
+└── utils/
+    └── token.js</code></pre></div>
+        <div class="codebox"><div class="clabel">services/emailService.js</div><pre><code data-lang="js">const ejs = require("ejs");
+const path = require("path");
+
+async function sendVerificationEmail({ user, token }) {
+  const verifyUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
+
+  const templatePath = path.join(__dirname, "../emails/verify.ejs");
+
+  const html = await ejs.renderFile(templatePath, {
+    name: user.name,
+    verifyUrl
+  });
+
+  await transporter.sendMail({
+    to: user.email,
+    subject: "Verify your email",
+    html
+  });
+}</code></pre></div>
+        <p>والـController مش لازم تعرف EJS ولا Nodemailer Details أصلًا — بتقول بس:</p>
+        <div class="codebox"><div class="clabel">controller</div><pre><code data-lang="js">await emailService.sendVerificationEmail({ user, token });</code></pre></div>
+        <p>ده أحسن تنظيم — كل طبقة بتعرف بس اللي محتاجاه.</p>
+      </article>
+
+      <article class="topic" id="t22-thinkingframework" data-navlabel="أهم طريقة تفكير">
+        <h2 class="t-title">5) أهم طريقة تفكير عايزاكي تمشي بيها</h2>
+        <p>أي Template تقابلك اسألي نفسك الأسئلة دي بالترتيب:</p>
+        <div class="flowbox">
+1) الـHTML دي هتروح فين؟ (Browser → res.render() | Email → ejs.renderFile() | PDF → renderFile() ثم PDF generator)
+2) الـData جاية منين؟ (Database, Request, Config, Generated Token, URL)
+3) هل الـData دي Trusted؟ (لو User Input: Escape, Validate, Sanitize لو HTML مسموح)
+4) هل فيه Secret أو Token؟ (لو آه: Expiry, One-time use, متعمليش Log, HTTPS, إلغاء بعد الاستخدام)
+5) هل الـTemplate فيها أجزاء متكررة؟ (لو آه: Partials)
+        </div>
+        <div class="box box--why">
+          <div class="box-h">🟠 الفكرة الأساسية</div>
+          <p>الموضوع مش مجرد EJS Syntax — ده بقى Flow شغل كاملة، وده الفرق بين حد بيحفظ Syntax وحد فاهم إزاي يبني Feature حقيقية.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t22-finalmap" data-navlabel="الخريطة النهائية">
+        <h2 class="t-title">6) الخريطة النهائية</h2>
+        <div class="flowbox">
+TEMPLATE ENGINE
+├─ Web Pages → res.render() → HTML Response → Browser
+└─ Emails → ejs.renderFile() → HTML String → Nodemailer → Email
+        </div>
+        <p>ومعاهم دايمًا: Variables، Conditions، Loops، Partials، Escaping، Dynamic Data. وفي Auth Flows بالتحديد: Verification، Reset Password، OTP.</p>
+        <div class="box box--mental">
+          <div class="box-h">🧠 القاعدة الذهبية</div>
+          <p><code>res.render()</code> بتعملي بيها HTML وتبعتيها للـBrowser مباشرة. <code>ejs.renderFile()</code> بتعملي بيها HTML String، وبعدين إنتِ تحددي هتوديها Email ولا PDF ولا أي مكان تاني.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>الاعتقاد إن EJS مربوطة بـres.render() فقط</b> — ده بيمنعك من استخدامها في سيناريوهات قوية زي الإيميلات وPDF.</li>
+        <li><b>حط كل منطق الإيميل (Token, URL, Render, Send) جوه الـController مباشرة</b> — بيصعب القراءة والاختبار؛ الأفضل Service منفصل.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين res.render() وejs.renderFile()، وإمتى تستخدمي كل واحدة؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك العميق لكون Template Engine مش مقيدة باستخدام واحد بس.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: إيه اللي بيحصل فعليًا جوه res.render()؟ هل هو أكتر من مجرد "استدعاء renderFile وبعتها"؟
+          <span class="iv-label">الإجابة المختصرة</span>res.render() بتعمل Render للـTemplate وتبعت الناتج كـHTTP Response على طول. ejs.renderFile() بتعمل بس Render وترجع HTML String، وإنتِ اللي بتقرري مصيرها — تبعتيها Email، تحطيها في PDF، أو حتى تبعتيها بنفسك بـres.send().
+          <span class="iv-label">بالتفصيل</span>الفهم ده بيفتح استخدامات أوسع بكتير من مجرد صفحات الويب — نفس مهارة كتابة EJS Template بتتطبق على الإيميلات وأي مستند HTML تاني.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إزاي تنظمي كود إرسال إيميل التفعيل بشكل احترافي؟ (بتعملي emailService منفصل مسؤول عن بناء الـURL وعمل renderFile وإرسال الميل، والـController بس بتستدعي الـService ده من غير ما تعرف تفاصيله).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>EJS كـLibrary مستقلة عن res.render()، الفرق بين res.render() وejs.renderFile()، استخداماتها (Email, PDF, HTML يدوي)، وتنظيم الكود في Email Service منفصل.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>await ejs.renderFile(templatePath, data)</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>الاعتقاد إن EJS مقيدة بـres.render() فقط، حشر كل منطق الإيميل جوه الـController.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين res.render() وejs.renderFile() وإمتى تستخدمي كل واحدة.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين res.render() وejs.renderFile()؟</li>
+            <li>لو عندك Invoice عايزة تحوليها PDF، إيه دور EJS هنا؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) res.render() بترندر وتبعت HTTP Response على طول. ejs.renderFile() بترندر وترجع HTML String بس، وإنتِ تحددي مصيره.</p>
+              <p>2) EJS بتحول Template + بيانات الـInvoice لـHTML String عن طريق ejs.renderFile()، وبعدين الـHTML ده بيتحول PDF عن طريق أداة HTML-to-PDF منفصلة.</p>
             </div>
           </details>
         </div>

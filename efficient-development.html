@@ -17,8 +17,8 @@
   --text:#ece9f4;
   --text-dim:#a6a2b8;
   --text-faint:#726e85;
-  --violet:#9b87f5;
-  --violet-dim:#7c68d9;
+  --violet:#4f8fbf;
+  --violet-dim:#1b3c53;
   --magenta:#f2599e;
   --amber:#f0a94e;
   --blue:#5aa9f7;
@@ -29,7 +29,7 @@
   --amber-bg:rgba(240,169,78,.09);
   --blue-bg:rgba(90,169,247,.09);
   --magenta-bg:rgba(242,89,158,.09);
-  --violet-bg:rgba(155,135,245,.1);
+  --violet-bg:rgba(79,143,191,.1);
   --radius:14px;
   --maxw:860px;
 }
@@ -43,7 +43,7 @@ body{
   font-size:16px;
   -webkit-font-smoothing:antialiased;
 }
-::selection{background:var(--violet);color:#0b0b10;}
+::selection{background:var(--violet);color:var(--bg);}
 a{color:var(--blue);text-decoration:none;}
 code, pre, .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
 .app{display:flex;min-height:100vh;align-items:flex-start;}
@@ -87,11 +87,14 @@ code, pre, .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
 .navgroup{margin-bottom:6px;}
 .navgroup-title{
   display:flex;align-items:center;gap:8px;
-  font-size:11.5px;font-weight:800;color:var(--text-faint);
+  font-size:11.5px;font-weight:800;color:var(--violet);
   text-transform:uppercase;letter-spacing:.06em;
-  padding:14px 8px 6px;cursor:pointer;user-select:none;
+  margin:14px 0 6px;padding:9px 10px;cursor:pointer;user-select:none;
+  background:var(--violet-bg);border:1px solid rgba(79,143,191,.28);
+  border-radius:9px;transition:background .15s,border-color .15s;
 }
-.navgroup-title .chev{margin-inline-start:auto;transition:transform .15s;font-size:10px;opacity:.6;}
+.navgroup-title:hover{background:rgba(79,143,191,.18);border-color:rgba(79,143,191,.45);}
+.navgroup-title .chev{margin-inline-start:auto;transition:transform .15s;font-size:10px;opacity:.75;color:var(--violet-dim);}
 .navgroup.collapsed .navgroup-title .chev{transform:rotate(-90deg);}
 .navgroup.collapsed .navlist{display:none;}
 .navlist{display:flex;flex-direction:column;gap:1px;}
@@ -158,7 +161,7 @@ h3.s-label{
 .box--correction .box-h{color:var(--red);}
 .box--addition{background:var(--blue-bg);border-color:rgba(90,169,247,.3);}
 .box--addition .box-h{color:var(--blue);}
-.box--mental{background:var(--violet-bg);border-color:rgba(155,135,245,.35);}
+.box--mental{background:var(--violet-bg);border-color:rgba(79,143,191,.35);}
 .box--mental .box-h{color:var(--violet);}
 .box--quick{background:linear-gradient(150deg,var(--green-bg),transparent);border-color:rgba(76,214,138,.35);}
 .box--quick .box-h{color:var(--green);}
