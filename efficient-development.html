@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Efficient Development</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#0b0b10;
+  --sidebar-bg:#0e0e13;
+  --surface:#16161d;
+  --surface-2:#1b1b24;
+  --surface-3:#202030;
+  --border:rgba(255,255,255,.09);
+  --border-strong:rgba(255,255,255,.16);
+  --text:#ece9f4;
+  --text-dim:#a6a2b8;
+  --text-faint:#726e85;
+  --violet:#9b87f5;
+  --violet-dim:#7c68d9;
+  --magenta:#f2599e;
+  --amber:#f0a94e;
+  --blue:#5aa9f7;
+  --green:#4cd68a;
+  --red:#f16767;
+  --red-bg:rgba(241,103,103,.09);
+  --green-bg:rgba(76,214,138,.09);
+  --amber-bg:rgba(240,169,78,.09);
+  --blue-bg:rgba(90,169,247,.09);
+  --magenta-bg:rgba(242,89,158,.09);
+  --violet-bg:rgba(155,135,245,.1);
+  --radius:14px;
+  --maxw:860px;
+}
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  direction:rtl;
+  font-family:'Cairo',system-ui,sans-serif;
+  line-height:1.9;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--violet);color:#0b0b10;}
+a{color:var(--blue);text-decoration:none;}
+code, pre, .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
+.app{display:flex;min-height:100vh;align-items:flex-start;}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  width:308px;flex:none;
+  background:var(--sidebar-bg);
+  border-inline-start:1px solid var(--border);
+  height:100vh;position:sticky;top:0;
+  display:flex;flex-direction:column;
+  padding:22px 18px;
+  overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar{width:8px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:8px;}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  font-weight:800;font-size:17px;margin-bottom:16px;padding:0 4px;
+}
+.brand .dot{width:11px;height:11px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);flex:none;}
+.sidebar-link{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:10px;padding:10px 12px;margin-bottom:18px;
+  font-weight:700;font-size:13.5px;color:var(--text);
+  transition:border-color .15s,background .15s;
+}
+.sidebar-link:hover{border-color:var(--violet-dim);background:var(--surface-2);color:var(--text);}
+.sidebar-link-icon{font-size:15px;flex:none;}
+.sidebar-link-text{flex:1;}
+.sidebar-link-arrow{opacity:.5;font-size:13px;flex:none;}
+.searchbox{position:relative;margin-bottom:18px;}
+.searchbox input{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  color:var(--text);border-radius:10px;padding:10px 36px 10px 12px;
+  font-family:'Cairo';font-size:13.5px;outline:none;
+}
+.searchbox input:focus{border-color:var(--violet-dim);}
+.searchbox svg{position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:12px;opacity:.5;pointer-events:none;}
+.navgroup{margin-bottom:6px;}
+.navgroup-title{
+  display:flex;align-items:center;gap:8px;
+  font-size:11.5px;font-weight:800;color:var(--text-faint);
+  text-transform:uppercase;letter-spacing:.06em;
+  padding:14px 8px 6px;cursor:pointer;user-select:none;
+}
+.navgroup-title .chev{margin-inline-start:auto;transition:transform .15s;font-size:10px;opacity:.6;}
+.navgroup.collapsed .navgroup-title .chev{transform:rotate(-90deg);}
+.navgroup.collapsed .navlist{display:none;}
+.navlist{display:flex;flex-direction:column;gap:1px;}
+.navlink{
+  display:block;padding:8px 10px;border-radius:8px;
+  font-size:13.5px;color:var(--text-dim);font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.navlink:hover{background:var(--surface);color:var(--text);}
+.navlink.active{background:var(--violet-bg);color:var(--violet);font-weight:700;}
+.navlink.hidden{display:none;}
+.navgroup.hidden{display:none;}
+.backtop{
+  margin-top:auto;padding-top:14px;text-align:center;
+  font-size:12px;color:var(--text-faint);border-top:1px solid var(--border);
+}
+
+/* ===== Content ===== */
+.content{flex:1;min-width:0;padding:56px 48px 120px;max-width:1100px;}
+.chapter{max-width:var(--maxw);margin:0 auto 110px;scroll-margin-top:24px;}
+.chapter:first-child{margin-top:0;}
+.crumb{
+  color:var(--blue);font-weight:700;font-size:13.5px;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.chapter h1.title{
+  font-size:32px;font-weight:800;margin:0 0 14px;text-wrap:balance;
+}
+.chapter > .lede{color:var(--text-dim);font-size:15.5px;max-width:72ch;margin-bottom:26px;}
+hr.div{border:none;border-top:1px solid var(--border);margin:28px 0 34px;}
+
+.topic{margin-bottom:52px;scroll-margin-top:24px;}
+.topic h2.t-title{
+  font-size:22px;font-weight:800;margin:0 0 18px;
+  padding-inline-start:14px;border-inline-start:4px solid var(--violet);
+}
+h3.s-label{
+  display:flex;align-items:center;gap:8px;
+  font-size:14.5px;font-weight:800;color:var(--amber);
+  margin:26px 0 10px;
+}
+
+.box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;
+}
+.box > .box-h{font-weight:800;font-size:14.5px;margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+.box > p{margin:0 0 10px;color:var(--text);}
+.box > p:last-child{margin-bottom:0;}
+.box ul, .box ol{margin:8px 0;padding-inline-start:22px;}
+.box li{margin-bottom:6px;}
+
+.box--what .box-h{color:var(--magenta);}
+.box--why .box-h{color:var(--amber);}
+.box--how .box-h{color:var(--blue);}
+.box--flowpos .box-h{color:var(--green);}
+.box--note{border-color:var(--border-strong);}
+.box--note .box-h{color:var(--violet);}
+.box--warn{background:var(--amber-bg);border-color:rgba(240,169,78,.35);}
+.box--warn .box-h{color:var(--amber);}
+.box--mistake{background:var(--red-bg);border-color:rgba(241,103,103,.35);}
+.box--mistake .box-h{color:var(--red);}
+.box--correction{background:var(--red-bg);border-color:rgba(241,103,103,.4);}
+.box--correction .box-h{color:var(--red);}
+.box--addition{background:var(--blue-bg);border-color:rgba(90,169,247,.3);}
+.box--addition .box-h{color:var(--blue);}
+.box--mental{background:var(--violet-bg);border-color:rgba(155,135,245,.35);}
+.box--mental .box-h{color:var(--violet);}
+.box--quick{background:linear-gradient(150deg,var(--green-bg),transparent);border-color:rgba(76,214,138,.35);}
+.box--quick .box-h{color:var(--green);}
+.box--confuse{border-color:var(--border-strong);}
+.box--confuse .box-h{color:var(--magenta);}
+
+/* code */
+.codebox{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;}
+.codebox .clabel{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 16px;font-size:11.5px;color:var(--text-faint);
+  border-bottom:1px solid var(--border);font-family:'JetBrains Mono';
+  letter-spacing:.03em;
+}
+.codebox pre{margin:0;padding:16px 18px;overflow-x:auto;font-size:13.6px;line-height:1.75;direction:ltr;text-align:left;}
+.codebox code{color:#dcd9ea;}
+.tok-kw{color:var(--violet);}
+.tok-str{color:var(--green);}
+.tok-com{color:var(--text-faint);font-style:italic;}
+.tok-fn{color:var(--amber);}
+.tok-num{color:var(--blue);}
+.tok-prop{color:#dcd9ea;}
+.flowbox{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;direction:ltr;text-align:center;font-family:'JetBrains Mono';font-size:13.5px;color:var(--text-dim);}
+.flowbox .arrow{color:var(--violet);font-weight:700;padding:0 4px;}
+
+/* line by line explanation */
+.linewalk{margin-bottom:16px;}
+.lw-line{
+  display:flex;gap:14px;padding:12px 0;border-bottom:1px dashed var(--border);
+}
+.lw-line:last-child{border-bottom:none;}
+.lw-code{
+  flex:none;width:auto;min-width:150px;max-width:270px;
+  background:var(--surface-2);border-radius:8px;padding:6px 10px;
+  font-family:'JetBrains Mono';font-size:12.5px;color:var(--amber);
+  direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-word;height:fit-content;
+}
+.lw-text{flex:1;color:var(--text-dim);font-size:14.5px;}
+.lw-text b{color:var(--text);font-weight:700;}
+
+/* function box */
+.fnbox{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);padding:0;margin-bottom:16px;overflow:hidden;}
+.fnbox .fn-head{background:var(--surface-3);padding:11px 18px;font-weight:800;font-family:'JetBrains Mono';font-size:14px;color:var(--amber);}
+.fnbox .fn-row{display:flex;gap:12px;padding:10px 18px;border-top:1px solid var(--border);font-size:14px;}
+.fnbox .fn-row b{flex:none;width:120px;color:var(--violet);font-weight:700;}
+.fnbox .fn-row span{color:var(--text-dim);}
+
+/* tables */
+.tablewrap{overflow-x:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:var(--radius);}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th,td{padding:11px 16px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;}
+thead th{background:var(--surface-3);color:var(--text-faint);font-size:12px;text-transform:uppercase;letter-spacing:.04em;font-weight:800;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--surface);}
+td code{background:var(--surface-2);padding:2px 7px;border-radius:6px;font-size:12.5px;color:var(--amber);}
+
+/* interview */
+.interview{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+.interview summary{
+  cursor:pointer;padding:14px 18px;font-weight:700;font-size:14.5px;
+  display:flex;gap:10px;align-items:flex-start;list-style:none;
+}
+.interview summary::-webkit-details-marker{display:none;}
+.interview summary::before{content:"+";color:var(--blue);font-weight:800;flex:none;width:18px;}
+.interview[open] summary::before{content:"−";}
+.interview[open] summary{border-bottom:1px solid var(--border);}
+.interview .iv-body{padding:6px 18px 16px;font-size:14px;color:var(--text-dim);}
+.interview .iv-body .iv-label{color:var(--amber);font-weight:800;font-size:12.5px;display:block;margin:10px 0 4px;}
+.interview .iv-body .iv-label:first-child{margin-top:0;}
+
+/* mistakes list simple */
+.msistakes-list{list-style:none;padding:0;margin:0;}
+.mistakes-list li{padding:8px 0;border-bottom:1px dashed var(--border);}
+.mistakes-list li:last-child{border-bottom:none;}
+
+/* chapter summary */
+.chsummary{background:var(--surface);border:2px solid var(--violet-dim);border-radius:var(--radius);padding:22px 24px;margin-top:10px;}
+.chsummary h3{margin:0 0 14px;color:var(--violet);font-size:16.5px;}
+.chsummary h4{color:var(--text);font-size:13.5px;margin:14px 0 6px;}
+.chsummary h4:first-of-type{margin-top:0;}
+
+.qbank{background:var(--surface-2);border:1px dashed var(--border-strong);border-radius:var(--radius);padding:20px 22px;margin-top:14px;}
+.qbank ol{margin:0;padding-inline-start:22px;}
+.qbank li{margin-bottom:8px;color:var(--text-dim);}
+.qbank .reveal summary{cursor:pointer;color:var(--blue);font-weight:700;font-size:13.5px;margin-top:14px;}
+
+.needsclar{background:var(--red-bg);border:1px dashed var(--red);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;}
+
+/* compact method/definition entries */
+.defgrid{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.defitem{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 18px;}
+.defitem .dname{font-family:'JetBrains Mono';color:var(--amber);font-weight:700;font-size:14px;margin-bottom:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.defitem .dname .tag{font-family:'Cairo';font-size:10.5px;font-weight:800;background:var(--violet-bg);color:var(--violet);padding:2px 8px;border-radius:99px;}
+.defitem p{margin:0;color:var(--text-dim);font-size:14px;}
+.defitem code.inline-ex{display:block;margin-top:7px;background:var(--surface-2);padding:6px 10px;border-radius:7px;font-size:12.5px;color:#dcd9ea;direction:ltr;text-align:left;}
+
+/* generic small helpers */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:99px;}
+.badge--v{background:var(--violet-bg);color:var(--violet);}
+.badge--g{background:var(--green-bg);color:var(--green);}
+.badge--r{background:var(--red-bg);color:var(--red);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:760px){.grid2{grid-template-columns:1fr;}}
+
+@media (max-width:900px){
+  .sidebar{position:fixed;inset-inline-end:0;top:0;z-index:50;transform:translateX(100%);transition:transform .2s;box-shadow:-10px 0 40px rgba(0,0,0,.5);}
+  body.nav-open .sidebar{transform:translateX(0);}
+  .content{padding:56px 20px 120px;}
+  .navtoggle{display:flex !important;}
+}
+.navtoggle{
+  display:none;position:fixed;top:16px;inset-inline-end:16px;z-index:60;
+  width:44px;height:44px;border-radius:12px;background:var(--surface-3);
+  border:1px solid var(--border-strong);color:var(--text);align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;
+}
+
+</style>
+</head>
+<body>
+
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand"><span class="dot"></span> Efficient Development</div>
+    <a class="sidebar-link" href="index.html">
+      <span class="sidebar-link-icon">📗</span>
+      <span class="sidebar-link-text">دفتر مذاكرة Node.js</span>
+      <span class="sidebar-link-arrow">↗</span>
+    </a>
+    <div class="searchbox">
+      <input id="searchInput" type="text" placeholder="دوري على تاسك أو موضوع...">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+    <div id="navRoot"></div>
+    <div class="backtop">⚡ ملاحظات وأدوات لتطوير أسرع وأنضف</div>
+  </nav>
+
+  <div class="navtoggle" id="navToggle">☰</div>
+
+  <main class="content" id="contentRoot">
+    <section class="chapter" id="ch0" data-navlabel="🏁 عن الصفحة دي">
+      <div class="crumb">🏁 قبل ما نبدأ</div>
+      <h1 class="title">Efficient Development</h1>
+      <p class="lede">الصفحة دي هتبقى مرجع منفصل لأي حاجة تخلي شغلك في التطوير أسرع وأنضف — أدوات، اختصارات، عادات كويسة، وأفكار عملية. هنضيف فيها حاجات جديدة أول بأول، بنفس شكل دفتر مذاكرة Node.js.</p>
+      <hr class="div">
+
+      <article class="topic" id="t0-about" data-navlabel="عن الصفحة">
+        <h2 class="t-title">إيه فايدة الصفحة دي؟</h2>
+        <div class="box box--why">
+          <div class="box-h">💡 ببساطة</div>
+          <p>مع الوقت هيتجمع عندك حاجات كتير بتخلي شغلك أسرع وأنضف — من عادات صغيرة في كتابة الكود، لحد أدوات وIDE Shortcuts وWorkflow Tips. الصفحة دي المكان اللي هيجمعهم كلهم في مكان واحد، منظمين بنفس شكل دفتر مذاكرة Node.js (نفس الـ Boxes ونفس طريقة الشرح).</p>
+        </div>
+        <div class="box box--note">
+          <div class="box-h">🟪 لسه البداية</div>
+          <p>الصفحة دي فاضية دلوقتي غير الفصل ده، وهنبدأ نضيف فيها فصول جديدة أول ما نحدد المواضيع اللي عايزين نغطيها.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="chapter" id="ea-mindset" data-navlabel="🧠 إزاي تفكري قبل ما تكتبي كود">
+      <div class="crumb">📗 Chapter 1</div>
+      <h1 class="title">إزاي تفكري كـ Backend Developer شاطرة قبل ما تكتبي الكود</h1>
+      <p class="lede">الفرق الحقيقي مش إنك تحفظي إن <code>routes</code> في فولدر و<code>controllers</code> في فولدر. الفرق إنك تبقي فاهمة: الكود ده مسؤوليته إيه؟ يتحط فين؟ مين المفروض يعرف عنه؟ لو المشروع كبر، هل هعرف أغيره من غير ما أكسر 20 حاجة؟ لو حصل Bug، هعرف أوصل له بسرعة؟ وده التفكير اللي هنمشي بيه في كل نقطة في الصفحة دي.</p>
+      <hr class="div">
+
+      <article class="topic" id="tea-startquestion" data-navlabel="أول قاعدة: متبدأيش بالكود">
+        <h2 class="t-title">1) أول قاعدة: متبدأيش بالكود</h2>
+        <p>لما ييجي Requirement زي "عايزين Endpoint يعمل Create Order":</p>
+        <div class="box box--mistake">
+          <div class="box-h">❌ الغلط</div>
+          <p>إنك تفتحي VS Code على طول وتكتبي:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="js">app.post('/orders', async (req, res) => {
+  // 150 سطر
+});</code></pre></div>
+        <div class="box box--how">
+          <div class="box-h">🔵 الصحيح</div>
+          <p>إنك الأول تسألي نفسك سلسلة أسئلة قبل ما تلمسي الكود خالص:</p>
+        </div>
+        <div class="flowbox">الـRequest جاية منين؟ <span class="arrow">↓</span> مين يتأكد إن المستخدم مسجل؟ <span class="arrow">↓</span> مين يتأكد إن Body صح؟ <span class="arrow">↓</span> مين ينفذ Business Logic؟ <span class="arrow">↓</span> مين يتعامل مع Database؟ <span class="arrow">↓</span> مين يرجع HTTP Response؟ <span class="arrow">↓</span> لو حصل Error، مين يمسكه؟ <span class="arrow">↓</span> إزاي هعرف بعدين حصل إيه؟</div>
+        <div class="box box--quick">
+          <div class="box-h">⚡ القاعدة</div>
+          <p>لو قدرتِ تجاوبي الأسئلة دي قبل الكود، نص شغلك خلص.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tea-mentalmodel" data-navlabel="الـMental Model الأساسية">
+        <h2 class="t-title">2) الـMental Model الأساسية لأي Backend</h2>
+        <p>أي Feature تقريبًا تقدري تشوفيها بالشكل ده — وده أهم Flow في الموضوع كله:</p>
+        <div class="flowbox">Client <span class="arrow">↓</span> Request <span class="arrow">↓</span> Route <span class="arrow">↓</span> Middleware <span class="arrow">↓</span> Validation <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Service <span class="arrow">↓</span> Model / Repository <span class="arrow">↓</span> Database <span class="arrow">↓</span> Service <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Response</div>
+        <div class="box box--note">
+          <div class="box-h">🟪 لاحظي</div>
+          <p>خلينا في باقي فصول الصفحة دي نفهم كل طبقة "ليه موجودة" بدل "بنكتب فيها إيه" — وده بالظبط اللي هيفرق بينك وبين حد بيحفظ Folder Structure بس.</p>
+        </div>
+      </article>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>التفكير قبل الكود، الـ Mental Model الأساسية لأي Request (Client → Route → Middleware → Validation → Controller → Service → Model → Database → Response).</p>
+        <h4>أهم الأخطاء</h4>
+        <p>البدء بكتابة الكود مباشرة من غير ما تسألي نفسك مين مسؤول عن إيه في الـ Flow.</p>
+      </div>
+    </section>
+
+    <section class="chapter" id="ea1" data-navlabel="🗂️ Project Structure & Code Organization">
+      <div class="crumb">📗 Chapter 2</div>
+      <h1 class="title">Project Structure & Code Organization</h1>
+      <p class="lede">هنا هنفهم ليه بنفصل الكود لطبقات، وكل طبقة مسؤوليتها إيه بالظبط، عشان المشروع يفضل قابل للتوسع من غير ما يتحول لكتلة واحدة محدش فاهمها.</p>
+      <hr class="div">
+
+      <article class="topic" id="t1-problem" data-navlabel="المشكلة اللي بنحلها">
+        <h2 class="t-title">1) المشكلة اللي بنحلها</h2>
+        <p>تخيلي كل الكود في File واحدة:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.post('/register', ...)
+app.post('/login', ...)
+app.get('/users', ...)
+app.delete('/users/:id', ...)
+app.post('/orders', ...)
+app.get('/products', ...)</code></pre></div>
+        <p>وتحت كل Route: validation، database، password hashing، email sending، business logic، error handling، response. بعد فترة هتلاقي <code>app.js = 5000 سطر</code>.</p>
+        <div class="box box--why">
+          <div class="box-h">🟠 المشكلة الحقيقية</div>
+          <p>المشكلة مش بس إن الملف كبير. المشكلة الحقيقية: <b>كل حاجة عارفة كل حاجة</b>. وده بيخلي التعديل خطر.</p>
+        </div>
+        <div class="box box--mental">
+          <div class="box-h">🧠 فكري في المشروع كشركة</div>
+          <p>مش منطقي موظف الاستقبال: يستقبل العميل + يعمل الحسابات + يمضي العقد + يدير المخزن + يصلح الكمبيوتر. كل واحد له مسؤولية. نفس الفكرة بالظبط في الكود.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t1-folders" data-navlabel="Folder Structure">
+        <h2 class="t-title">2) Folder Structure</h2>
+        <p>ممكن مشروع يبقى:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">src/
+│
+├── routes/
+├── controllers/
+├── services/
+├── models/
+├── middlewares/
+├── validators/
+├── utils/
+├── config/
+├── app.js
+└── server.js</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>الـ Folder Structure مش هدف. يعني مش النجاح إن عندك 15 Folder. النجاح إن كل Folder لها Responsibility واضحة.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t1-routes" data-navlabel="Routes">
+        <h2 class="t-title">3) Routes</h2>
+        <p>الـ Route دورها بسيط جدًا: لما Request بشكل معين تيجي، روح شغل مين؟</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">router.post(
+  '/users',
+  validateCreateUser,
+  createUser
+);</code></pre></div>
+        <div class="flowbox">POST /users <span class="arrow">↓</span> validateCreateUser <span class="arrow">↓</span> createUser</div>
+        <div class="box box--mistake">
+          <div class="box-h">❌ مينفعش</div>
+          <p>تحطي جوه Route كل الـ validate/bcrypt/database/send email/business rules/response مباشرة. ليه؟ لأن Route مسؤوليتها Routing، مش Business Logic.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t1-controller" data-navlabel="Controller">
+        <h2 class="t-title">4) Controller</h2>
+        <p>فكري في Controller كأنها <b>المترجم بين HTTP والـ Application</b>. هي تعرف حاجات زي <code>req</code>، <code>res</code>، status code، query، params، body.</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">async function createUser(req, res, next) {
+  try {
+    const user = await userService.createUser(
+      req.body
+    );
+
+    res.status(201).json({
+      data: user
+    });
+  } catch (error) {
+    next(error);
+  }
+}</code></pre></div>
+        <p>خدي بالك Controller دي صغيرة. ليه؟ لأنها قالت: هات الـ Body ← ابعتها Service ← خد النتيجة ← حولها HTTP Response. وخلاص.</p>
+      </article>
+
+      <article class="topic" id="t1-service" data-navlabel="Service">
+        <h2 class="t-title">5) Service</h2>
+        <p>Service دي قلب الـ Business Logic. يعني لو Requirement بيقول "مينفعش User بنفس Email يتسجل مرتين" — دي Business Rule، مكانها الطبيعي Service.</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">async function createUser(data) {
+  const existingUser =
+    await User.findOne({
+      email: data.email
+    });
+
+  if (existingUser) {
+    throw new AppError(
+      'Email already exists',
+      409
+    );
+  }
+
+  const hashedPassword =
+    await bcrypt.hash(
+      data.password,
+      12
+    );
+
+  const user =
+    await User.create({
+      ...data,
+      password: hashedPassword
+    });
+
+  return user;
+}</code></pre></div>
+        <p>لاحظي Service مش محتاجة تعرف <code>req</code>، <code>res</code>، HTTP، ولا Express. دي نقطة مهمة جدًا.</p>
+        <h3 class="s-label">🔹 ليه فصل Business Logic عن HTTP مهم؟</h3>
+        <p>تخيلي بعدين عندك نفس Logic تتنفذ من HTTP API، Cron Job، Queue Worker، CLI Script، أو WebSocket Event. لو الـ Business Logic مربوطة بـ <code>req</code>/<code>res</code>، هتضطري تعيدي الكود. لكن لو عندك <code>userService.createUser()</code>، أي مكان يقدر يستخدمها.</p>
+      </article>
+
+      <article class="topic" id="t1-model" data-navlabel="Model">
+        <h2 class="t-title">6) Model</h2>
+        <p>Model مسؤولة عن شكل البيانات والتعامل مع Database. مثلًا Mongoose:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const userSchema =
+  new mongoose.Schema({
+    name: String,
+    email: String,
+    password: String
+  });</code></pre></div>
+        <p>الـ Model تعرف شكل User، أنواع الحقول، Indexes، Database operations. لكن مش من الأفضل تحطي فيها كل Business Logic بتاعت المشروع بدون سبب.</p>
+      </article>
+
+      <article class="topic" id="t1-middleware" data-navlabel="Middleware">
+        <h2 class="t-title">7) Middleware</h2>
+        <p>فكري في Middleware كأنها حاجات بتحصل على Request قبل ما توصل للهدف النهائي:</p>
+        <div class="flowbox">Request <span class="arrow">↓</span> Authentication <span class="arrow">↓</span> Authorization <span class="arrow">↓</span> Validation <span class="arrow">↓</span> Controller</div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">router.delete(
+  '/users/:id',
+  authenticate,
+  requireAdmin,
+  deleteUser
+);</code></pre></div>
+        <p>دي جميلة جدًا لأنها بتقري كأنها جملة: Delete user، بس الأول اتأكد إنه authenticated وبعدين admin وبعدين نفذ deleteUser.</p>
+      </article>
+
+      <article class="topic" id="t1-validators" data-navlabel="Validators">
+        <h2 class="t-title">8) Validators</h2>
+        <p>الـ Validator تسأل: الداتا اللي دخلتلي صالحة أصلًا ولا لأ؟ (email موجود؟ email format صح؟ password 8 characters؟ age number؟)</p>
+        <div class="box box--note">
+          <div class="box-h">🟪 فرق مهم</div>
+          <p><b>Validation</b>: هل شكل الداتا صح؟ <b>Business Rule</b>: هل العملية مسموح تحصل؟ مثلًا: "Email valid format؟" ← Validation. "Email already exists؟" ← Business Logic / Service. دي من أهم الفروقات اللي تخلي الكود منظم.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t1-utils" data-navlabel="Utils / Helpers">
+        <h2 class="t-title">9) Utils / Helpers</h2>
+        <p>دي حاجات عامة صغيرة ملهاش Business Meaning كبير، زي <code>generateRandomCode()</code>، <code>formatDate()</code>، <code>slugify()</code>، <code>calculatePagination()</code>.</p>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك من كارثة اسمها utils.js</div>
+          <p>يعني متحطيش فيها 300 Function ملهمش علاقة ببعض. الأفضل تقسيمها حسب الحاجة:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">utils/
+├── date.js
+├── pagination.js
+└── string.js</code></pre></div>
+      </article>
+
+      <article class="topic" id="t1-config" data-navlabel="Config">
+        <h2 class="t-title">10) Config</h2>
+        <p>أي Settings تخص تشغيل الـ Application: Database URL، Port، JWT configuration، CORS settings، Mail configuration. بدل ما كل File يعمل <code>process.env.JWT_SECRET</code> بنفسه، ممكن تعملي Config Layer:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const config = {
+  port: Number(process.env.PORT) || 3000,
+  jwtSecret: process.env.JWT_SECRET,
+  databaseUrl: process.env.DATABASE_URL
+};</code></pre></div>
+        <p>وبعدين باقي المشروع يستخدم <code>config.jwtSecret</code>. ده بيديكي مكان واحد لكل Configuration.</p>
+      </article>
+
+      <article class="topic" id="t1-appserver" data-navlabel="فصل app.js عن server.js">
+        <h2 class="t-title">11) فصل app.js عن server.js</h2>
+        <p>دي حركة صغيرة لكن مهمة.</p>
+        <h3 class="s-label">🔹 app.js — يجهز Express Application</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const express = require('express');
+
+const app = express();
+
+app.use(express.json());
+
+app.use('/api/users', userRoutes);
+
+app.use(errorHandler);
+
+module.exports = app;</code></pre></div>
+        <h3 class="s-label">🔹 server.js — مسؤول عن تشغيل السيرفر</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const app = require('./app');
+
+const server =
+  app.listen(3000, () => {
+    console.log('Server started');
+  });</code></pre></div>
+        <p>ليه الفصل؟ لأن <code>app.js = Application configuration</code> و<code>server.js = Runtime / process startup</code>. وده مفيد جدًا في Testing، لأن Test تقدر تستورد <code>app</code> من غير ما تفتح Port حقيقي.</p>
+      </article>
+
+      <article class="topic" id="t1-decide" data-navlabel="إزاي أعرف الحاجة تتحط فين؟">
+        <h2 class="t-title">12) إزاي أعرف الحاجة تتحط فين؟</h2>
+        <p>اسألي السؤال ده: "الكود ده بيتكلم مع مين؟"</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>لو بيتعامل مع...</th><th>مكانه</th></tr></thead>
+          <tbody>
+            <tr><td><code>req</code> / <code>res</code></td><td>Controller</td></tr>
+            <tr><td>هل ينفع العملية تحصل؟ إزاي تحصل؟</td><td>Service</td></tr>
+            <tr><td>Database</td><td>Model / Repository</td></tr>
+            <tr><td>Request تكمل ولا تتوقف؟</td><td>Middleware</td></tr>
+            <tr><td>شكل الـ Input</td><td>Validator</td></tr>
+            <tr><td>Function عامة ملهاش Business Meaning</td><td>Utility</td></tr>
+          </tbody>
+        </table></div>
+        <div class="box box--quick">
+          <div class="box-h">⚡ الخلاصة</div>
+          <p>دي طريقة تفكير أهم من حفظ Folder Structure.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>الأول</th><th>التاني</th><th>الفرق ببساطة</th></tr></thead>
+        <tbody>
+          <tr><td>Validation</td><td>Business Rule</td><td>الأولى بتتأكد إن شكل الداتا صح (Email format مثلًا). التانية بتتأكد إن العملية مسموح تحصل فعليًا (زي عدم تكرار Email).</td></tr>
+          <tr><td>Controller</td><td>Service</td><td>الأولى بترجم بين HTTP والتطبيق (req/res بس). التانية فيها الـ Business Logic الحقيقي، من غير ما تعرف حاجة عن HTTP.</td></tr>
+          <tr><td><code>app.js</code></td><td><code>server.js</code></td><td>الأول بيجهز الـ Express Application نفسها. التاني مسؤول بس عن تشغيلها كـ Process حقيقي على Port.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>كتابة كل حاجة (validation + database + business logic + response) جوه الـ Route مباشرة</b> — بيخلي التعديل والاختبار صعب جدًا مع الوقت.</li>
+        <li><b>حط كل Business Logic جوه الـ Controller</b> — Controller المفروض تبقى Thin، الـ Logic الحقيقي مكانه Service.</li>
+        <li><b>الخلط بين Validation وBusiness Rule</b> — بيؤدي لكود غير منظم، ولحاجات زي Validation checks بتتكرر جوه Service بدل ما تتحط في Validator من الأول.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين Controller وService؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لتقسيم المسؤوليات بين طبقة الـ HTTP وطبقة الـ Business Logic.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو حبيت تشغلي نفس الـ Logic من مكان تاني غير HTTP Request (زي Cron Job)، هل الكود الحالي يسمحلك بده من غير تعديل؟
+          <span class="iv-label">الإجابة المختصرة</span>Controller مسؤوليتها الترجمة بين HTTP والتطبيق: تاخد الـ Request، تنادي الـ Service المناسبة، وتحول النتيجة لـ HTTP Response. Service فيها الـ Business Logic الفعلي، ومش بتعرف حاجة عن req أو res.
+          <span class="iv-label">بالتفصيل</span>لو الـ Business Logic اتكتبت جوه الـ Controller مباشرة، هتبقى مربوطة بـ Express تحديدًا، ومحتاجة تتكرر لو عايزة تستخدميها من مكان تاني (Queue Worker مثلًا). لما تفصليها في Service، أي مكان في المشروع يقدر ينادي نفس الـ Function.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل الـ Service ينفع تنادي Service تانية؟ (أيوة، طبيعي جدًا إن Service تستخدم Services تانية لتنفيذ عملية مركبة).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>ليه بنفصل app.js عن server.js؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لفايدة فصل إعداد الـ Application عن تشغيلها الفعلي.
+          <span class="iv-label">نفكر إزاي؟</span>فكري إزاي هتكتبي Test لـ Endpoint من غير ما تفتحي Port حقيقي على جهازك.
+          <span class="iv-label">الإجابة المختصرة</span>app.js بيجهز الـ Express Application (Middlewares وRoutes) ويصدرها. server.js بس بينادي app.listen() عشان يشغلها كـ Process حقيقي.
+          <span class="iv-label">بالتفصيل</span>الفصل ده بيسمحلك في الـ Tests إنك تعملي require('./app') وتستخدميها مباشرة مع مكتبة زي Supertest، من غير ما يفتح فعليًا Port على الجهاز — وده بيخلي الـ Tests أسرع وأنضف.
+          <span class="iv-label">ممكن يسأل Follow-up</span>لو المشروع بسيط جدًا، لازم أفصلهم؟ (مش إجباري في مشروع صغير جدًا، بس بيبقى عادة كويسة من البداية عشان لما المشروع يكبر ويحتاج Testing متضطريش تعيدي الهيكلة).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>فصل المسؤوليات بين Routes وControllers وServices وModels وMiddlewares وValidators وUtils وConfig، والفرق بين Validation وBusiness Rule، وفصل app.js عن server.js.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>router.post(path, ...middlewares, controller)</code>، <code>module.exports = app</code>، <code>app.listen(port, callback)</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>كتابة كل حاجة جوه الـ Route، حط Business Logic جوه الـ Controller، الخلط بين Validation وBusiness Rule.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين Controller وService، ليه بنفصل app.js عن server.js.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه مينفعش نحط الـ Business Logic كلها جوه الـ Route؟</li>
+            <li>إيه الفرق بين Validation وBusiness Rule؟</li>
+            <li>Service بتعرف حاجة عن req أو res؟ ليه؟</li>
+            <li>ليه بنفصل app.js عن server.js؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) لأن ده بيخلي الملف عملاق ومحدش يقدر يتأكد إن التعديل مش هيكسر حاجة تانية؛ كل طبقة لازم تبقى مسؤولة عن حاجة واحدة بس.</p>
+              <p>2) Validation بتتأكد من شكل الداتا (Email format مثلًا)، Business Rule بتتأكد إن العملية مسموح تحصل فعليًا (زي منع تكرار Email).</p>
+              <p>3) لأ، وده مقصود؛ عشان تقدري تستخدمي نفس الـ Business Logic من أي مكان (Cron Job، Queue، CLI) من غير ما تكون مربوطة بـ HTTP.</p>
+              <p>4) عشان نقدر نستورد app في الـ Tests من غير ما نفتح Port حقيقي، وعشان نفصل بين "تجهيز التطبيق" و"تشغيله كـ Process".</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="ea2" data-navlabel="🔐 Environment & Configuration Management">
+      <div class="crumb">📗 Chapter 3</div>
+      <h1 class="title">Environment & Configuration Management</h1>
+      <p class="lede">إزاي نخلي الإعدادات الحساسة (Secrets) بعيدة عن الكود نفسه، وإزاي نخلي نفس المشروع يشتغل بشكل مختلف حسب البيئة (Development/Testing/Production) من غير ما نلمس الكود.</p>
+      <hr class="div">
+
+      <article class="topic" id="t2-problem" data-navlabel="الفكرة">
+        <h2 class="t-title">1) الفكرة</h2>
+        <p>تخيلي كاتبة في الكود:</p>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="js">const dbUrl =
+  'mongodb://username:password@...';</code></pre></div>
+        <div class="box box--mistake">
+          <div class="box-h">❌ ورفعتِ الكود GitHub</div>
+          <p>مبروك، الـ Password بقت Public. عشان كده عندنا Environment Variables.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t2-env" data-navlabel=".env و dotenv">
+        <h2 class="t-title">2) .env و dotenv</h2>
+        <div class="codebox"><div class="clabel">.env</div><pre><code data-lang="text">PORT=3000
+DATABASE_URL=mongodb://...
+JWT_SECRET=super-secret</code></pre></div>
+        <p>وفي الكود:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">process.env.DATABASE_URL</code></pre></div>
+        <p>في مشاريع كتير بنستخدم <code>dotenv</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">require('dotenv').config();</code></pre></div>
+        <p>وده يحمّل <code>.env</code>. الفكرة الأساسية:</p>
+        <div class="flowbox">.env <span class="arrow">↓</span> Environment Variables <span class="arrow">↓</span> process.env <span class="arrow">↓</span> Application</div>
+      </article>
+
+      <article class="topic" id="t2-rule" data-navlabel="أهم قاعدة">
+        <h2 class="t-title">3) أهم قاعدة</h2>
+        <p>أي حاجة Secret أو Environment-specific أو Deployment-specific متتكتبش Hardcoded. مثلًا: Database URL، JWT Secret، API Key، SMTP password، Cloud credentials.</p>
+      </article>
+
+      <article class="topic" id="t2-example" data-navlabel=".env.example">
+        <h2 class="t-title">4) .env.example</h2>
+        <p>دي مش فيها القيم الحقيقية:</p>
+        <div class="codebox"><div class="clabel">.env.example</div><pre><code data-lang="text">PORT=
+DATABASE_URL=
+JWT_SECRET=</code></pre></div>
+        <p>ليه؟ عشان Developer جديد يعرف المشروع محتاج Variables إيه، لكن من غير Secrets.</p>
+      </article>
+
+      <article class="topic" id="t2-environments" data-navlabel="Development/Testing/Production">
+        <h2 class="t-title">5) Development / Testing / Production</h2>
+        <p>نفس Application ممكن تشتغل في بيئات مختلفة:</p>
+        <div class="flowbox">Development <span class="arrow">→</span> جهازك <span class="arrow">|</span> Testing <span class="arrow">→</span> Tests <span class="arrow">|</span> Production <span class="arrow">→</span> السيرفر الحقيقي</div>
+        <p>ممكن Database تبقى: Development → <code>mongodb://localhost/dev-db</code>، Testing → <code>mongodb://localhost/test-db</code>، Production → cloud-production-db. نفس الكود، لكن Config مختلفة.</p>
+        <h3 class="s-label">🔹 NODE_ENV</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">if (
+  process.env.NODE_ENV === 'production'
+) {
+  // production behavior
+}</code></pre></div>
+        <p>مثال: Development → stack trace تظهر. Production → stack trace متظهرش للـ Client.</p>
+      </article>
+
+      <article class="topic" id="t2-thinking" data-navlabel="طريقة التفكير في Configuration">
+        <h2 class="t-title">6) طريقة التفكير في Configuration</h2>
+        <div class="box box--quick">
+          <div class="box-h">⚡ اسألي</div>
+          <p>لو القيمة دي هتختلف لما أنقل المشروع من Laptop لسيرفر، هل المفروض تكون في الكود؟ غالبًا لأ.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>كتابة Secrets (Database URL، API Keys) مباشرة في الكود</b> — بتتسرب فورًا لو الكود اترفع مكان عام زي GitHub.</li>
+        <li><b>رفع ملف .env الحقيقي على Git</b> — المفروض .env يكون في .gitignore، وبس .env.example يترفع.</li>
+        <li><b>افتراض إن نفس Database/Config تصلح لكل البيئات</b> — Development وTesting وProduction لازم يكون ليهم Config مستقلة.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>ليه بنستخدم Environment Variables بدل ما نكتب القيم مباشرة في الكود؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لأمان الـ Secrets وفصل الإعدادات عن الكود.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو رفعتي الكود على GitHub بأي Secret مكتوب جواه، مين يقدر يشوفه؟
+          <span class="iv-label">الإجابة المختصرة</span>عشان الـ Secrets متفضلش مكشوفة في الكود نفسه (اللي غالبًا بيترفع على Git)، وعشان نقدر نغيّر القيم دي حسب البيئة (Development/Production) من غير ما نلمس الكود خالص.
+          <span class="iv-label">بالتفصيل</span>لو Database Password اتكتب Hardcoded ورُفع الكود على مستودع عام، أي حد يقدر يشوفه ويستخدمه. الـ Environment Variables بتتخزن في مكان منفصل (.env محليًا، أو Secrets Manager في الـ Production) وبتتقرأ وقت التشغيل بس.
+          <span class="iv-label">ممكن يسأل Follow-up</span>لو نسيتِ تحطي .env في .gitignore وترفع بالغلط، إيه الحل؟ (لازم تغيّري كل الـ Secrets دي فورًا (Rotate)، لأن مجرد حذفها من الكود لاحقًا مش كافي؛ هي فعليًا اتسربت في الـ Git History).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Environment Variables، ملف .env و.env.example، الفرق بين Development وTesting وProduction، NODE_ENV.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>require('dotenv').config()</code>، <code>process.env.VARIABLE_NAME</code>، <code>process.env.NODE_ENV</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>كتابة Secrets في الكود، رفع .env الحقيقي على Git، استخدام نفس Config لكل البيئات.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>ليه بنستخدم Environment Variables بدل الكتابة المباشرة في الكود.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه متكتبيش Database URL مباشرة في الكود؟</li>
+            <li>إيه الفرق بين .env و.env.example؟</li>
+            <li>ليه محتاجين NODE_ENV؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) عشان ميترفعش على Git بشكل مكشوف، وعشان نقدر نغيّرها حسب البيئة من غير تعديل في الكود.</p>
+              <p>2) .env فيها القيم الحقيقية وميترفعش على Git. .env.example فيها أسماء المتغيرات بس من غير قيم، وده بيترفع عشان يوضح لأي Developer جديد المشروع محتاج إيه.</p>
+              <p>3) عشان الكود يقدر يتصرف بشكل مختلف حسب البيئة (زي إظهار Stack Trace في Development وإخفاؤه في Production) من غير ما نكتب كود منفصل لكل بيئة.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="ea3" data-navlabel="🚨 Error Handling Strategy">
+      <div class="crumb">📗 Chapter 4</div>
+      <h1 class="title">Error Handling Strategy</h1>
+      <p class="lede">هنا الفرق بين Junior بيحل Error لما تظهر، وDeveloper عامل System للـ Errors من الأول.</p>
+      <hr class="div">
+
+      <article class="topic" id="t3-problem" data-navlabel="الغلط الشائع">
+        <h2 class="t-title">1) الغلط الشائع</h2>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="js">try {
+  ...
+} catch (error) {
+  console.log(error);
+  res.status(500).send('error');
+}</code></pre></div>
+        <p>في كل Controller. ده Repetition.</p>
+      </article>
+
+      <article class="topic" id="t3-flow" data-navlabel="فكري في Error كـFlow">
+        <h2 class="t-title">2) فكري في Error كـFlow</h2>
+        <div class="flowbox">Something fails <span class="arrow">↓</span> Throw Error <span class="arrow">↓</span> Error travels upward <span class="arrow">↓</span> Global Error Handler <span class="arrow">↓</span> Log <span class="arrow">↓</span> Correct HTTP Response</div>
+      </article>
+
+      <article class="topic" id="t3-customerror" data-navlabel="Custom Error">
+        <h2 class="t-title">3) Custom Error</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">class AppError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+
+    this.statusCode =
+      statusCode;
+
+    this.isOperational =
+      true;
+  }
+}</code></pre></div>
+        <p>وبعدين:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">throw new AppError(
+  'User not found',
+  404
+);</code></pre></div>
+        <p>Service مش محتاجة تعمل Response. هي بس بتقول: حصلت مشكلة من النوع ده.</p>
+      </article>
+
+      <article class="topic" id="t3-operational" data-navlabel="Operational Errors">
+        <h2 class="t-title">4) Operational Errors</h2>
+        <p>دي Errors متوقعة أثناء تشغيل الـ Application، مثلًا: User not found، Invalid credentials، Email already exists، Forbidden، Validation failed. دي مش Bugs في الكود بالضرورة.</p>
+        <p>أما <code>Cannot read properties of undefined</code> دي غالبًا Programming Error. الفرق مهم.</p>
+      </article>
+
+      <article class="topic" id="t3-globalhandler" data-navlabel="Global Error Handler">
+        <h2 class="t-title">5) Global Error Handler</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.use(
+  (err, req, res, next) => {
+    const statusCode =
+      err.statusCode || 500;
+
+    res
+      .status(statusCode)
+      .json({
+        message:
+          err.message
+      });
+  }
+);</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ في Production</div>
+          <p>لو Error غير متوقعة، متقوليش للـ Client "Cannot read property password of undefined at userService line 82" — قولي "Internal server error"، وسجلي التفاصيل داخليًا.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t3-404" data-navlabel="404">
+        <h2 class="t-title">6) 404</h2>
+        <p>404 مش لازم معناها Error انفجرت. معناها: مفيش Route مطابقة. آخر Routes:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.use((req, res, next) => {
+  next(
+    new AppError(
+      'Route not found',
+      404
+    )
+  );
+});</code></pre></div>
+        <p>بعدها Global Error Handler.</p>
+      </article>
+
+      <article class="topic" id="t3-thinking" data-navlabel="إزاي تفكري في Error؟">
+        <h2 class="t-title">7) إزاي تفكري في Error؟</h2>
+        <p>كل Error اسألي:</p>
+        <div class="flowbox">هل متوقعة؟ <span class="arrow">↓</span> هل Client سببها؟ <span class="arrow">↓</span> هل Server سببها؟ <span class="arrow">↓</span> Status المناسب إيه؟ <span class="arrow">↓</span> إيه اللي Client محتاج يعرفه؟ <span class="arrow">↓</span> إيه اللي Developer محتاج يعرفه؟ <span class="arrow">↓</span> هل لازم تتعمل Log؟</div>
+      </article>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>الأول</th><th>التاني</th><th>الفرق ببساطة</th></tr></thead>
+        <tbody>
+          <tr><td>Operational Error</td><td>Programming Error</td><td>الأولى متوقعة وجزء طبيعي من تشغيل التطبيق (User not found). التانية Bug فعلي في الكود (Cannot read properties of undefined).</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>تكرار try/catch مع نفس منطق الـ Response في كل Controller</b> — الأفضل نرمي Error ونسيب Global Error Handler يتعامل معاها مركزيًا.</li>
+        <li><b>إظهار تفاصيل الـ Error الداخلية (Stack Trace، أسماء الملفات) للـ Client في Production</b> — دي معلومة حساسة تفيد مهاجم محتمل.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين Operational Error وProgramming Error؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لتصنيف الأخطاء وإزاي بيأثر على طريقة التعامل معاها.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: هل الخطأ ده كان متوقع كجزء من منطق العمل، ولا حصل بسبب غلطة في الكود؟
+          <span class="iv-label">الإجابة المختصرة</span>Operational Error متوقعة وجزء طبيعي من تشغيل النظام (زي User not found)، وبنتعامل معاها بـ AppError واضحة برسالة وStatus Code مناسب. Programming Error دي Bug فعلي (زي محاولة قراءة property من undefined) ومحتاجة تتصلح في الكود نفسه.
+          <span class="iv-label">بالتفصيل</span>الـ AppError بتحمل flag اسمه isOperational بالظبط عشان نميز النوعين؛ في بعض الأنظمة المتقدمة، لو الخطأ Programming Error، النظام ممكن يقرر يعمل Restart للـ Process كإجراء أمان، لأن حالة الذاكرة ممكن تكون بقت غير موثوقة.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه اللي المفروض يظهر للـ Client في الحالتين؟ (Operational Error ممكن نظهر رسالتها مباشرة (زي "Email already exists"). Programming Error يفضل نظهر رسالة عامة زي "Internal server error" ونسجل التفاصيل داخليًا بس).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Error كـ Flow بيتصعد للـ Global Error Handler، Custom Error class (AppError)، الفرق بين Operational وProgramming Errors، التعامل مع 404.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>class AppError extends Error</code>، <code>throw new AppError(message, statusCode)</code>، <code>app.use((err, req, res, next) => {...})</code>، <code>next(error)</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>تكرار try/catch بنفس المنطق في كل Controller، إظهار تفاصيل حساسة للـ Client في Production.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين Operational Error وProgramming Error.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه بنعمل Global Error Handler بدل try/catch منفصل في كل Controller؟</li>
+            <li>إيه الفرق بين Operational Error وProgramming Error؟</li>
+            <li>ليه معلش نبعت Stack Trace كامل للـ Client في Production؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) عشان نتجنب تكرار نفس منطق التعامل مع الخطأ في كل مكان، ونخلي التعامل مع كل الأخطاء متوحد في مكان واحد.</p>
+              <p>2) Operational Error متوقعة وجزء طبيعي من منطق العمل (زي User not found). Programming Error دي Bug فعلي في الكود.</p>
+              <p>3) لأن ده بيكشف تفاصيل داخلية عن بنية الكود ممكن تُستغل من مهاجم؛ الأفضل رسالة عامة للـ Client وتسجيل التفاصيل داخليًا بس.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="ea4" data-navlabel="🐞 Debugging">
+      <div class="crumb">📗 Chapter 5</div>
+      <h1 class="title">Debugging</h1>
+      <p class="lede">دي من أهم Skills في البرمجة كلها — إزاي توصلي لسبب المشكلة بسرعة، بدل ما تجربي تعديلات عشوائية.</p>
+      <hr class="div">
+
+      <article class="topic" id="t4-mindset" data-navlabel="ضعيف مقابل شاطر">
+        <h2 class="t-title">1) المطور الضعيف مقابل الشاطر</h2>
+        <div class="box box--mistake">
+          <div class="box-h">❌ المطور الضعيف</div>
+          <p>لما Bug تحصل، يجرب تعديلات عشوائية.</p>
+        </div>
+        <div class="box box--how">
+          <div class="box-h">🔵 المطور الشاطر</div>
+          <p>يكوّن Hypothesis ← يختبرها ← يضيّق نطاق المشكلة.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t4-rule" data-navlabel="أهم قاعدة Debugging">
+        <h2 class="t-title">2) أهم قاعدة Debugging</h2>
+        <p>متقوليش: "الكود مش شغال". قولي: "إيه بالضبط آخر نقطة أنا متأكدة إنها شغالة؟"</p>
+        <div class="flowbox">Frontend <span class="arrow">↓</span> API <span class="arrow">↓</span> Route <span class="arrow">↓</span> Middleware <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Service <span class="arrow">↓</span> Database</div>
+        <p>مثال: لو Frontend بيقول 500. ابدئي: "هل Request وصلت Backend؟" آه. "Route matched؟" آه. "Authentication passed؟" آه. "Controller دخلت؟" آه. "Service رجعت؟" لأ. كده المشكلة ضاقت لـ Service.</p>
+      </article>
+
+      <article class="topic" id="t4-errormsg" data-navlabel="Error Message">
+        <h2 class="t-title">3) Error Message</h2>
+        <p>متقريش "Error Error Error" بس. ركزي في: Error Type، Message، File، Line، Stack Trace.</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">TypeError:
+Cannot read properties of undefined
+(reading 'email')
+
+at createUser
+userService.js:42</code></pre></div>
+        <p>هو بيقولك تقريبًا: في userService.js line 42 فيه حاجة undefined وإنتِ بتحاولي تقري email منها. ده Clue مباشر.</p>
+      </article>
+
+      <article class="topic" id="t4-stacktrace" data-navlabel="Stack Trace">
+        <h2 class="t-title">4) Stack Trace</h2>
+        <p>Stack Trace كأنها آثار خطوات:</p>
+        <div class="flowbox">Route <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Service <span class="arrow">↓</span> Function X <span class="arrow">↓</span> Error</div>
+        <p>بتقولك: وصلنا للـ Error إزاي؟ متبصيش بس على أول Line أو آخر Line. اقري أول Frame من Code إنتِ كاتباه.</p>
+      </article>
+
+      <article class="topic" id="t4-vscode" data-navlabel="VS Code Debugger">
+        <h2 class="t-title">5) VS Code Debugger</h2>
+        <p>بدل:</p>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="js">console.log('1');
+console.log('2');
+console.log(user);</code></pre></div>
+        <p>اعملي Breakpoint. وقف الكود عند سطر معين. وشوفي <code>req.body</code>، <code>user</code>، <code>token</code>، <code>result</code> بالراحة.</p>
+        <div class="defgrid">
+          <div class="defitem"><div class="dname">Step Over</div><p>نفذ السطر الحالي وروح للبعده، من غير ما تدخل جوه Function.</p></div>
+          <div class="defitem"><div class="dname">Step Into</div><p>Function اتناديت؟ ادخل جواها وشوفها بتعمل إيه.</p></div>
+        </div>
+      </article>
+
+      <article class="topic" id="t4-async" data-navlabel="Debugging async/await">
+        <h2 class="t-title">6) Debugging async/await</h2>
+        <p>لو:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user =
+  await User.findById(id);</code></pre></div>
+        <p>السؤال: id قيمتها إيه؟ Query اتنفذت؟ رجعت null؟ عملت throw؟ مش "Mongo بايظة".</p>
+      </article>
+
+      <article class="topic" id="t4-expected" data-navlabel="Expected vs Actual">
+        <h2 class="t-title">7) طريقة Debugging فعالة: Expected مقابل Actual</h2>
+        <p>اكتبي في دماغك:</p>
+        <div class="flowbox">Expected <span class="arrow">↕</span> Actual</div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">Expected:
+req.user.id = "123"
+
+Actual:
+req.user = undefined</code></pre></div>
+        <p>يبقى دوري قبل النقطة دي. مش بعدها.</p>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>تجربة تعديلات عشوائية من غير Hypothesis واضحة</b> — بتضيع وقت أكتر وممكن تخفي المشكلة الحقيقية.</li>
+        <li><b>الاعتماد على console.log فقط بدل الـ Debugger</b> — بيبطئ عملية التشخيص خصوصًا في Flows معقدة أو async.</li>
+        <li><b>تجاهل قراءة الـ Stack Trace بالكامل</b> — أول Frame من كود إنتِ كاتباه غالبًا بيوريكي مكان المشكلة الحقيقي.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي تقربي من مصدر Bug في Backend فيه أكتر من طبقة (Route/Middleware/Controller/Service/DB)؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>منهجيتك في تضييق نطاق المشكلة بدل التخمين العشوائي.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في الـ Request كأنه بيمشي في خط أنابيب من طبقة لطبقة؛ إنتِ محتاجة تعرفي عند أي نقطة بالظبط توقف السلوك الصحيح.
+          <span class="iv-label">الإجابة المختصرة</span>بتتبعي الـ Request طبقة طبقة (Route → Middleware → Controller → Service → Database) وتتأكدي عند كل نقطة هل السلوك المتوقع حصل ولا لأ، لحد ما توصلي لآخر نقطة شغالة صح.
+          <span class="iv-label">بالتفصيل</span>بدل "الكود مش شغال"، بتسألي: هل الـ Request وصل الـ Backend؟ هل الـ Route اتطابقت؟ هل الـ Middleware عدّت؟ هل دخلنا الـ Controller؟ هل الـ Service رجعت نتيجة؟ أول نقطة الإجابة فيها "لأ" هي مكان المشكلة.
+          <span class="iv-label">ممكن يسأل Follow-up</span>لو المشكلة في Service بس مش واضح فين بالظبط، تعملي إيه؟ (تحطي Breakpoint جوه الـ Service نفسها وتتبعي قيم المتغيرات سطر سطر، أو تقارني Expected vs Actual عند كل خطوة).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>التفكير بـ Hypothesis بدل التخمين العشوائي، تضييق نطاق المشكلة طبقة طبقة، قراءة Error Message وStack Trace صح، استخدام VS Code Debugger (Breakpoints, Step Over, Step Into)، مقارنة Expected مقابل Actual.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>تعديلات عشوائية من غير فرضية، الاعتماد الكامل على console.log، تجاهل قراءة الـ Stack Trace.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>منهجية تضييق نطاق الـ Bug عبر الطبقات المختلفة.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه مينفعش نبدأ Debugging بتعديلات عشوائية؟</li>
+            <li>إيه الفرق بين Step Over وStep Into؟</li>
+            <li>إزاي تستخدمي فكرة Expected مقابل Actual في تضييق مكان المشكلة؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) لأنها بتضيع وقت وممكن تخفي المشكلة الحقيقية أو تحل عرض جانبي بدل السبب الأساسي.</p>
+              <p>2) Step Over بينفذ السطر الحالي كامل وينتقل للي بعده من غير ما يدخل جوه أي Function اتنادت. Step Into بيدخل جوه الـ Function نفسها عشان تشوفي بتعمل إيه بالظبط.</p>
+              <p>3) بتحددي إيه المفروض تكون القيمة (Expected) وتقارنيها بإيه القيمة الفعلية (Actual)؛ أول نقطة الاتنين مختلفين فيها هي مكان المشكلة.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="ea5" data-navlabel="🪵 Logging">
+      <div class="crumb">📗 Chapter 6</div>
+      <h1 class="title">Logging</h1>
+      <p class="lede"><code>console.log</code> مفيدة أثناء التطوير، لكن الـ Production محتاجة حاجة أكتر تنظيمًا.</p>
+      <hr class="div">
+
+      <article class="topic" id="t5-problem" data-navlabel="المشكلة">
+        <h2 class="t-title">1) المشكلة</h2>
+        <p>تخيلي عندك مليون Log:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">hello
+here
+test
+errorrrrr
+user
+done</code></pre></div>
+        <p>مش هتفهمي حاجة.</p>
+      </article>
+
+      <article class="topic" id="t5-structured" data-navlabel="Structured Logging">
+        <h2 class="t-title">2) Structured Logging</h2>
+        <p>بدل:</p>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="js">console.log(
+  'user login failed'
+);</code></pre></div>
+        <p>يبقى:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="json">{
+  "level": "warn",
+  "event": "login_failed",
+  "userId": "123",
+  "requestId": "abc",
+  "timestamp": "..."
+}</code></pre></div>
+        <p>دلوقتي تقدري تبحثي عن <code>event = login_failed</code> بسهولة.</p>
+      </article>
+
+      <article class="topic" id="t5-levels" data-navlabel="Log Levels">
+        <h2 class="t-title">3) Log Levels</h2>
+        <p>فكري فيها كدرجة أهمية:</p>
+        <div class="defgrid">
+          <div class="defitem"><div class="dname">debug</div><p>تفاصيل للتشخيص.</p></div>
+          <div class="defitem"><div class="dname">info</div><p>Event طبيعي مهم.</p></div>
+          <div class="defitem"><div class="dname">warn</div><p>حاجة غريبة لكن السيستم مكمل.</p></div>
+          <div class="defitem"><div class="dname">error</div><p>عملية فشلت.</p></div>
+        </div>
+        <p>مثال: "Server started" ← info. "User tried invalid password 5 times" ← warn. "Database unavailable" ← error. "Query parameters values أثناء Debug" ← debug.</p>
+      </article>
+
+      <article class="topic" id="t5-requestlogging" data-navlabel="Request Logging">
+        <h2 class="t-title">4) Request Logging</h2>
+        <p>كل Request ممكن نسجل: method، url، status، duration، requestId:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="json">{
+  "method": "POST",
+  "path": "/api/orders",
+  "status": 201,
+  "duration": 82
+}</code></pre></div>
+      </article>
+
+      <article class="topic" id="t5-rule" data-navlabel="أهم قاعدة Logging">
+        <h2 class="t-title">5) أهم قاعدة Logging</h2>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ متعمليش Log لـ</div>
+          <p>Passwords، JWTs، Authorization Headers، Credit card data، Secrets، Sensitive personal data بدون داعي.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t5-libs" data-navlabel="Pino / Winston">
+        <h2 class="t-title">6) Pino / Winston</h2>
+        <p>الاتنين Logging Libraries. مش المهم تحفظي مين "أحسن". المهم تعرفي إنتِ محتاجة: Structured Logs، Levels، Production Output، Transports لو محتاجة.</p>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>الاعتماد على console.log بدون تنظيم في Production</b> — بيصعب البحث والتحليل مع كثرة الـ Logs.</li>
+        <li><b>تسجيل بيانات حساسة زي Passwords أو JWTs</b> — خطر أمان حقيقي لو الـ Logs اتسربت أو اطّلع عليها حد مش مفروض.</li>
+        <li><b>استخدام نفس الـ Level لكل حاجة</b> — بيصعب فلترة الـ Logs المهمة (errors/warnings) وسط الكم الكبير.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>ليه Structured Logging أفضل من console.log العادي في Production؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لأهمية تنظيم الـ Logs في نظام حقيقي فيه كمية بيانات كبيرة.
+          <span class="iv-label">نفكر إزاي؟</span>فكري إزاي هتدوري على مشكلة معينة وسط مليون سطر Log نصي غير منظم.
+          <span class="iv-label">الإجابة المختصرة</span>Structured Logging (زي JSON) بيديكي Fields واضحة (level، event، userId، requestId) تقدري تبحثي وتفلتري بيها بسهولة، بدل نص حر صعب تحليله آليًا.
+          <span class="iv-label">بالتفصيل</span>لو كل الـ Logs عبارة عن نصوص حرة زي "user login failed"، أي أداة مراقبة (Monitoring Tool) هتلاقي صعوبة تستخرج منها معلومة مفيدة أو تعمل عليها Alerts. أما لو كل Log عبارة عن Object فيه Fields ثابتة، تقدري تعملي Query عليها زي قاعدة بيانات.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إيه اللي المفروض نتجنب تسجيله في الـ Logs؟ (أي بيانات حساسة زي Passwords وJWTs وCredit Card Data، لأن الـ Logs نفسها ممكن تتخزن أو تتشارك مع فريق أوسع).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Structured Logging، Log Levels (debug/info/warn/error)، Request Logging، تجنب تسجيل بيانات حساسة، مكتبات Logging زي Pino وWinston.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>الاعتماد على console.log غير المنظم في Production، تسجيل بيانات حساسة، استخدام Level واحد لكل حاجة.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>ليه Structured Logging أفضل من console.log في Production.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين debug وinfo وwarn وerror؟</li>
+            <li>ليه Structured Logging أفضل من نص حر؟</li>
+            <li>إيه اللي ميصحش نسجله في الـ Logs؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) debug للتفاصيل التقنية وقت التشخيص، info للأحداث الطبيعية المهمة، warn لحاجة غريبة لكن النظام مكمل شغله، error لعملية فشلت فعليًا.</p>
+              <p>2) لأنه بيديكي Fields واضحة تقدري تبحثي وتفلتري بيها آليًا، بدل نص حر صعب تحليله على نطاق واسع.</p>
+              <p>3) بيانات حساسة زي Passwords وJWTs وAuthorization Headers وبيانات بطاقات الدفع والبيانات الشخصية الحساسة بدون داعي واضح.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="ea6" data-navlabel="📦 npm & Dependency Management">
+      <div class="crumb">📗 Chapter 7</div>
+      <h1 class="title">npm & Dependency Management</h1>
+      <p class="lede">هنا فكري إن أي Package بتضيفيها: هي Code مش إنتِ كتباه، بس بقت جزء من مشروعك ومسؤولة عنه.</p>
+      <hr class="div">
+
+      <article class="topic" id="t6-intro" data-navlabel="مسؤولية الـ Package">
+        <h2 class="t-title">1) مسؤولية الـ Package</h2>
+        <div class="box box--mistake">
+          <div class="box-h">❌ متعمليش</div>
+          <p><code>npm install random-package</code> عشان أول Google Result.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t6-packagejson" data-navlabel="package.json">
+        <h2 class="t-title">2) package.json</h2>
+        <p>ده بطاقة المشروع. فيه: name، version، scripts، dependencies، devDependencies.</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="json">{
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "vitest"
+  }
+}</code></pre></div>
+      </article>
+
+      <article class="topic" id="t6-depsvsdev" data-navlabel="dependencies مقابل devDependencies">
+        <h2 class="t-title">3) dependencies مقابل devDependencies</h2>
+        <p>لو Package محتاجاها الـ Application وهي شغالة: <code>express</code>، <code>mongoose</code>، <code>jsonwebtoken</code> ← dependency. لو محتاجاها أثناء Development بس: <code>eslint</code>، <code>prettier</code>، <code>vitest</code> ← devDependency.</p>
+      </article>
+
+      <article class="topic" id="t6-lockfile" data-navlabel="package-lock.json">
+        <h2 class="t-title">4) package-lock.json</h2>
+        <p>دي مهمة. بتثبت Dependency Tree المستخدمة فعليًا. يعني الفريق كله يقدر يثبت نسخ متقاربة جدًا من نفس الحزم. وعادة تترفَع Git.</p>
+      </article>
+
+      <article class="topic" id="t6-semver" data-navlabel="Semantic Versioning">
+        <h2 class="t-title">5) Semantic Versioning</h2>
+        <p>نسخة زي <code>3.7.2</code> تقريبًا: <code>Major.Minor.Patch</code>.</p>
+        <div class="defgrid">
+          <div class="defitem"><div class="dname">Patch</div><p>Bug fix.</p></div>
+          <div class="defitem"><div class="dname">Minor</div><p>Feature backward compatible.</p></div>
+          <div class="defitem"><div class="dname">Major</div><p>Breaking changes.</p></div>
+        </div>
+      </article>
+
+      <article class="topic" id="t6-troubleshoot" data-navlabel="لما Package تعمل مشكلة">
+        <h2 class="t-title">6) لما Package تعمل مشكلة</h2>
+        <div class="box box--mistake">
+          <div class="box-h">❌ متعمليش فورًا</div>
+          <p>امسح node_modules، امسح lock، install، pray 😂</p>
+        </div>
+        <div class="box box--how">
+          <div class="box-h">🔵 الأصح</div>
+          <p>Error بدأ بعد إيه؟ Package Version إيه؟ Node Version إيه؟ Breaking change؟ Peer dependency؟ Lock file اتغير؟ — شخّصي المشكلة الأول.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>تثبيت Packages من غير مراجعة (شعبيتها، آخر تحديث، الاعتمادية عليها)</b> — بتزود سطح المخاطر الأمني والصيانة للمشروع.</li>
+        <li><b>عدم رفع package-lock.json على Git</b> — بيخلي كل عضو في الفريق يثبت نسخ مختلفة شوية من نفس الحزم، وده مصدر مشاكل صعبة التتبع.</li>
+        <li><b>حذف node_modules وإعادة التثبيت كأول حل لأي مشكلة</b> — بدل تشخيص السبب الحقيقي (Version، Breaking Change، Peer Dependency).</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين dependencies وdevDependencies؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لتصنيف الـ Packages حسب الحاجة الفعلية ليها وقت التشغيل.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو رفعتي التطبيق على سيرفر Production، هل محتاجة ESLint فعليًا يكون متثبت هناك؟
+          <span class="iv-label">الإجابة المختصرة</span>dependencies هي الحزم اللي التطبيق فعليًا محتاجها وهو شغال (زي express). devDependencies هي حزم بتستخدمها وقت التطوير بس (زي eslint وprettier وvitest) ومش لازم تتثبت في Production.
+          <span class="iv-label">بالتفصيل</span>لما تعملي npm install --production أو ما يعادلها في بيئة الـ Production، الـ devDependencies بتتجاهل، وده بيقلل حجم node_modules وسطح الحزم اللي ممكن يكون فيها ثغرات أمنية غير ضرورية.
+          <span class="iv-label">ممكن يسأل Follow-up</span>مين المسؤول عن ضمان إن الفريق كله بيثبت نفس نسخ الحزم بالظبط؟ (package-lock.json، وده سبب أساسي إننا نرفعه على Git دايمًا).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>package.json، الفرق بين dependencies وdevDependencies، package-lock.json، Semantic Versioning (Major/Minor/Patch)، منهجية تشخيص مشاكل الحزم.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>npm install &lt;package&gt;</code>، <code>npm install --save-dev &lt;package&gt;</code>، <code>package.json</code> scripts.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>تثبيت Packages بدون مراجعة، عدم رفع package-lock.json، حذف node_modules كأول حل بدل التشخيص.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين dependencies وdevDependencies.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين dependency وdevDependency؟</li>
+            <li>ليه package-lock.json مهم يترفع على Git؟</li>
+            <li>إيه معنى Major.Minor.Patch في رقم النسخة؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) dependency محتاجاها الـ Application وهي شغالة فعليًا (زي express). devDependency محتاجاها أثناء التطوير بس (زي eslint).</p>
+              <p>2) عشان يضمن إن كل أعضاء الفريق (والسيرفر) بيثبتوا نفس نسخ الحزم بالظبط، ويتجنبوا مشاكل "شغال عندي مش شغال عندك".</p>
+              <p>3) Patch = إصلاح Bug. Minor = ميزة جديدة متوافقة مع القديم. Major = تغييرات كاسرة (Breaking Changes) ممكن تحتاج تعديل في كودك.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="ea7" data-navlabel="🛠️ Development Tooling">
+      <div class="crumb">📗 Chapter 8</div>
+      <h1 class="title">Development Tooling</h1>
+      <p class="lede">الـ Tools هنا هدفها تقلل الحمل العقلي عليكي، مش مجرد شكل.</p>
+      <hr class="div">
+
+      <article class="topic" id="t7-watch" data-navlabel="node --watch و Nodemon">
+        <h2 class="t-title">1) node --watch و Nodemon</h2>
+        <p>بدل ما كل تعديل: Stop server ← Run server يدويًا، Node تعيد التشغيل تلقائيًا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="bash">node --watch src/server.js</code></pre></div>
+        <p>Nodemon بتعمل نفس الفكرة تاريخيًا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="bash">nodemon src/server.js</code></pre></div>
+      </article>
+
+      <article class="topic" id="t7-eslint" data-navlabel="ESLint">
+        <h2 class="t-title">2) ESLint</h2>
+        <p>ESLint تقولك: الكود فيه Pattern ممكن يكون غلط أو غير consistent. مثال: unused variable، missing await، style rule. هي مش Formatter بس. هي Static Analysis / Linting.</p>
+      </article>
+
+      <article class="topic" id="t7-prettier" data-navlabel="Prettier">
+        <h2 class="t-title">3) Prettier</h2>
+        <p>Prettier مسؤولة أكتر عن شكل الكود: spaces، line length، quotes، format.</p>
+        <div class="box box--quick">
+          <div class="box-h">⚡ فكري كده</div>
+          <p>ESLint → هل الكود فيه مشاكل/قواعد؟ Prettier → شكله يتكتب إزاي؟</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>إعادة تشغيل السيرفر يدويًا بعد كل تعديل</b> — استخدمي node --watch أو Nodemon بدل كده لتوفير وقت.</li>
+        <li><b>الخلط بين مهمة ESLint وPrettier</b> — الأول بيفحص مشاكل منطقية/أنماط في الكود، والتاني بيهتم بالشكل (Formatting) بس.</li>
+      </ul>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>إعادة التشغيل التلقائي (node --watch / Nodemon)، ESLint كـ Static Analysis، Prettier كـ Formatter.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>node --watch file.js</code>، <code>nodemon file.js</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>إعادة التشغيل اليدوي بعد كل تعديل، الخلط بين دور ESLint ودور Prettier.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين ESLint وPrettier؟</li>
+            <li>ليه نستخدم node --watch أو Nodemon؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) ESLint بيفحص الكود عن مشاكل منطقية أو أنماط غير متسقة (زي متغير مش مستخدم). Prettier بيهتم بشكل الكود بس (مسافات، اقتباسات، طول السطر).</p>
+              <p>2) عشان السيرفر يعيد التشغيل تلقائيًا بعد أي تعديل، بدل ما توقفيه وتشغليه يدويًا كل مرة.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="ea8" data-navlabel="⚡ Async Code Organization">
+      <div class="crumb">📗 Chapter 9</div>
+      <h1 class="title">Async Code Organization</h1>
+      <p class="lede">ده من أهم الأجزاء جدًا. الفكرة مش بس تعرفي await. لازم تعرفي: إمتى العمليات تعتمد على بعض وإمتى لا.</p>
+      <hr class="div">
+
+      <article class="topic" id="t8-sequential" data-navlabel="Sequential">
+        <h2 class="t-title">1) Sequential</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const user =
+  await getUser();
+
+const orders =
+  await getOrders(user.id);</code></pre></div>
+        <p>دي لازم Sequential. ليه؟ لأن <code>getOrders</code> محتاجة <code>user.id</code>:</p>
+        <div class="flowbox">getUser <span class="arrow">↓</span> user.id <span class="arrow">↓</span> getOrders</div>
+      </article>
+
+      <article class="topic" id="t8-parallel" data-navlabel="Parallel">
+        <h2 class="t-title">2) Parallel</h2>
+        <p>لكن:</p>
+        <div class="codebox"><div class="clabel">example — بطيء بدون داعي</div><pre><code data-lang="js">const products =
+  await getProducts();
+
+const categories =
+  await getCategories();</code></pre></div>
+        <p>لو الاتنين ملهمش علاقة، إنتِ كده بتضيعي وقت. لو <code>getProducts = 1 second</code> و<code>getCategories = 1 second</code>، Sequential: <code>1 + 1 ≈ 2 seconds</code>. Parallel:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const [products, categories] =
+  await Promise.all([
+    getProducts(),
+    getCategories()
+  ]);</code></pre></div>
+        <p>تقريبًا: <code>max(1, 1) ≈ 1 second</code>.</p>
+      </article>
+
+      <article class="topic" id="t8-question" data-navlabel="أهم سؤال قبل await">
+        <h2 class="t-title">3) أهم سؤال قبل await</h2>
+        <p>اسألي: هل السطر اللي بعده محتاج نتيجة السطر الحالي؟ لو آه → Sequential. لو لأ → فكري في Parallel. دي واحدة من أكتر الحاجات اللي تفرق في Performance.</p>
+      </article>
+
+      <article class="topic" id="t8-blocking" data-navlabel="تجنب Blocking Code">
+        <h2 class="t-title">4) تجنب Blocking Code</h2>
+        <p>Node ممتازة في I/O. لكن لو عملتي:</p>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="js">for (
+  let i = 0;
+  i < 10_000_000_000;
+  i++
+) {}</code></pre></div>
+        <p>JavaScript Thread هتتخنق:</p>
+        <div class="flowbox">Request A <span class="arrow">↓</span> CPU-heavy loop <span class="arrow">↓</span> Event Loop blocked <span class="arrow">↓</span> B / C / D مستنيين</div>
+        <p>ففكري: هل العملية I/O ولا CPU intensive؟ دي قاعدة مهمة جدًا في Node.</p>
+      </article>
+
+      <article class="topic" id="t8-callbackhell" data-navlabel="Callback Hell">
+        <h2 class="t-title">5) Callback Hell</h2>
+        <p>بدل:</p>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="js">a(() => {
+  b(() => {
+    c(() => {
+      d(() => {});
+    });
+  });
+});</code></pre></div>
+        <p>استخدمي Promises وasync/await.</p>
+      </article>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>الأول</th><th>التاني</th><th>الفرق ببساطة</th></tr></thead>
+        <tbody>
+          <tr><td>Sequential await</td><td>Promise.all Parallel</td><td>الأول لما كل عملية محتاجة نتيجة اللي قبلها. التاني لما العمليات مستقلة عن بعض، فتشغيلها مع بعض بيوفر وقت.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>تنفيذ عمليات مستقلة بـ await متتابع بدل Promise.all</b> — بيزود وقت الاستجابة بدون داعي.</li>
+        <li><b>تنفيذ عملية CPU-heavy (Loop ضخم) في نفس الـ Thread الرئيسي</b> — بيوقف الـ Event Loop ويأثر على كل الـ Requests التانية.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إمتى تستخدمي await متتابع وإمتى Promise.all؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك للاعتمادية بين العمليات الـ Async وتأثيرها على الأداء.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: هل نتيجة العملية التانية محتاجة نتيجة الأولى أصلًا؟
+          <span class="iv-label">الإجابة المختصرة</span>لو العملية التانية محتاجة نتيجة الأولى، لازم Sequential (await واحدة ورا التانية). لو العمليتين مستقلتين تمامًا عن بعض، الأفضل Promise.all عشان تتنفذوا في نفس الوقت وتوفري وقت الاستجابة الكلي.
+          <span class="iv-label">بالتفصيل</span>مثلًا getOrders(user.id) لازم تستني نتيجة getUser() الأول عشان تعرفي الـ id. لكن getProducts() وgetCategories() في صفحة عرض منتجات غالبًا مالهومش علاقة ببعض، فتشغيلهم بـ Promise.all بيخلي الوقت الكلي تقريبًا مساوي لأبطأهم بدل مجموعهم.
+          <span class="iv-label">ممكن يسأل Follow-up</span>لو واحدة من العمليات في Promise.all فشلت، إيه اللي بيحصل؟ (Promise.all بترفض فورًا لو أي Promise فيها فشلت؛ لو عايزة تكملي حتى لو واحدة فشلت، تستخدمي Promise.allSettled بدلها).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>التفرقة بين العمليات المعتمدة على بعضها (Sequential) والمستقلة (Parallel عبر Promise.all)، تجنب الكود اللي بيعمل Blocking للـ Event Loop، الانتقال من Callback Hell لـ Promises/async-await.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>await</code>، <code>Promise.all([...])</code>، <code>Promise.allSettled([...])</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>تنفيذ عمليات مستقلة بشكل متتابع بدل Promise.all، تنفيذ عمليات CPU-heavy على الـ Thread الرئيسي.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إمتى نستخدم await متتابع وإمتى Promise.all.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إمتى تستخدمي Sequential await وإمتى Promise.all؟</li>
+            <li>ليه Loop ضخم CPU-heavy بيأثر على كل الـ Requests التانية في Node؟</li>
+            <li>إيه المشكلة في Callback Hell وإزاي بنحلها؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) Sequential لما العملية التانية محتاجة نتيجة الأولى. Promise.all لما العمليات مستقلة عن بعض، عشان تتنفذ في نفس الوقت بدل ما تستنى كل واحدة لوحدها.</p>
+              <p>2) لأن Node بتشتغل على Thread واحد رئيسي للكود، فأي عملية CPU-heavy بتوقف الـ Event Loop عن استقبال أو معالجة أي Request تاني لحد ما تخلص.</p>
+              <p>3) Callback Hell بيخلي الكود متداخل وصعب القراءة والصيانة؛ بنحلها باستخدام Promises أو async/await اللي بتخلي الكود شكله متسلسل وأوضح.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="ea9" data-navlabel="✨ Code Quality & Clean Code">
+      <div class="crumb">📗 Chapter 10</div>
+      <h1 class="title">Code Quality & Clean Code</h1>
+      <p class="lede">هنا فيه قاعدة مهمة: Clean Code مش أقصر Code. Clean Code يعني Developer تاني يقدر يفهم نيتك بسرعة.</p>
+      <hr class="div">
+
+      <article class="topic" id="t9-srp" data-navlabel="Single Responsibility">
+        <h2 class="t-title">1) Single Responsibility</h2>
+        <p>Function تعمل حاجة واحدة واضحة.</p>
+        <div class="box box--mistake">
+          <div class="box-h">❌ سيئة</div>
+        </div>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="js">async function processUser() {
+  // validate
+  // create
+  // send mail
+  // create invoice
+  // log
+  // analytics
+}</code></pre></div>
+        <div class="box box--how">
+          <div class="box-h">🔵 أفضل</div>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">createUser()
+sendWelcomeEmail()
+createInvoice()
+trackRegistration()</code></pre></div>
+        <p>مش لازم تبالغي في التقسيم، لكن كل Function يبقى ليها Purpose واضح.</p>
+      </article>
+
+      <article class="topic" id="t9-smallfn" data-navlabel="Small Functions">
+        <h2 class="t-title">2) Small Functions</h2>
+        <p>مش معنى كده كل 3 أسطر Function. الفكرة: لما Function تبدأ تعمل أكتر من Concept، فكري تقسميها.</p>
+      </article>
+
+      <article class="topic" id="t9-naming" data-navlabel="Naming">
+        <h2 class="t-title">3) Naming</h2>
+        <p>اسم سيئ:</p>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="js">const x = getData();</code></pre></div>
+        <p>اسم أفضل:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const activeUsers =
+  getActiveUsers();</code></pre></div>
+        <p>اسم Function <code>handle()</code> غامض. لكن <code>createOrder()</code>، <code>calculateOrderTotal()</code>، <code>validateCoupon()</code> واضحة.</p>
+      </article>
+
+      <article class="topic" id="t9-magicvalues" data-navlabel="Magic Values">
+        <h2 class="t-title">4) Magic Values</h2>
+        <p>سيئ:</p>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="js">if (attempts >= 5) {
+}</code></pre></div>
+        <p>ليه 5؟ أفضل:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const MAX_LOGIN_ATTEMPTS = 5;
+
+if (
+  attempts >= MAX_LOGIN_ATTEMPTS
+) {
+}</code></pre></div>
+        <p>دلوقتي المعنى واضح.</p>
+      </article>
+
+      <article class="topic" id="t9-dry" data-navlabel="DRY">
+        <h2 class="t-title">5) DRY (Don't Repeat Yourself)</h2>
+        <p>بس الناس ساعات تبالغ. لو شوفتِ سطرين شبه بعض مرة أو مرتين، مش لازم فورًا تعملي Abstraction معقدة.</p>
+        <div class="box box--quick">
+          <div class="box-h">⚡ قاعدة حلوة</div>
+          <p>Duplication بسيطة أحيانًا أرحم من Abstraction غلط. اعملي Reuse لما يكون فيه Concept فعلي متكرر.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t9-thincontrollers" data-navlabel="Controllers الضخمة">
+        <h2 class="t-title">6) Controllers الضخمة</h2>
+        <p>لو Controller فيها 200 lines، غالبًا فيها Business Logic مش مكانها. Controller الأفضل تكون Thin:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">async function checkout(
+  req,
+  res,
+  next
+) {
+  try {
+    const result =
+      await checkoutService.checkout({
+        userId: req.user.id,
+        items: req.body.items
+      });
+
+    res.status(201).json({
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+}</code></pre></div>
+        <p>ده جميل.</p>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>Function واحدة بتعمل حاجات كتير مش مرتبطة (validate + create + email + invoice)</b> — صعب فهمها واختبارها وتعديلها.</li>
+        <li><b>استخدام أرقام أو نصوص Magic بدون تسمية (زي 5 أو 'admin')</b> — بيصعب فهم المعنى وتعديل القيمة لاحقًا.</li>
+        <li><b>المبالغة في DRY وعمل Abstraction معقدة لمجرد سطرين متشابهين</b> — أحيانًا التكرار البسيط أوضح من طبقة Abstraction غير ضرورية.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه معنى Clean Code بالنسبالك؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك الحقيقي لمعنى "كود نظيف" وإنه مش مرادف لـ"كود قصير".
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو حد تاني (أو إنتِ بعد 6 شهور) فتحت الملف ده، هيفهم القصد بسرعة ولا هيحتاج مجهود كبير؟
+          <span class="iv-label">الإجابة المختصرة</span>Clean Code مش أقصر Code، هو Code يقدر Developer تاني يفهم نيته بسرعة: أسماء واضحة، Functions بمسؤولية واحدة، من غير Magic Values، ومن غير تكرار غير ضروري.
+          <span class="iv-label">بالتفصيل</span>كود قصير جدًا ممكن يكون غامض (اختصارات غريبة، منطق مضغوط في سطر واحد)، بينما كود أطول شوية لكن بأسماء واضحة وتقسيم منطقي بيبقى أسهل بكتير في الصيانة، حتى لو عدد الأسطر أكبر.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل الـ DRY دايمًا أولوية؟ (لأ، أحيانًا تكرار بسيط أوضح من Abstraction معقدة قبل ما يكون فيه Pattern فعلي متكرر بوضوح).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Single Responsibility، Small Functions، Naming الواضح، تجنب Magic Values، DRY بدون مبالغة، Controllers لازم تكون Thin.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>Function بتعمل حاجات كتير مش مرتبطة، استخدام قيم Magic بدون تسمية، المبالغة في DRY لمجرد تشابه بسيط.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إيه معنى Clean Code فعليًا.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>Clean Code معناها إيه بالظبط؟</li>
+            <li>ليه Magic Values مشكلة؟</li>
+            <li>ليه Controller المفروض تكون Thin؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) كود يقدر أي Developer تاني يفهم نيته بسرعة — أسماء واضحة، مسؤولية واحدة لكل Function، من غير تعقيد غير ضروري. مش بالضرورة أقصر كود.</p>
+              <p>2) لأنها بتخفي المعنى الحقيقي للقيمة (ليه 5 بالظبط؟)، وبتصعب التعديل لاحقًا لأنك محتاجة تدوري على كل مكان استخدمتها فيه.</p>
+              <p>3) عشان الـ Business Logic تفضل منفصلة وقابلة لإعادة الاستخدام من مصادر تانية غير HTTP، وعشان الـ Controller تفضل سهلة القراءة والفهم بسرعة.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="ea10" data-navlabel="🌍 Development vs Production Configuration">
+      <div class="crumb">📗 Chapter 11</div>
+      <h1 class="title">Development vs Production Configuration</h1>
+      <p class="lede">لازم تفكري إن Production عالم مختلف تمامًا عن جهازك الشخصي.</p>
+      <hr class="div">
+
+      <article class="topic" id="t10-worlds" data-navlabel="عالمين مختلفين">
+        <h2 class="t-title">1) عالمين مختلفين</h2>
+        <p>على جهازك: Traffic قليل، أنتِ شايفة Console، ممكن Restart بسهولة، Data مش حقيقية.</p>
+        <p>Production: Users حقيقيين، Secrets حقيقية، Traffic، Monitoring، Security، Failures لها تكلفة.</p>
+      </article>
+
+      <article class="topic" id="t10-errorhandling" data-navlabel="Error Handling">
+        <h2 class="t-title">2) Error Handling</h2>
+        <p>Development:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="json">{
+  "message": "...",
+  "stack": "..."
+}</code></pre></div>
+        <p>Production:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="json">{
+  "message":
+    "Internal server error"
+}</code></pre></div>
+      </article>
+
+      <article class="topic" id="t10-logging" data-navlabel="Logging">
+        <h2 class="t-title">3) Logging</h2>
+        <p>Development: Pretty logs، debug details. Production: Structured logs، requestId، timestamps، monitoring.</p>
+      </article>
+
+      <article class="topic" id="t10-cors" data-navlabel="CORS">
+        <h2 class="t-title">4) CORS</h2>
+        <p>Development ممكن: <code>localhost:5173</code>. Production: <code>https://myapp.com</code>.</p>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>متحطيش <code>origin: '*'</code> بلا تفكير، خصوصًا مع Authentication/Credentials.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Development</th><th>Production</th><th>الفرق ببساطة</th></tr></thead>
+        <tbody>
+          <tr><td>Error response فيها Stack Trace كامل</td><td>رسالة عامة فقط ("Internal server error")</td><td>عشان معلومة الـ Stack متتكشفش لمستخدم حقيقي أو مهاجم محتمل.</td></tr>
+          <tr><td>CORS origin مفتوح على localhost</td><td>CORS origin محدد بدومين الموقع الحقيقي فقط</td><td>عشان مواقع تانية متقدرش تنادي الـ API بتاعك بالنيابة عن يوزر حقيقي.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>إظهار نفس تفاصيل الـ Error (Stack Trace) في Production زي Development</b> — بيكشف معلومات حساسة عن بنية النظام.</li>
+        <li><b>استخدام <code>origin: '*'</code> في CORS مع Authentication/Credentials</b> — بيفتح باب لمواقع تانية تستخدم الـ API نيابة عن يوزر حقيقي.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>ليه معلش نستخدم نفس إعدادات Development في Production؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لاختلاف المخاطر والمتطلبات بين بيئة التطوير والبيئة الحقيقية.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في الفرق بين إنك تجربي حاجة على جهازك وبين إن مستخدمين حقيقيين وبياناتهم الحقيقية معرّضة للخطر.
+          <span class="iv-label">الإجابة المختصرة</span>Production فيها Users حقيقيين وSecrets حقيقية وTraffic فعلي، فأي تسريب معلومة (زي Stack Trace) أو إعداد أمان مرن زيادة (زي CORS مفتوح للكل) بيبقى له تكلفة أمنية حقيقية، على عكس Development.
+          <span class="iv-label">بالتفصيل</span>مثلًا إظهار الـ Stack Trace كامل في Production ممكن يكشف تفاصيل عن بنية السيرفر أو حتى معلومات حساسة عن قاعدة البيانات لمهاجم محتمل. وربط CORS بـ origin: '*' مع نظام فيه Authentication ممكن يسمح لموقع خبيث يعمل Requests نيابة عن يوزر مسجل دخول من غير علمه.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إزاي نتحكم في السلوك ده من غير ما نكرر الكود لكل بيئة؟ (باستخدام NODE_ENV أو متغيرات بيئة مخصصة، ونخلي الكود يتصرف بناءً عليها بدل كتابة نسخ منفصلة).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>الفرق بين Development وProduction من ناحية المخاطر والمتطلبات، اختلاف شكل Error Response وLogging بين البيئتين، إعدادات CORS الصحيحة في Production.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>إظهار Stack Trace كامل في Production، استخدام origin: '*' في CORS مع Authentication.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>ليه معلش نستخدم نفس إعدادات Development في Production.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه Production محتاجة Error Handling مختلف عن Development؟</li>
+            <li>ليه origin: '*' في CORS خطر مع Authentication؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) عشان معلومات الـ Stack Trace ممكن تكشف تفاصيل حساسة عن الكود والبنية لمستخدمين حقيقيين أو مهاجمين، فالأفضل رسالة عامة والتفاصيل تتسجل داخليًا بس.</p>
+              <p>2) لأنه بيسمح لأي موقع في العالم يعمل Requests للـ API بتاعك، وده خطير جدًا لو الـ API بتتعامل مع Authentication أو Credentials حقيقية لمستخدمين.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="ea11" data-navlabel="🔀 Git Workflow">
+      <div class="crumb">📗 Chapter 12</div>
+      <h1 class="title">Git Workflow</h1>
+      <p class="lede">Git مش مجرد <code>git add . / git commit / git push</code>. هي طريقة تحافظي بيها على تاريخ المشروع.</p>
+      <hr class="div">
+
+      <article class="topic" id="t11-gitignore" data-navlabel=".gitignore">
+        <h2 class="t-title">1) .gitignore</h2>
+        <p>لازم غالبًا:</p>
+        <div class="codebox"><div class="clabel">.gitignore</div><pre><code data-lang="text">node_modules/
+.env
+logs/
+coverage/</code></pre></div>
+        <p>لكن <code>package-lock.json</code> غالبًا لأ — ده يترفَع.</p>
+      </article>
+
+      <article class="topic" id="t11-commits" data-navlabel="Meaningful Commits">
+        <h2 class="t-title">2) Meaningful Commits</h2>
+        <p>سيئ:</p>
+        <div class="codebox"><div class="clabel">example — غلط</div><pre><code data-lang="text">fix
+update
+done
+changes</code></pre></div>
+        <p>أفضل:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">fix authentication token expiry
+add order validation
+refactor payment service</code></pre></div>
+        <p>الـ Commit المفروض تقول: حصل إيه؟</p>
+      </article>
+
+      <article class="topic" id="t11-branches" data-navlabel="Branches">
+        <h2 class="t-title">3) Branches</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">main
+│
+├── feature/auth
+├── feature/orders
+└── fix/payment-timeout</code></pre></div>
+        <p>Feature مستقلة في Branch.</p>
+      </article>
+
+      <article class="topic" id="t11-conflicts" data-navlabel="Merge Conflict">
+        <h2 class="t-title">4) Merge Conflict</h2>
+        <p>متتعاملش معاه كأن Git عايز يضايقك. هو بيقول: فيه نسختين مختلفتين لنفس الجزء، أنا مش عارف انهي الصح. إنتِ لازم تفهمي: Current code، Incoming code، Desired final code — مش تضغطي Accept Current وخلاص.</p>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>Commit messages غامضة زي "fix" أو "update"</b> — محدش يقدر يفهم تاريخ المشروع منها لاحقًا.</li>
+        <li><b>حل Merge Conflict بضغط "Accept Current" أو "Accept Incoming" من غير فهم</b> — ممكن يمسح تعديل مهم من الطرف التاني.</li>
+        <li><b>عدم إضافة .env أو node_modules في .gitignore</b> — بيسرب Secrets أو يضخم حجم الـ Repository بدون داعي.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إزاي تتعاملي مع Merge Conflict بشكل صحيح؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك الحقيقي لمعنى الـ Conflict، مش بس إزاي تخليه يختفي.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو ضغطتِ Accept Current بدون فهم، ممكن تمسحي تعديل مهم عمله زميلك.
+          <span class="iv-label">الإجابة المختصرة</span>لازم تفهمي إن الـ Conflict معناه إن نفس الجزء اتعدل بطريقتين مختلفتين، وإنك محتاجة تشوفي الكود الحالي (Current) والكود الجاي (Incoming) وتقرري إيه النتيجة النهائية الصح اللي تجمع بينهم أو تختار الأنسب.
+          <span class="iv-label">بالتفصيل</span>Git بيحط علامات زي <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code> و<code>=======</code> و<code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> عشان يوريكي الجزئين المتعارضين. القرار الصح مش دايمًا اختيار واحد منهم بالكامل؛ أحيانًا الحل الصح هو دمج المنطقين مع بعض.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إمتى تحصل Conflicts أكتر؟ (لما أكتر من شخص بيعدلوا في نفس الملف أو نفس الأسطر في وقت متقارب؛ Branches قصيرة العمر وCommits متكررة صغيرة بتقلل احتمالية الـ Conflicts الكبيرة).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>.gitignore ومحتواه المناسب، كتابة Commit Messages ذات معنى، تنظيم Branches حسب الـ Feature، فهم Merge Conflict بدل تجاهله.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>Commit messages غامضة، حل Conflicts بدون فهم، عدم استثناء .env من Git.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تتعاملي مع Merge Conflict بشكل صحيح.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>ليه package-lock.json يترفع على Git لكن .env لأ؟</li>
+            <li>إيه اللي يميز Commit Message كويس؟</li>
+            <li>إزاي تتعاملي مع Merge Conflict صح؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) package-lock.json بيثبت نسخ الحزم المستخدمة فعليًا ومفيد للفريق كله (مش سري). .env فيه Secrets حقيقية ميصحش يترفع أو يتشارك في مكان عام.</p>
+              <p>2) إنه يوصف بوضوح إيه اللي اتغير وليه (زي "fix authentication token expiry")، مش كلمة عامة زي "fix" أو "update".</p>
+              <p>3) بتفهمي إن فيه نسختين مختلفتين للكود، وتقرري النتيجة النهائية الصح بناءً على فهم حقيقي للتعديلين، مش بضغط Accept Current بشكل عشوائي.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="ea12" data-navlabel="🧪 API Development Workflow">
+      <div class="crumb">📗 Chapter 13</div>
+      <h1 class="title">API Development Workflow</h1>
+      <p class="lede">دي من أهم الحاجات اللي تخلي شغلك احترافي. ماتكتبيش Endpoint وبعدها تقولي "غالبًا شغالة" — اختبريها Scenario Scenario.</p>
+      <hr class="div">
+
+      <article class="topic" id="t12-scenarios" data-navlabel="اختبار كل Endpoint">
+        <h2 class="t-title">1) لكل Endpoint اسألي</h2>
+        <p>مثلًا <code>POST /users</code> — اختبري: Valid body، Missing name، Invalid email، Duplicate email، No auth، Wrong role، Database failure. مش Happy Path بس.</p>
+      </article>
+
+      <article class="topic" id="t12-postman" data-navlabel="Postman / Bruno">
+        <h2 class="t-title">2) Postman / Bruno</h2>
+        <p>الفكرة إنك تحفظي Requests. بدل كل مرة تكتبي URL وتحطي headers وtoken وbody، اعملي Collection.</p>
+      </article>
+
+      <article class="topic" id="t12-envvars" data-navlabel="Environment Variables">
+        <h2 class="t-title">3) Environment Variables في Postman</h2>
+        <p>مثلًا: <code>baseUrl</code>، <code>token</code>، <code>userId</code>. Request:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">{{baseUrl}}/users/{{userId}}</code></pre></div>
+        <p>ده أحسن من Hardcoding.</p>
+      </article>
+
+      <article class="topic" id="t12-statuscodes" data-navlabel="Status Codes">
+        <h2 class="t-title">4) Status Codes</h2>
+        <p>متبعتش <code>200</code> لكل حاجة. فكري:</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>الحالة</th><th>Status Code</th></tr></thead>
+          <tbody>
+            <tr><td>Created؟</td><td>201</td></tr>
+            <tr><td>Not found؟</td><td>404</td></tr>
+            <tr><td>Not logged in؟</td><td>401</td></tr>
+            <tr><td>Logged in بس not allowed؟</td><td>403</td></tr>
+            <tr><td>Invalid input؟</td><td>400 / 422 حسب convention</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="topic" id="t12-swagger" data-navlabel="Swagger / OpenAPI">
+        <h2 class="t-title">5) Swagger / OpenAPI</h2>
+        <p>الـ API Documentation لازم تجاوب: Endpoint إيه؟ Method إيه؟ Body شكلها إيه؟ Params إيه؟ Auth؟ Response؟ Errors؟</p>
+        <div class="box box--why">
+          <div class="box-h">🟠 ليه مهمة</div>
+          <p>لأن Backend من غير Documentation يخلي Frontend يخمن.</p>
+        </div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>اختبار الـ Happy Path بس والاكتفاء بـ "غالبًا شغالة"</b> — الأخطاء الحقيقية بتظهر في الحالات الشاذة (Invalid input، No auth، Database failure).</li>
+        <li><b>استخدام Status Code 200 لكل حاجة بغض النظر عن الحالة الفعلية</b> — بيصعب على الـ Frontend التفرقة بين النجاح وأنواع الفشل المختلفة.</li>
+        <li><b>عدم توثيق الـ API</b> — بيخلي Frontend Developer (أو حتى إنتِ بعد فترة) يخمن شكل الـ Request/Response.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>ليه اختبار Happy Path بس مش كافي لـ Endpoint جديد؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لأهمية تغطية الحالات الشاذة (Edge Cases) قبل اعتبار الـ Endpoint جاهزة.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في كل حاجة ممكن تغلط: بيانات ناقصة، مستخدم مش مسجل دخول، البيانات مكررة، السيرفر نفسه بيفشل.
+          <span class="iv-label">الإجابة المختصرة</span>معظم المشاكل الحقيقية في الإنتاج بتظهر في الحالات الشاذة مش في السيناريو المثالي، فلازم تختبري كل Endpoint مع Valid body وMissing fields وInvalid data وNo auth وDuplicate data وحتى فشل الـ Database.
+          <span class="iv-label">بالتفصيل</span>مثلًا Endpoint POST /users ممكن تشتغل تمام لو البيانات صح، لكن لو محدش اختبر حالة Duplicate Email، ممكن تكتشفي بعد النشر إن فيه Bug بيسمح بتسجيل نفس الإيميل مرتين لأن الـ Validation أو الـ Business Rule مش متغطية.
+          <span class="iv-label">ممكن يسأل Follow-up</span>إزاي تنظمي اختبار السيناريوهات دي عمليًا؟ (باستخدام Collection في Postman/Bruno لكل Endpoint فيها Request منفصل لكل سيناريو، أو Tests آلية بـ Supertest تغطي نفس الحالات).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>اختبار كل Endpoint بسيناريوهات متعددة (مش Happy Path بس)، استخدام Postman/Bruno وEnvironment Variables، اختيار Status Codes المناسبة، توثيق الـ API بـ Swagger/OpenAPI.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>اختبار Happy Path بس، استخدام 200 لكل الحالات، غياب توثيق الـ API.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>ليه اختبار Happy Path بس مش كافي.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه أنواع السيناريوهات المفروض تختبريها لكل Endpoint؟</li>
+            <li>إمتى تستخدمي 401 وإمتى 403؟</li>
+            <li>ليه توثيق الـ API (Swagger/OpenAPI) مهم؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) Valid body، Missing fields، Invalid data، Duplicate data، No auth، Wrong role/permissions، وحتى فشل الـ Database.</p>
+              <p>2) 401 لما المستخدم مش مسجل دخول أصلًا (Authentication). 403 لما هو مسجل دخول بس مش مسموحله بالعملية دي (Authorization).</p>
+              <p>3) عشان أي فريق تاني (Frontend مثلًا) يعرف شكل الـ Request والـ Response المتوقع من غير ما يضطر يخمن أو يقرأ الكود المصدري.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="ea13" data-navlabel="✅ Testing Basics">
+      <div class="crumb">📗 Chapter 14</div>
+      <h1 class="title">Testing Basics</h1>
+      <p class="lede">Testing مش معناها أتأكد إن Function بترجع 2 بس. الفكرة: أثبت إن Behavior المهم مش هيتكسر بعدين.</p>
+      <hr class="div">
+
+      <article class="topic" id="t13-unit" data-navlabel="Unit Test">
+        <h2 class="t-title">1) Unit Test</h2>
+        <p>اختبري وحدة صغيرة. مثال: <code>calculateTotal()</code> — لو <code>100 + 50</code> يرجع <code>150</code>.</p>
+      </article>
+
+      <article class="topic" id="t13-integration" data-navlabel="Integration Test">
+        <h2 class="t-title">2) Integration Test</h2>
+        <p>اختبري أجزاء بتشتغل مع بعض:</p>
+        <div class="flowbox">POST /users <span class="arrow">↓</span> Route <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Service <span class="arrow">↓</span> Database <span class="arrow">↓</span> Response</div>
+        <p>دي Integration.</p>
+      </article>
+
+      <article class="topic" id="t13-apitesting" data-navlabel="API Testing">
+        <h2 class="t-title">3) API Testing</h2>
+        <p>Supertest مثلًا يسمحلك:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">await request(app)
+  .post('/users')
+  .send({
+    email: 'test@example.com'
+  })
+  .expect(201);</code></pre></div>
+      </article>
+
+      <article class="topic" id="t13-testdb" data-navlabel="Test Database">
+        <h2 class="t-title">4) Test Database</h2>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ خلي بالك</div>
+          <p>متختبريش على Production Database. اعملي Separate Test DB، والـ Tests تنظف داتاها بعد كل تشغيل.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t13-mocking" data-navlabel="Mocking">
+        <h2 class="t-title">5) Mocking</h2>
+        <p>Mock يعني: بدل Dependency حقيقية، استخدم نسخة Fake متحكم فيها. مثال: إنتِ بتختبري <code>OrderService</code>، بس مش عايزة تبعتي Email حقيقية. تعملي Mock لـ <code>emailService.send()</code>.</p>
+      </article>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>الأول</th><th>التاني</th><th>الفرق ببساطة</th></tr></thead>
+        <tbody>
+          <tr><td>Unit Test</td><td>Integration Test</td><td>الأول بيختبر وحدة صغيرة معزولة (Function واحدة). التاني بيختبر أجزاء متعددة شغالة مع بعض (Route → Controller → Service → Database).</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>الاختبار على Production Database الحقيقية</b> — ممكن يمسح أو يعدل بيانات حقيقية بالغلط.</li>
+        <li><b>عدم عمل Mock لخدمات خارجية زي إرسال Email أو Payment أثناء الاختبار</b> — بيبطئ الـ Tests وممكن يبعت رسائل حقيقية بالغلط.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين Unit Test وIntegration Test؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لمستويات الاختبار المختلفة وإيه اللي كل واحد بيغطيه.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: هل بتختبري Function واحدة معزولة، ولا سلوك كامل بيمر بعدة طبقات؟
+          <span class="iv-label">الإجابة المختصرة</span>Unit Test بيختبر وحدة صغيرة معزولة (Function أو Class واحدة) من غير ما يعتمد على أجزاء تانية حقيقية. Integration Test بيختبر أجزاء متعددة من النظام وهي شغالة مع بعض فعليًا (زي Route كامل لحد الـ Database).
+          <span class="iv-label">بالتفصيل</span>مثلًا Unit Test لـ calculateTotal() بيتأكد إنها بترجع النتيجة الصح لمدخلات معينة من غير أي اتصال بقاعدة بيانات. أما Integration Test لـ POST /users بيتأكد إن الـ Request كله بيمر صح من الـ Route لحد ما يتسجل فعليًا في قاعدة بيانات اختبار.
+          <span class="iv-label">ممكن يسأل Follow-up</span>أي نوع أهم؟ (الاتنين مكملين بعض؛ Unit Tests سريعة وبتغطي تفاصيل منطقية دقيقة، وIntegration Tests بتتأكد إن الأجزاء فعليًا بتتكامل صح مع بعض).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>الفرق بين Unit Test وIntegration Test، API Testing بـ Supertest، أهمية Test Database منفصلة، Mocking للـ Dependencies الخارجية.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>request(app).post(path).send(body).expect(statusCode)</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>الاختبار على Production Database، عدم عمل Mock للخدمات الخارجية.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين Unit Test وIntegration Test.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين Unit Test وIntegration Test؟</li>
+            <li>ليه محتاجين Test Database منفصلة؟</li>
+            <li>إمتى نستخدم Mocking؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) Unit Test بيختبر وحدة صغيرة معزولة. Integration Test بيختبر عدة أجزاء بتشتغل مع بعض فعليًا (زي Route كامل لحد الـ Database).</p>
+              <p>2) عشان متختبريش على بيانات حقيقية، وعشان الـ Tests تقدر تنضّف بياناتها بحرية من غير أي خطر على بيانات المستخدمين الفعليين.</p>
+              <p>3) لما محتاجة تستبدلي Dependency حقيقية (زي إرسال Email أو Payment) بنسخة Fake متحكم فيها، عشان الـ Test يبقى سريع وموثوق ومن غير آثار جانبية حقيقية.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="ea14" data-navlabel="🛑 Graceful Shutdown & Process Management">
+      <div class="crumb">📗 Chapter 15</div>
+      <h1 class="title">Graceful Shutdown & Process Management</h1>
+      <p class="lede">دي نقطة ناس كتير بتتجاهلها. تخيلي السيرفر شغال وعنده Requests شغالة وDatabase connection وOpen sockets، وبعتيله Shutdown.</p>
+      <hr class="div">
+
+      <article class="topic" id="t14-problem" data-navlabel="الغلط الشائع">
+        <h2 class="t-title">1) الغلط الشائع</h2>
+        <div class="box box--mistake">
+          <div class="box-h">❌ اقفل فورًا</div>
+          <p>ممكن Request تكون في نص Payment.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="t14-flow" data-navlabel="Graceful Shutdown Flow">
+        <h2 class="t-title">2) Graceful Shutdown</h2>
+        <p>الفكرة:</p>
+        <div class="flowbox">وصل SIGTERM <span class="arrow">↓</span> بطل تستقبل Requests جديدة <span class="arrow">↓</span> استنى Requests الحالية تخلص <span class="arrow">↓</span> اقفل HTTP Server <span class="arrow">↓</span> اقفل Database <span class="arrow">↓</span> Exit</div>
+      </article>
+
+      <article class="topic" id="t14-signals" data-navlabel="SIGINT مقابل SIGTERM">
+        <h2 class="t-title">3) SIGINT مقابل SIGTERM</h2>
+        <p><b>SIGINT</b>: غالبًا لما تعملي <code>Ctrl + C</code>. <b>SIGTERM</b>: غالبًا Environment أو Process Manager يقول "اقفل".</p>
+      </article>
+
+      <article class="topic" id="t14-example" data-navlabel="مثال كود">
+        <h2 class="t-title">4) مثال كود</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const shutdown =
+  async () => {
+    console.log(
+      'Shutting down...'
+    );
+
+    server.close(
+      async () => {
+        await mongoose
+          .connection
+          .close();
+
+        process.exit(0);
+      }
+    );
+  };
+
+process.on(
+  'SIGTERM',
+  shutdown
+);
+
+process.on(
+  'SIGINT',
+  shutdown
+);</code></pre></div>
+      </article>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>قفل السيرفر فجأة بدون انتظار الـ Requests الحالية</b> — ممكن Request تكون في منتصف عملية حساسة زي Payment وتتقطع فجأة.</li>
+        <li><b>عدم إغلاق اتصال الـ Database بشكل صريح عند إيقاف السيرفر</b> — ممكن يسبب Connections معلقة أو مشاكل عند إعادة التشغيل.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه فايدة Graceful Shutdown، وليه مينفعش نقفل السيرفر فجأة؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لأهمية إدارة دورة حياة الـ Process بشكل آمن، خصوصًا وقت الـ Deployment أو إعادة التشغيل.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في مستخدم في نص عملية Payment وقت ما السيرفر بيتقفل فجأة.
+          <span class="iv-label">الإجابة المختصرة</span>Graceful Shutdown بيضمن إن السيرفر يبطل يستقبل Requests جديدة، لكن يستنى الـ Requests الحالية تخلص، ويقفل الاتصالات (زي Database) بشكل نظيف قبل ما الـ Process يقفل خالص، بدل ما يقطع كل حاجة فجأة.
+          <span class="iv-label">بالتفصيل</span>لو السيرفر اتقفل فجأة وفيه Request بتعمل Payment أو بتكتب في الـ Database، العملية ممكن تتقطع في نص الطريق وتسيب البيانات في حالة غير متسقة. باستخدام SIGTERM/SIGINT handlers، بنعطي السيرفر فرصة يخلص شغله الحالي الأول.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل فيه وقت محدد ننتظره قبل ما نجبر الإغلاق؟ (في أنظمة كتير بيتحدد Timeout معين، ولو الـ Requests ما خلصتش خلاله، الـ Process بيتقفل إجباريًا عشان مايتعلقش للأبد).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Graceful Shutdown Flow (وقف استقبال Requests جديدة → انتظار الحالية → إغلاق الـ Server → إغلاق الـ Database → Exit)، الفرق بين SIGINT وSIGTERM.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>process.on('SIGTERM', handler)</code>، <code>process.on('SIGINT', handler)</code>، <code>server.close(callback)</code>، <code>process.exit(code)</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>قفل السيرفر فجأة بدون انتظار الـ Requests الحالية، عدم إغلاق اتصال الـ Database بشكل صريح.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إيه فايدة Graceful Shutdown وليه مهم.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين SIGINT وSIGTERM؟</li>
+            <li>ليه مينفعش نقفل السيرفر فجأة؟</li>
+            <li>إيه ترتيب خطوات الـ Graceful Shutdown الصحيح؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) SIGINT غالبًا بييجي من Ctrl+C اليدوي. SIGTERM غالبًا بييجي من الـ Environment أو Process Manager (زي عند عمل Deployment جديد).</p>
+              <p>2) لأن ممكن يكون فيه Requests شغالة في منتصف عملية حساسة (زي Payment)، وقفل السيرفر فجأة ممكن يقطعها ويسيب البيانات في حالة غير متسقة.</p>
+              <p>3) بطل استقبال Requests جديدة → استنى الـ Requests الحالية تخلص → اقفل HTTP Server → اقفل اتصال الـ Database → Exit.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="eafinal" data-navlabel="🧭 إزاي تفكري صح في أي Feature">
+      <div class="crumb">📗 الفصل الأخير</div>
+      <h1 class="title">إزاي تفكري صح في أي Feature — الـFramework الشامل</h1>
+      <p class="lede">هنا هنجمع كل التفكير اللي فاتنا في الصفحة دي في Framework ذهني واحد، تقدري تطبقيه على أي Task جديدة، أيًا كانت الـ Stack.</p>
+      <hr class="div">
+
+      <article class="topic" id="tfinal-framework" data-navlabel="الـ12 خطوة الذهنية">
+        <h2 class="t-title">1) لما يجيلك أي Task، امشي بالترتيب ده</h2>
+        <div class="flowbox">1. What? إيه المطلوب بالظبط؟ <span class="arrow">↓</span> 2. Input? إيه الداتا الداخلة؟ <span class="arrow">↓</span> 3. Validation? إيه اللي يعتبر Input صالح؟ <span class="arrow">↓</span> 4. Authentication? مين المستخدم؟ <span class="arrow">↓</span> 5. Authorization? هل مسموحله؟ <span class="arrow">↓</span> 6. Business Rules? الشروط الحقيقية للعملية إيه؟ <span class="arrow">↓</span> 7. Data? إيه اللي هيتقرأ/يتكتب في DB؟ <span class="arrow">↓</span> 8. Side Effects? Email؟ Notification؟ File؟ Payment؟ <span class="arrow">↓</span> 9. Failure Cases? إيه اللي ممكن يفشل؟ <span class="arrow">↓</span> 10. Response? Client محتاج يعرف إيه؟ <span class="arrow">↓</span> 11. Logging? إيه اللي لازم يتسجل؟ <span class="arrow">↓</span> 12. Testing? هثبت إزاي إنها شغالة؟</div>
+        <p>ده التفكير الهندسي.</p>
+      </article>
+
+      <article class="topic" id="tfinal-example" data-navlabel="مثال: User يعمل Order">
+        <h2 class="t-title">2) مثال: User يعمل Order</h2>
+        <p>خدي مثال: User يعمل Order. بدل ما تكتبي Code فورًا:</p>
+        <div class="codebox"><div class="clabel">example — تحليل قبل الكود</div><pre><code data-lang="text">Input:
+items
+
+Authentication:
+User logged in
+
+Validation:
+items array مش فاضية
+
+Business:
+Products موجودة؟
+Stock كافي؟
+Prices؟
+Coupon صالح؟
+
+Database:
+Create order
+Update stock
+
+Side Effects:
+Payment?
+Notification?
+Email?
+
+Errors:
+Product unavailable
+Insufficient stock
+Payment failed
+
+Response:
+201 + order
+
+Logging:
+order created / payment failed
+
+Testing:
+success
+empty items
+out of stock
+invalid coupon
+payment failure</code></pre></div>
+      </article>
+
+      <article class="topic" id="tfinal-happypath" data-navlabel="Happy Path مش كفاية">
+        <h2 class="t-title">3) قاعدة مهمة جدًا: Happy Path مش كفاية</h2>
+        <p>المبتدئ بيفكر: "لو كل حاجة صح، العملية هتشتغل إزاي؟" الشاطر بيفكر كمان:</p>
+        <div class="flowbox">طب لو User مش موجود؟ <span class="arrow">|</span> لو DB وقعت؟ <span class="arrow">|</span> لو Request اتبعت مرتين؟ <span class="arrow">|</span> لو File كبيرة؟ <span class="arrow">|</span> لو Payment نجحت والDatabase فشلت؟ <span class="arrow">|</span> لو Notification فشلت؟ <span class="arrow">|</span> لو اتنين Users عدلوا نفس Record؟</div>
+        <p>مش مطلوب تحلي كل Edge Case في أول مشروع، لكن لازم مخك يتعود يسأل.</p>
+      </article>
+
+      <article class="topic" id="tfinal-effective" data-navlabel="إزاي تعرفي إن الحل فعال؟">
+        <h2 class="t-title">4) إزاي تعرفي إن Solution فعالة؟</h2>
+        <p>متسأليش بس: "اشتغلت؟" اسألي ستة أسئلة:</p>
+        <div class="defgrid">
+          <div class="defitem"><div class="dname">Correct?</div><p>هل صح؟</p></div>
+          <div class="defitem"><div class="dname">Readable?</div><p>هل حد تاني يفهمها؟</p></div>
+          <div class="defitem"><div class="dname">Maintainable?</div><p>هل تتعدل بسهولة؟</p></div>
+          <div class="defitem"><div class="dname">Reliable?</div><p>هل بتتصرف صح عند الفشل؟</p></div>
+          <div class="defitem"><div class="dname">Efficient?</div><p>هل بتستخدم Resources بشكل منطقي؟</p></div>
+          <div class="defitem"><div class="dname">Secure?</div><p>هل آمنة؟</p></div>
+        </div>
+      </article>
+
+      <article class="topic" id="tfinal-optimize" data-navlabel="متعمليش Optimization بدري">
+        <h2 class="t-title">5) متعمليش Optimization بدري زيادة</h2>
+        <p>في نفس الوقت متتحوليش لشخص كل Function يسأل "هل دي O(n) ولا O(log n)؟" قبل ما أصلًا نعرف Requirement. الترتيب الأفضل:</p>
+        <div class="flowbox">Correct <span class="arrow">↓</span> Clear <span class="arrow">↓</span> Measured <span class="arrow">↓</span> Optimize where needed</div>
+        <p>يعني: الأول اعملي حاجة صحيحة وواضحة، بعدين لو فيه Performance Problem حقيقي قيسيها وحسنيها.</p>
+      </article>
+
+      <article class="topic" id="tfinal-fullexample" data-navlabel="مثال عملي كامل">
+        <h2 class="t-title">6) مثال عملي يربط كل الكلام</h2>
+        <p>Requirement: <code>POST /api/orders</code>. Structure:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">routes/
+  orderRoutes.js
+
+controllers/
+  orderController.js
+
+services/
+  orderService.js
+
+models/
+  Order.js
+
+validators/
+  orderValidator.js
+
+middlewares/
+  auth.js</code></pre></div>
+        <h3 class="s-label">🔹 Route</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">router.post(
+  '/',
+  authenticate,
+  validateCreateOrder,
+  createOrder
+);</code></pre></div>
+        <h3 class="s-label">🔹 Controller</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">async function createOrder(
+  req,
+  res,
+  next
+) {
+  try {
+    const order =
+      await orderService
+        .createOrder({
+          userId: req.user.id,
+          items: req.body.items
+        });
+
+    res.status(201).json({
+      data: order
+    });
+  } catch (error) {
+    next(error);
+  }
+}</code></pre></div>
+        <h3 class="s-label">🔹 Service</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">async function createOrder({
+  userId,
+  items
+}) {
+  const products =
+    await Product.find({
+      _id: {
+        $in: items.map(
+          item => item.productId
+        )
+      }
+    });
+
+  if (
+    products.length !==
+    items.length
+  ) {
+    throw new AppError(
+      'Some products are invalid',
+      400
+    );
+  }
+
+  const order =
+    await Order.create({
+      user: userId,
+      items
+    });
+
+  return order;
+}</code></pre></div>
+        <p>لو حصل Error:</p>
+        <div class="flowbox">Service <span class="arrow">↓</span> throw AppError <span class="arrow">↓</span> Controller <span class="arrow">↓</span> next(error) <span class="arrow">↓</span> Global Error Handler <span class="arrow">↓</span> Logger <span class="arrow">↓</span> Response</div>
+        <p>ولما تعملي Test: Valid order، Invalid product، No auth، Empty items. ولما Production تقفل: <code>SIGTERM ↓ server.close() ↓ database.close()</code>.</p>
+        <div class="box box--note">
+          <div class="box-h">🟪 شايفة؟</div>
+          <p>كل الـ Topics اللي عندك في الصفحة دي مش منفصلين. هما أجزاء من طريقة واحدة لبناء Backend محترمة.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tfinal-mindset" data-navlabel="أهم Mindset">
+        <h2 class="t-title">7) أهم Mindset عايزاكي تطلعي بيها</h2>
+        <p>لما تشوفي Code، متسأليش بس "السطر ده بيعمل إيه؟" اسألي:</p>
+        <div class="flowbox">ليه موجود هنا؟ <span class="arrow">↓</span> مين المفروض يكون مسؤول عنه؟ <span class="arrow">↓</span> لو غيرت Requirement بكرة، هغير كام مكان؟ <span class="arrow">↓</span> لو فشل، هعرف ليه؟ <span class="arrow">↓</span> لو المشروع كبر 10 أضعاف، التصميم ده لسه مفهوم؟ <span class="arrow">↓</span> هل أنا بحل مشكلة حقيقية ولا بعمل Complexity لمجرد الشكل؟</div>
+        <div class="box box--quick">
+          <div class="box-h">⚡ خلاصة الخلاصة</div>
+          <p>لو الأسئلة دي بدأت تيجي في دماغك تلقائي، ساعتها إنتِ مش بس بتتعلمي Node.js؛ إنتِ بتتعلمي Software Engineering.</p>
+        </div>
+        <h3 class="s-label">🔹 أهم Flow يفضل ثابت في دماغك</h3>
+        <div class="flowbox">Request <span class="arrow">↓</span> Route <span class="arrow">↓</span> Middleware <span class="arrow">↓</span> Validation <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Service <span class="arrow">↓</span> Model / Repository <span class="arrow">↓</span> Database <span class="arrow">↓</span> Result <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Response</div>
+        <p>وحوالين الـ Flow ده فيه أنظمة بتحميه: Configuration، Logging، Error Handling، Testing، Security، Git، Tooling، Monitoring، Graceful Shutdown.</p>
+        <div class="box box--mental">
+          <div class="box-h">🧠 بشكل مختصر جدًا</div>
+          <p>Core Feature Flow + Safety + Observability + Maintainability + Testing = Backend شغل Production.</p>
+        </div>
+        <p>وده التفكير اللي يخليكي لما تدخلي مشروع جديد حتى لو Stack مختلفة، تعرفي ترتبيه وتفهميه بدل ما تكوني معتمدة على حفظ شكل مشروع معين.</p>
+      </article>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>الـ 12 خطوة الذهنية لتحليل أي Feature قبل الكود (What/Input/Validation/Authentication/Authorization/Business Rules/Data/Side Effects/Failure Cases/Response/Logging/Testing)، Happy Path مش كفاية، الأسئلة الستة لتقييم فعالية الحل (Correct/Readable/Maintainable/Reliable/Efficient/Secure)، الترتيب الصحيح (Correct → Clear → Measured → Optimize)، والـ Mindset النهائي.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>إزاي تحللي Feature جديدة قبل ما تكتبي أي سطر كود.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه أول 3 أسئلة المفروض تسأليها نفسك قبل ما تكتبي كود لأي Feature جديدة؟</li>
+            <li>ليه Happy Path مش كفاية لتقييم الحل؟</li>
+            <li>إيه الترتيب الصحيح بين Correct وClear وOptimize؟</li>
+            <li>إيه الأسئلة الستة لتقييم فعالية أي Solution؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) إيه المطلوب بالظبط (What)؟ إيه الداتا الداخلة (Input)؟ وإيه اللي يعتبر Input صالح (Validation)؟</p>
+              <p>2) لأن معظم المشاكل الحقيقية بتظهر في الحالات الشاذة (User مش موجود، DB وقعت، Payment نجحت والDatabase فشلت...) مش في السيناريو المثالي.</p>
+              <p>3) الأول اعملي حاجة صحيحة (Correct)، بعدين واضحة (Clear)، وبس لو ظهرت مشكلة أداء حقيقية اتقاسها (Measured) وبعدين حسّنيها (Optimize) — مش العكس.</p>
+              <p>4) Correct (هل صح؟)، Readable (هل حد تاني يفهمها؟)، Maintainable (هل تتعدل بسهولة؟)، Reliable (هل بتتصرف صح عند الفشل؟)، Efficient (هل بتستخدم Resources بشكل منطقي؟)، وSecure (هل آمنة؟).</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!--CHAPTERS_GO_HERE-->
+  </main>
+</div>
+
+<script>
+// build nav from chapters/topics present in DOM
+function buildNav(){
+  var root=document.getElementById('navRoot');
+  var chapters=document.querySelectorAll('.chapter');
+  var html='';
+  chapters.forEach(function(ch){
+    var label=ch.getAttribute('data-navlabel')||ch.querySelector('h1.title').textContent;
+    html+='<div class="navgroup"><div class="navgroup-title" data-toggle><span>'+label+'</span><span class="chev">▾</span></div><div class="navlist">';
+    ch.querySelectorAll('.topic').forEach(function(t){
+      var tid=t.id;
+      var tlabel=t.getAttribute('data-navlabel')|| (t.querySelector('.t-title')?t.querySelector('.t-title').textContent:tid);
+      html+='<a class="navlink" href="#'+tid+'" data-text="'+tlabel.replace(/"/g,'')+'">'+tlabel+'</a>';
+    });
+    html+='</div></div>';
+  });
+  root.innerHTML=html;
+}
+buildNav();
+
+// collapse toggle
+document.getElementById('navRoot').addEventListener('click',function(e){
+  var t=e.target.closest('[data-toggle]');
+  if(t){ t.parentElement.classList.toggle('collapsed'); }
+});
+
+// search filter
+document.getElementById('searchInput').addEventListener('input',function(e){
+  var q=e.target.value.trim().toLowerCase();
+  document.querySelectorAll('.navgroup').forEach(function(g){
+    var anyVisible=false;
+    g.querySelectorAll('.navlink').forEach(function(a){
+      var match = q==='' || a.getAttribute('data-text').toLowerCase().indexOf(q)>-1;
+      a.classList.toggle('hidden', !match);
+      if(match) anyVisible=true;
+    });
+    g.classList.toggle('hidden', !anyVisible);
+    if(q!=='' && anyVisible){ g.classList.remove('collapsed'); }
+  });
+});
+
+// smooth scroll + active link
+document.getElementById('navRoot').addEventListener('click',function(e){
+  var a=e.target.closest('.navlink');
+  if(a){
+    document.body.classList.remove('nav-open');
+  }
+});
+var navToggle=document.getElementById('navToggle');
+if(navToggle){ navToggle.addEventListener('click',function(){document.body.classList.toggle('nav-open');}); }
+
+// active-link-on-scroll
+var topics=[];
+function refreshTopics(){ topics=Array.prototype.slice.call(document.querySelectorAll('.topic')); }
+refreshTopics();
+function onScroll(){
+  var y=window.scrollY+120;
+  var current=null;
+  topics.forEach(function(t){ if(t.offsetTop<=y) current=t; });
+  document.querySelectorAll('.navlink').forEach(function(a){ a.classList.remove('active'); });
+  if(current){
+    var link=document.querySelector('.navlink[href="#'+current.id+'"]');
+    if(link) link.classList.add('active');
+  }
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+
+// tiny JS syntax highlighter for code blocks
+function highlight(code){
+  code = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  code = code.replace(/(\/\/[^\n]*)/g,'§COM§$1§/COM§');
+  code = code.replace(/('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)/g,'§STR§$1§/STR§');
+  code = code.replace(/\b(const|let|var|function|return|if|else|async|await|require|module|exports|new|try|catch|throw|class|extends|import|export|default|from|typeof|instanceof|for|while|of|in|null|undefined|true|false|this|switch|case|break|continue|static|get|set|yield)\b/g,'§KW§$1§/KW§');
+  code = code.replace(/\b([A-Za-z_$][\w$]*)(?=\()/g,'§FN§$1§/FN§');
+  code = code.replace(/\b(\d+)\b/g,'§NUM§$1§/NUM§');
+  code = code.replace(/§COM§/g,'<span class="tok-com">').replace(/§\/COM§/g,'</span>');
+  code = code.replace(/§STR§/g,'<span class="tok-str">').replace(/§\/STR§/g,'</span>');
+  code = code.replace(/§KW§/g,'<span class="tok-kw">').replace(/§\/KW§/g,'</span>');
+  code = code.replace(/§FN§/g,'<span class="tok-fn">').replace(/§\/FN§/g,'</span>');
+  code = code.replace(/§NUM§/g,'<span class="tok-num">').replace(/§\/NUM§/g,'</span>');
+  return code;
+}
+document.querySelectorAll('code[data-lang]').forEach(function(el){
+  el.innerHTML = highlight(el.textContent);
+});
+</script>
+
+</body>
+</html>
