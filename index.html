@@ -1473,8 +1473,566 @@ console.log('2) رجّعنا Response فورًا: تم استلام طلبك');<
       </div>
     </section>
 
-    <section class="chapter" id="ch2" data-navlabel="🌊 Streams">
+    <section class="chapter" id="chbuffer" data-navlabel="🧮 Buffer">
       <div class="crumb">📗 Chapter 3</div>
+      <h1 class="title">Buffer — البيانات الخام على شكل Bytes</h1>
+      <p class="lede">قبل ما ندخل في تفاصيل الـ Streams، لازم نفهم <code>Buffer</code> — لأن الـ Chunks اللي بتتنقل في أي Stream، وأي ملف Binary زي صورة أو فيديو، وأي بيانات جاية من الـ Network، كل ده في الآخر بيتخزن في Node على شكل <code>Buffer</code>.</p>
+      <hr class="div">
+
+      <article class="topic" id="tbuf-intro" data-navlabel="يعني إيه Buffer؟">
+        <h2 class="t-title">1) يعني إيه Buffer أصلًا؟</h2>
+        <div class="box box--what">
+          <div class="box-h">🟣 الكمبيوتر مش شايف نص أو صور زي ما إحنا شايفينها</div>
+          <p>إحنا كبني آدمين شايفين <code>Hello</code> كنص، وشايفين صورة أو فيديو أو PDF كملفات. لكن الكمبيوتر في الآخر مش فاهم أي حاجة من دي مباشرة — هو بيفهم بس أرقام صغيرة جدًا متخزنة على شكل <b>Bytes</b>.</p>
+        </div>
+        <div class="flowbox">إحنا شايفين: Hello / صورة / فيديو <span class="arrow">↓</span> الكمبيوتر شايف: Bytes (أرقام صغيرة)</div>
+
+        <h3 class="s-label">🔹 طيب يعني إيه Binary Data؟</h3>
+        <p><b>Binary</b> يعني البيانات في شكل <code>0</code> و<code>1</code> بس. مثلًا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="text">01001000
+01100101
+01101100
+01101100
+01101111</code></pre></div>
+        <p>وده ممكن يمثل الكلمة <code>Hello</code>. إحنا شايفين <code>Hello</code>، لكن الكمبيوتر شايف حاجة زي <code>72 101 108 108 111</code> — كل رقم هنا بيمثل <b>Byte</b> واحدة.</p>
+
+        <h3 class="s-label">🔹 طيب الـ Byte نفسها يعني إيه؟</h3>
+        <div class="defgrid">
+          <div class="defitem"><div class="dname">Bit</div><p>أصغر وحدة، وقيمتها إما <code>0</code> أو <code>1</code>.</p></div>
+          <div class="defitem"><div class="dname">Byte</div><p>مجموعة من <code>8 bits</code> مع بعض. يعني <code>1 Byte = 8 Bits</code>.</p></div>
+        </div>
+        <p>مثلًا <code>01001000</code> دي 8 bits، يعني Byte واحدة بالظبط.</p>
+
+        <div class="box box--why">
+          <div class="box-h">🟠 ليه Node.js محتاجة أصلًا حاجة اسمها Buffer؟</div>
+          <p>لأن Node بتتعامل جدًا مع Files، Images، Videos، Audio، Streams، HTTP، Sockets، وNetwork بشكل عام — والحاجات دي مش دايمًا Text. مثلًا صورة <code>photo.jpg</code> مش عبارة عن String مفهومة؛ هي Binary Data خام. فـ Node محتاجة مكان تمسك فيه الـ Bytes دي مؤقتًا — وده اسمه <b>Buffer</b>.</p>
+        </div>
+        <div class="box box--how">
+          <div class="box-h">🔵 التعريف البسيط</div>
+          <p><b>Buffer</b> في Node.js هي حتة Memory بنحط فيها Binary Data بشكل مؤقت. تقدري تتخيليها زي طبق أو صندوق صغير، Node بتحط فيه الداتا الخام اللي جاية من File أو Network أو Stream.</p>
+        </div>
+        <div class="flowbox">File <span class="arrow">↓</span> Binary Data <span class="arrow">↓</span> Buffer <span class="arrow">↓</span> Node.js بتتعامل معاها</div>
+      </article>
+
+      <article class="topic" id="tbuf-vsstring" data-navlabel="Buffer مقابل String">
+        <h2 class="t-title">2) Buffer مقابل String</h2>
+        <p>دي نقطة مهمة جدًا. الـ String هي نص عادي:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const name = "Nada";</code></pre></div>
+        <p>لكن الـ Buffer هي تمثيل الـ String دي كـ Bytes:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("Nada");
+
+console.log(buffer);
+// &lt;Buffer 4e 61 64 61&gt;</code></pre></div>
+        <p>إنتِ شايفة <code>Nada</code>، لكن الـ Buffer شايفة <code>4e 61 64 61</code> — ودي قيم <b>Hex</b> (Hexadecimal) للـ Bytes.</p>
+
+        <h3 class="s-label">🔹 مثال أبسط بحرف واحد</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const text = "A";
+
+const buffer = Buffer.from(text);
+
+console.log(buffer);
+// &lt;Buffer 41&gt;</code></pre></div>
+        <p>لأن الحرف <code>A</code> في نظام ASCII قيمته <code>65</code>، وفي Hex بتتكتب <code>41</code>.</p>
+        <div class="box box--note"><div class="box-h">🟪 لاحظي</div><p>لما بتعملي <code>console.log()</code> لـ Buffer، Node مش بتطلعلك الأرقام العشرية (decimal) زي 65، هي بتطلعلك تمثيلهم بالـ Hex — وده هيبقى واضح أكتر لما نتكلم عن Hex بالتفصيل بعدين في الفصل ده.</p></div>
+      </article>
+
+      <article class="topic" id="tbuf-create" data-navlabel="طرق إنشاء Buffer">
+        <h2 class="t-title">3) طرق إنشاء Buffer: from() و alloc() و allocUnsafe()</h2>
+        <h3 class="s-label">🔹 Buffer.from() — من Data موجودة بالفعل</h3>
+        <p>دي أشهر طريقة نعمل بيها Buffer من Data موجودة أصلًا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("Hello");
+
+console.log(buffer);
+// &lt;Buffer 48 65 6c 6c 6f&gt;</code></pre></div>
+        <div class="flowbox">"Hello" <span class="arrow">↓</span> Buffer.from() <span class="arrow">↓</span> Bytes <span class="arrow">↓</span> Buffer</div>
+
+        <h3 class="s-label">🔹 Buffer.alloc() — احجزي مساحة بحجم معين، متصفّرة</h3>
+        <p><code>Buffer.alloc()</code> معناها: اعملي Buffer بحجم معين، وامليها أصفار من الأول:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.alloc(10);
+
+console.log(buffer);
+// &lt;Buffer 00 00 00 00 00 00 00 00 00 00&gt;</code></pre></div>
+        <p>ليه كلها <code>00</code>؟ لأن <code>Buffer.alloc()</code> بتعمل Memory وتهيئها بصفر أولًا، فمينفعش تلاقي فيها بيانات قديمة من الذاكرة. تستخدميها لما تكوني عارفة "أنا محتاجة مساحة حجمها كذا" وهتكتبي فيها بعدين.</p>
+
+        <h3 class="s-label">🔹 Buffer.allocUnsafe() — أسرع، بس من غير تصفير</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.allocUnsafe(10);</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ كلمة Unsafe مش هزار</div>
+          <p><code>allocUnsafe()</code> بتحجز Memory بسرعة، لكن من غير ما تضمن إنها اتصفرت قبل الاستخدام — يعني ممكن تلاقي فيها بيانات قديمة موجودة أصلًا في الـ Memory من عملية تانية. عشان كده أسرع من <code>alloc()</code> (اللي بتعمل Allocate + Fill with zeros)، لكن لازم تكتبي فوق كل الـ Memory بتاعتها قبل ما تعتمدي عليها أو تعرضي محتواها لحد تاني.</p>
+        </div>
+        <div class="box box--quick">
+          <div class="box-h">⚡ كقاعدة للمبتدئ</div>
+          <p>استخدمي <code>Buffer.alloc()</code> إلا لو عندك سبب واضح تعرفي فيه ليه محتاجة الأداء الإضافي بتاع <code>allocUnsafe()</code>.</p>
+        </div>
+
+        <h3 class="s-label">🔹 خلاصة الفرق بين التلاتة</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>الطريقة</th><th>معناها</th></tr></thead>
+          <tbody>
+            <tr><td><code>Buffer.from("Hello")</code></td><td>عندي Data بالفعل، حوليها Buffer.</td></tr>
+            <tr><td><code>Buffer.alloc(10)</code></td><td>احجزي 10 Bytes وامليهم صفر.</td></tr>
+            <tr><td><code>Buffer.allocUnsafe(10)</code></td><td>احجزي 10 Bytes بسرعة من غير Zero Initialization.</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="topic" id="tbuf-readwrite" data-navlabel="القراءة والكتابة في Buffer">
+        <h2 class="t-title">4) القراءة والكتابة في Buffer</h2>
+        <h3 class="s-label">🔹 Reading Data — قراءة Byte بمكانها (index)</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("ABC");
+
+console.log(buffer[0]);   // 65
+console.log(buffer[1]);   // 66
+console.log(buffer[2]);   // 67</code></pre></div>
+        <p>ليه؟ لأن <code>A = 65</code>، <code>B = 66</code>، <code>C = 67</code> في ASCII. يعني Buffer ممكن تتعامل معاها شبه Array من الـ Bytes.</p>
+        <p>لو عايزة ترجعي للحرف نفسه بدل الرقم:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">console.log(String.fromCharCode(buffer[0]));
+// A</code></pre></div>
+
+        <h3 class="s-label">🔹 Modifying Individual Bytes — تعديل Byte معينة</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("ABC");
+
+buffer[0] = 90;   // 90 بتمثل الحرف Z
+
+console.log(buffer.toString());
+// ZBC</code></pre></div>
+        <div class="flowbox">ABC <span class="arrow">↓</span> غيّرنا أول Byte لـ 90 <span class="arrow">↓</span> ZBC</div>
+
+        <h3 class="s-label">🔹 buffer.write() — اكتبي String جوه Buffer موجودة</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.alloc(10);
+
+buffer.write("Hello");
+
+console.log(buffer.toString());
+// Hello (مع Bytes باقية = صفر)</code></pre></div>
+        <p>ونقدر نحدد نبدأ الكتابة منين:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.alloc(20);
+
+buffer.write("Nada");
+buffer.write("Hi", 5);   // ابدأ الكتابة من Byte رقم 5</code></pre></div>
+      </article>
+
+      <article class="topic" id="tbuf-encoding" data-navlabel="Encoding: UTF-8 و ASCII و Base64 و Hex">
+        <h2 class="t-title">5) Character Encoding: UTF-8، ASCII، Base64، Hex</h2>
+        <div class="box box--what">
+          <div class="box-h">🟣 Encoding يعني إيه؟</div>
+          <p>إحنا عندنا Characters زي <code>A</code>، <code>B</code>، <code>ن</code>، <code>د</code>. لكن الكمبيوتر محتاج يحولهم لأرقام (Bytes). السؤال هو: هنحوّل الحروف لأرقام بناءً على أنهي نظام؟ ده اسمه <b>Character Encoding</b>.</p>
+        </div>
+
+        <h3 class="s-label">🔹 UTF-8 — أشهر Encoding على الويب</h3>
+        <p>بيقدر يتعامل مع English وArabic وEmoji ولغات كتير:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer1 = Buffer.from("Hello", "utf8");
+const buffer2 = Buffer.from("مرحبا", "utf8");   // شغالة برضه</code></pre></div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ نقطة مهمة جدًا: كل Character مش شرط = Byte واحدة</div>
+          <p>بالإنجليزي، الحروف البسيطة زي <code>A</code>، <code>B</code>، <code>C</code> غالبًا كل واحد Byte واحدة في UTF-8. لكن العربي ممكن الحرف ياخد أكتر من Byte واحدة:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const text1 = "A";
+console.log(text1.length);              // 1
+console.log(Buffer.byteLength(text1));  // 1
+
+const text2 = "م";
+console.log(text2.length);              // 1
+console.log(Buffer.byteLength(text2));  // 2</code></pre></div>
+        <p>يعني <b>String length</b> ≈ عدد الـ code units، أما <b>Buffer byteLength</b> = عدد الـ Bytes الفعلي. ودي نقطة مهمة هنرجعلها بالتفصيل تاني.</p>
+
+        <h3 class="s-label">🔹 ASCII — نظام قديم وأبسط</h3>
+        <p>بيمثل Characters محدودة بس، زي English letters وnumbers وbasic symbols (<code>A = 65</code>، <code>B = 66</code>). لكن ASCII مش مناسب لكل لغات العالم؛ العربي مثلًا محتاج Encoding زي UTF-8.</p>
+
+        <h3 class="s-label">🔹 Base64 — تمثيل Binary Data كـ Text</h3>
+        <p>Base64 موضوع مختلف شوية: هو طريقة نمثل بيها Binary Data على شكل Text Characters عادية:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("Hello");
+
+const base64 = buffer.toString("base64");
+
+console.log(base64);
+// SGVsbG8=</code></pre></div>
+        <div class="box box--mistake">
+          <div class="box-h">❌ Base64 مش Encryption</div>
+          <p>لو عندك <code>Hello</code> واتحولت لـ <code>SGVsbG8=</code>، ده مش معناه إنها اتشفرت. أي حد يقدر يرجعها بسهولة تامة. يعني <b>Base64 ≠ Encryption</b> — هي مجرد Encoding، مش وسيلة أمان.</p>
+        </div>
+        <p>ونرجعها تاني:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("SGVsbG8=", "base64");
+
+console.log(buffer.toString("utf8"));
+// Hello</code></pre></div>
+
+        <h3 class="s-label">🔹 Hex — تمثيل كل Byte بأرقام وحروف 0-9 وa-f</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("Hello");
+
+console.log(buffer.toString("hex"));
+// 48656c6c6f</code></pre></div>
+
+        <h3 class="s-label">🔹 خلي الفرق بينهم ثابت في دماغك</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>الفكرة</th><th>معناها</th></tr></thead>
+          <tbody>
+            <tr><td>UTF-8</td><td>إزاي نحوّل Characters لـ Bytes.</td></tr>
+            <tr><td>Base64</td><td>إزاي نمثل Binary Data كنص قابل للنقل بسهولة.</td></tr>
+            <tr><td>Hex</td><td>إزاي نمثل كل Byte بشكل Hexadecimal.</td></tr>
+          </tbody>
+        </table></div>
+        <p>الداتا الأساسية (الـ Bytes) واحدة دايمًا — الاختلاف في الـ <b>Representation</b> بس:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("Hello", "utf8");
+
+console.log(buffer.toString("utf8"));     // Hello
+console.log(buffer.toString("hex"));      // 48656c6c6f
+console.log(buffer.toString("base64"));   // SGVsbG8=</code></pre></div>
+      </article>
+
+      <article class="topic" id="tbuf-length" data-navlabel="Buffer Length و byteLength">
+        <h2 class="t-title">6) buffer.length و Buffer.byteLength()</h2>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("Hello");
+
+console.log(buffer.length);   // 5</code></pre></div>
+        <p><code>buffer.length</code> بتجيب حجم الـ Buffer بالـ Bytes، مش عدد الحروف — ودي نقطة مهمة جدًا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("مرحبا");
+
+console.log(buffer.length);
+// رقم أكبر من عدد الحروف، لأن UTF-8 بتستخدم أكتر من Byte لبعض الحروف العربية</code></pre></div>
+
+        <h3 class="s-label">🔹 Buffer.byteLength() — لو لسه عندك String من غير Buffer</h3>
+        <p>لو عندك String قبل ما تعمل Buffer، وعايزة تعرفي هتحتاج كام Byte:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">console.log(Buffer.byteLength("Hello"));   // 5
+console.log(Buffer.byteLength("مرحبا"));   // أكبر من "مرحبا".length</code></pre></div>
+
+        <h3 class="s-label">🔹 Interview Question حلوة: Buffer Length مقابل String Length</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const text = "😊";
+
+console.log(text.length);                        // 2
+console.log(Buffer.byteLength(text, "utf8"));     // 4</code></pre></div>
+        <p>ليه الأرقام مختلفة؟ لأن <code>String.length</code> في JavaScript بتحسب عدد الـ UTF-16 code units، مش عدد الـ Bytes الفعلية في UTF-8. فدي نقطة Advanced لكن مهمة جدًا: <b>String length ≠ Byte length دايمًا</b>.</p>
+      </article>
+
+      <article class="topic" id="tbuf-slicing" data-navlabel="Slicing و Combining Buffers">
+        <h2 class="t-title">7) Slicing و Combining Buffers</h2>
+        <h3 class="s-label">🔹 buffer.subarray(start, end) — جزء من Buffer</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("Hello World");
+
+const part = buffer.subarray(0, 5);
+
+console.log(part.toString());
+// Hello</code></pre></div>
+        <p>يعني: ابدأ من index 0، وقّف قبل index 5:</p>
+        <div class="flowbox">H(0) e(1) l(2) l(3) o(4) <span class="arrow">|</span> subarray(0, 5) = Hello</div>
+
+        <div class="box box--warn">
+          <div class="box-h">⚠️ نقطة مهمة جدًا: subarray() مش بتعمل Copy</div>
+          <p><code>subarray()</code> غالبًا مش بتعمل نسخة جديدة من البيانات؛ هي بتعمل <b>View</b> على نفس الـ Memory الأصلية. يعني:</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.from("Hello");
+
+const part = buffer.subarray(0, 2);
+
+part[0] = 74;   // 74 بتمثل J
+
+console.log(buffer.toString());
+// Jello (!) — الأصلية اتأثرت</code></pre></div>
+        <p>ليه؟ لأن الاتنين شايفين نفس الـ Memory:</p>
+        <div class="flowbox">Original Buffer <span class="arrow">↕</span> نفس الـ Memory <span class="arrow">↕</span> subarray</div>
+        <p>لو عايزة نسخة مستقلة تمامًا:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const copy = Buffer.from(buffer.subarray(0, 5));
+// كده Buffer جديدة بمحتوى منفصل تمامًا</code></pre></div>
+
+        <h3 class="s-label">🔹 Buffer.concat() — ادمج أكتر من Buffer</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer1 = Buffer.from("Hello ");
+const buffer2 = Buffer.from("Nada");
+
+const result = Buffer.concat([buffer1, buffer2]);
+
+console.log(result.toString());
+// Hello Nada</code></pre></div>
+        <div class="box box--why">
+          <div class="box-h">🟠 ليه Buffer.concat() مهمة جدًا؟</div>
+          <p>لأن الـ Streams والـ Network ممكن تبعت الداتا على شكل Chunks (زي <code>Chunk 1: "Hello"</code>، <code>Chunk 2: " Na"</code>، <code>Chunk 3: "da"</code>). ممكن نخزنهم في Array (<code>chunks.push(chunk)</code>)، ولما يخلصوا نستخدم <code>Buffer.concat(chunks)</code> عشان يبقى عندنا كل الداتا مجمّعة في Buffer واحدة.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tbuf-compare" data-navlabel="مقارنة الـ Buffers">
+        <h2 class="t-title">8) مقارنة الـ Buffers</h2>
+        <p>عندنا Buffer اتنين بنفس المحتوى:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const a = Buffer.from("Hello");
+const b = Buffer.from("Hello");
+
+console.log(a === b);
+// false</code></pre></div>
+        <p>ليه <code>false</code> رغم إن المحتوى واحد؟ لأن دول Objects مختلفين تمامًا في الـ Memory، حتى لو محتواهم واحد.</p>
+
+        <h3 class="s-label">🔹 buffer.equals() — قارني المحتوى مش الـ Reference</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const a = Buffer.from("Hello");
+const b = Buffer.from("Hello");
+const c = Buffer.from("World");
+
+console.log(a.equals(b));   // true
+console.log(a.equals(c));   // false</code></pre></div>
+
+        <h3 class="s-label">🔹 Buffer.compare() — للمقارنة والترتيب (Sorting)</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const a = Buffer.from("A");
+const b = Buffer.from("B");
+
+console.log(Buffer.compare(a, b));
+// رقم سالب</code></pre></div>
+        <div class="tablewrap"><table>
+          <thead><tr><th>النتيجة</th><th>المعنى</th></tr></thead>
+          <tbody>
+            <tr><td><code>&lt; 0</code></td><td>الـ Buffer الأولى (a) بتيجي قبل التانية (b).</td></tr>
+            <tr><td><code>0</code></td><td>الاتنين متساويين.</td></tr>
+            <tr><td><code>&gt; 0</code></td><td>الـ Buffer الأولى بتيجي بعد التانية.</td></tr>
+          </tbody>
+        </table></div>
+        <p>ودي مفيدة جدًا لو عايزة تعملي Sorting لمجموعة Buffers.</p>
+      </article>
+
+      <article class="topic" id="tbuf-files" data-navlabel="Buffer مع Files و Streams">
+        <h2 class="t-title">9) Buffer مع Files و Streams</h2>
+        <p>فاكرة لما استخدمنا <code>fs.readFile()</code> — لو ما كتبناش <code>'utf8'</code>، Node بترجع Buffer:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const fs = require('fs');
+
+fs.readFile('./photo.jpg', (error, data) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  console.log(data);   // Buffer
+});</code></pre></div>
+        <p><code>data</code> هنا Buffer، لأن الصورة أصلًا Binary Data. حتى مع Text File عادي، من غير Encoding هترجع Buffer برضه:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">fs.readFile('./message.txt', (error, data) => {
+  console.log(data);   // Buffer
+});
+
+fs.readFile('./message.txt', 'utf8', (error, data) => {
+  console.log(data);   // String
+});</code></pre></div>
+        <div class="flowbox">readFile بدون encoding <span class="arrow">↓</span> Buffer <span class="arrow">|</span> readFile بـ utf8 <span class="arrow">↓</span> String</div>
+
+        <h3 class="s-label">🔹 Streams: الـ Chunks غالبًا Buffers</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const fs = require('fs');
+
+const stream = fs.createReadStream('./video.mp4');
+
+stream.on('data', (chunk) => {
+  console.log(chunk);   // Buffer
+});</code></pre></div>
+        <div class="flowbox">File <span class="arrow">↓</span> Read Stream <span class="arrow">↓</span> Buffer Chunk <span class="arrow">↓</span> Buffer Chunk <span class="arrow">↓</span> Buffer Chunk</div>
+        <p>وده طبيعي جدًا لأن الملف عبارة عن Binary Data. لكن لو حددنا Encoding في الـ Stream، الـ Chunks تيجي Strings بدل Buffers:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const stream = fs.createReadStream('./data.txt', { encoding: 'utf8' });
+// ساعتها الـ Chunks تيجي Strings</code></pre></div>
+      </article>
+
+      <article class="topic" id="tbuf-http" data-navlabel="Buffer مع HTTP والـ Network">
+        <h2 class="t-title">10) Buffer مع HTTP والـ Network</h2>
+        <p>دي نقطة مهمة جدًا في Node. الـ Network أصلًا بتبعت Bytes، مش Text مباشرة. يعني لما Request Body تيجي، الـ Flow بيبقى:</p>
+        <div class="flowbox">Client <span class="arrow">↓</span> Network <span class="arrow">↓</span> Bytes <span class="arrow">↓</span> Node</div>
+        <p>في Raw HTTP، كل Chunk من الـ Body بيوصل كـ Buffer:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const chunks = [];
+
+req.on('data', (chunk) => {
+  chunks.push(chunk);
+});
+
+req.on('end', () => {
+  const body = Buffer.concat(chunks);
+
+  console.log(body.toString('utf8'));
+});</code></pre></div>
+        <div class="flowbox">HTTP Request Body <span class="arrow">↓</span> Chunk Buffer <span class="arrow">↓</span> Chunk Buffer <span class="arrow">↓</span> Buffer.concat() <span class="arrow">↓</span> Buffer واحدة <span class="arrow">↓</span> toString() <span class="arrow">↓</span> Text</div>
+
+        <h3 class="s-label">🔹 مثال كامل: لو الـ Body عبارة عن JSON</h3>
+        <p>لو الـ Client بيبعت <code>{ "name": "Nada" }</code>:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const chunks = [];
+
+req.on('data', (chunk) => {
+  chunks.push(chunk);
+});
+
+req.on('end', () => {
+  const buffer = Buffer.concat(chunks);
+
+  const text = buffer.toString('utf8');
+
+  const data = JSON.parse(text);
+
+  console.log(data);
+});</code></pre></div>
+        <div class="flowbox">Network Bytes <span class="arrow">↓</span> Buffers <span class="arrow">↓</span> concat <span class="arrow">↓</span> Buffer <span class="arrow">↓</span> toString <span class="arrow">↓</span> JSON Text <span class="arrow">↓</span> JSON.parse <span class="arrow">↓</span> JavaScript Object</div>
+        <div class="box box--note"><div class="box-h">🟪 لاحظي</div><p>ده بالظبط اللي شرحناه في فصل الـ HTTP Module لما اتكلمنا عن <code>req.on('data')</code> و<code>req.on('end')</code> — دلوقتي بقينا نفهم ليه <code>chunk</code> فعليًا بتوصل Buffer، مش String من الأول.</p></div>
+      </article>
+
+      <article class="topic" id="tbuf-memory" data-navlabel="Buffer و Memory">
+        <h2 class="t-title">11) Buffer و Memory</h2>
+        <p>خلينا نفهمها ببساطة. لما نعمل:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const buffer = Buffer.alloc(1024);</code></pre></div>
+        <p>إحنا بنقول: احجزلي 1024 Byte في الـ Memory. وده تقريبًا <code>1 KB</code>، لأن <code>1024 Bytes ≈ 1 KB</code>. فالـ Buffer في الآخر مساحة Memory حقيقية.</p>
+
+        <div class="box box--confuse">
+          <div class="box-h">🤔 Buffer مش Array عادية</div>
+          <p>شكلها ممكن يخدعك (<code>buffer[0]</code>، <code>buffer[1]</code>...) فتحسي إنها Array. هي فعلًا Array-like، لكن معمولة مخصوص للتعامل بكفاءة مع Binary Data. كل Element فيها يمثل Byte، والقيمة بتكون من <code>0</code> إلى <code>255</code> — لأن الـ Byte فيها 8 bits، وعدد الاحتمالات <code>2^8 = 256</code>، يعني من 0 لـ 255.</p>
+        </div>
+        <div class="box box--warn">
+          <div class="box-h">⚠️ لو حطيتِ رقم أكبر من 255؟</div>
+          <p><code>const buffer = Buffer.alloc(1); buffer[0] = 300;</code> — الـ Byte نفسها مش تقدر تخزن غير 0-255، فالقيمة بتتقص/تتحول بما يناسب حجم الـ Byte. عشان كده لازم نفتكر: كل خانة في Buffer = Byte واحدة بالظبط.</p>
+        </div>
+
+        <h3 class="s-label">🔹 ليه Buffer مهمة جدًا في الصور والفيديو؟</h3>
+        <p>تخيلي صورة JPEG. إنتِ كبني آدمة شايفة 🖼️ صورة، لكن الكمبيوتر شايف حاجة زي <code>255 216 255 224 0 16 74 70 ...</code> — يعني Bytes. Node تمسكها كـ Buffer، ومن هنا ممكن تكتبيها File، تبعتيها Network، ترفعيها Cloud، تعمليها Hash، تضغطيها، أو تعمليها Stream.</p>
+
+        <h3 class="s-label">🔹 مثال: Copy File باستخدام Buffer</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const fs = require('fs/promises');
+
+async function copy() {
+  const data = await fs.readFile('./photo.jpg');
+
+  console.log(Buffer.isBuffer(data));   // true
+
+  await fs.writeFile('./copy.jpg', data);
+}
+
+copy();</code></pre></div>
+        <div class="flowbox">photo.jpg <span class="arrow">↓</span> readFile <span class="arrow">↓</span> Buffer <span class="arrow">↓</span> writeFile <span class="arrow">↓</span> copy.jpg</div>
+
+        <h3 class="s-label">🔹 Buffer.isBuffer()</h3>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">console.log(Buffer.isBuffer(Buffer.from("Hello")));   // true
+console.log(Buffer.isBuffer("Hello"));                // false</code></pre></div>
+      </article>
+
+      <article class="topic" id="tbuf-uploads" data-navlabel="Buffer مع Upload و Base64 Images">
+        <h2 class="t-title">12) Buffer مع Image Upload و Base64 Images</h2>
+        <p>فاكرة لما استخدمنا Multer مع Memory Storage:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const storage = multer.memoryStorage();</code></pre></div>
+        <p>ساعتها الملف بيكون موجود في <code>req.file.buffer</code> — يعني الصورة نفسها موجودة كـ Buffer:</p>
+        <div class="flowbox">Browser <span class="arrow">↓</span> Upload Image <span class="arrow">↓</span> Network Bytes <span class="arrow">↓</span> Multer <span class="arrow">↓</span> req.file.buffer <span class="arrow">↓</span> Buffer <span class="arrow">↓</span> Cloud / Processing / Storage</div>
+        <p>وده مثال واقعي جدًا لاستخدام Buffer، وهو نفس اللي شفناه في فصل File Upload — Memory Storage بتحطه مؤقتًا كـ Buffer في الـ RAM، غالبًا تمهيدًا لرفعه لمكان تاني (Cloud Storage مثلًا).</p>
+
+        <h3 class="s-label">🔹 Buffer مع Base64 Images</h3>
+        <p>أحيانًا تلاقي حاجة زي <code>data:image/png;base64,iVBORw0...</code> — الجزء اللي بعد <code>base64,</code> عبارة عن Binary Image متحولة Text. نقدر نرجعها Buffer ونكتبها File:</p>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">const imageBuffer = Buffer.from(base64String, "base64");
+
+await fs.writeFile("./image.png", imageBuffer);</code></pre></div>
+        <div class="flowbox">Base64 String <span class="arrow">↓</span> Buffer.from(..., "base64") <span class="arrow">↓</span> Binary Buffer <span class="arrow">↓</span> writeFile <span class="arrow">↓</span> Image</div>
+        <div class="box box--mistake">
+          <div class="box-h">❌ نقطة مهمة: Base64 بيكبّر الحجم</div>
+          <p>لو عندك Binary Data وحولتيها Base64، الحجم النصي بيزيد تقريبًا حوالي الثلث. فمش معنى إن Base64 نص إن ده أفضل طريقة لإرسال Images كبيرة. أحيانًا الأفضل نستخدم <code>multipart/form-data</code> أو Streams أو Binary Upload مباشرة.</p>
+        </div>
+      </article>
+
+      <article class="topic" id="tbuf-vsstream" data-navlabel="Buffer مقابل Stream">
+        <h2 class="t-title">13) Buffer مقابل Stream</h2>
+        <p>لأن Stream فكرتها: بدل ما أجيب الداتا كلها مرة واحدة، أجيبها Chunks. والـ Chunk غالبًا Buffer:</p>
+        <div class="flowbox">1 GB File <span class="arrow">↓</span> Stream <span class="arrow">↓</span> 64 KB Buffer <span class="arrow">↓</span> 64 KB Buffer <span class="arrow">↓</span> 64 KB Buffer... <span class="arrow">|</span> بدل: 1 GB <span class="arrow">↓</span> Buffer ضخمة مرة واحدة</div>
+        <p>وده أفضل بكتير في استهلاك الـ Memory.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th></th><th>المعنى</th></tr></thead>
+          <tbody>
+            <tr><td><b>Buffer</b></td><td>Container — حتة Data موجودة بالكامل في الـ Memory دلوقتي.</td></tr>
+            <tr><td><b>Stream</b></td><td>Flow — طريقة تدفق Data على أجزاء (Chunks) مع الوقت، وده غالبًا بينقل Buffers.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 class="s-label">🔹 وخلي الفرق مع String ثابت كمان</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th></th><th>المعنى</th></tr></thead>
+          <tbody>
+            <tr><td><b>String</b></td><td>Text = Characters.</td></tr>
+            <tr><td><b>Buffer</b></td><td>Binary Data = Bytes.</td></tr>
+          </tbody>
+        </table></div>
+        <div class="flowbox">String <span class="arrow">↓ Encoding ↓</span> Buffer <span class="arrow">↕</span> Buffer <span class="arrow">↓ Decoding ↓</span> String</div>
+      </article>
+
+      <div class="box box--quick">
+        <div class="box-h">⚡ خريطة Buffer كاملة</div>
+        <p><code>Buffer.from()</code> — اعمل Buffer من Data موجودة. <code>Buffer.alloc()</code> — احجز Buffer متصفّرة. <code>Buffer.allocUnsafe()</code> — احجز Buffer بسرعة من غير تصفير. <code>buffer.write()</code> — اكتب في Buffer. <code>buffer.toString()</code> — Buffer إلى String. <code>buffer.length</code> — حجم Buffer بالـ Bytes. <code>Buffer.byteLength()</code> — عدد الـ Bytes المطلوبة لنص. <code>buffer.subarray()</code> — جزء من Buffer (View مش Copy). <code>Buffer.concat()</code> — ادمج Buffers. <code>buffer.equals()</code> — هل المحتوى متساوي؟ <code>Buffer.compare()</code> — قارن Buffers للترتيب.</p>
+      </div>
+
+      <h3 class="s-label">🆚 Don't Confuse These</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>الأول</th><th>التاني</th><th>الفرق ببساطة</th></tr></thead>
+        <tbody>
+          <tr><td><code>Buffer.alloc()</code></td><td><code>Buffer.allocUnsafe()</code></td><td>الأولى بتحجز الـ Memory وتصفّرها (آمنة بس أبطأ شوية). التانية بتحجز بسرعة من غير تصفير، وممكن تحتوي بيانات قديمة لحد ما تكتبي فوقها بنفسك.</td></tr>
+          <tr><td><code>Buffer.from()</code></td><td><code>Buffer.alloc()</code></td><td>الأولى بتحوّل Data موجودة بالفعل لـ Buffer. التانية بتحجز مساحة فاضية بحجم معين عشان تكتبي فيها بعدين.</td></tr>
+          <tr><td><code>buffer.subarray()</code></td><td><code>Buffer.from(buffer.subarray())</code></td><td>الأولى بترجع View على نفس الـ Memory الأصلية (تعديلها بيأثر على الأصل). التانية بتعمل Copy مستقلة تمامًا.</td></tr>
+          <tr><td>Base64</td><td>Encryption</td><td>Base64 مجرد Encoding — أي حد يقدر يرجّعها بسهولة. Encryption وسيلة أمان فعلية بتحتاج مفتاح لفك التشفير.</td></tr>
+          <tr><td><code>string.length</code></td><td><code>Buffer.byteLength()</code></td><td>الأولى بتحسب عدد code units في الـ String (UTF-16). التانية بترجع عدد الـ Bytes الفعلي بعد الـ Encoding (UTF-8 غالبًا)، وممكن يكونوا مختلفين خصوصًا مع Arabic أو Emoji.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="s-label">❌ Common Mistakes</h3>
+      <ul class="mistakes-list">
+        <li><b>الاعتماد على إن Buffer.allocUnsafe() هتكون فاضية دايمًا</b> — ممكن تحتوي بيانات قديمة من الذاكرة، لازم تكتبي فوق كل المساحة قبل ما تستخدميها أو تعرضيها.</li>
+        <li><b>الظن إن Base64 وسيلة تشفير أو حماية</b> — هي مجرد تمثيل نصي لبيانات Binary، وأي حد يقدر يفك تشفيرها فورًا.</li>
+        <li><b>الافتراض إن string.length = عدد الـ Bytes دايمًا</b> — مع Arabic أو Emoji، Buffer.byteLength() ممكن ترجع رقم أكبر بكتير.</li>
+        <li><b>تعديل نتيجة buffer.subarray() على أساس إنها نسخة مستقلة</b> — هي View على نفس الـ Memory، والتعديل فيها بيأثر على الـ Buffer الأصلية.</li>
+      </ul>
+
+      <h3 class="s-label">🎤 Interview Questions</h3>
+      <details class="interview">
+        <summary>إيه الفرق بين Buffer.alloc() وBuffer.allocUnsafe()؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لتفاصيل حجز الـ Memory في Node وإزاي بتوازني بين الأمان والأداء.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لو محتاجة سرعة قصوى في حجز مساحة كبيرة، هل مستعدة تتحملي مخاطرة وجود بيانات قديمة فيها؟
+          <span class="iv-label">الإجابة المختصرة</span><code>alloc()</code> بتحجز الـ Memory وتصفّرها بالكامل، فآمنة لكن أبطأ شوية. <code>allocUnsafe()</code> بتحجز بسرعة من غير تصفير، فممكن تحتوي بيانات قديمة موجودة في الذاكرة.
+          <span class="iv-label">بالتفصيل</span>لو استخدمتي <code>allocUnsafe()</code> ولسه ما كتبتيش فوق كل الـ Buffer، وعرضتيها أو بعتيها لحد تاني، ممكن يشوف بيانات كانت موجودة قبل كده في نفس مكان الـ Memory ده — وده احتمال تسريب بيانات حساسة. عشان كده القاعدة العامة: استخدمي <code>alloc()</code> إلا لو عندك سبب أداء واضح ومتأكدة إنك هتكتبي فوق كل المساحة فورًا.
+          <span class="iv-label">ممكن يسأل Follow-up</span>هل الفرق في الأداء بينهم كبير عمليًا؟ (بيبان أكتر مع Buffers كبيرة جدًا أو عمليات متكررة كتير؛ في غالبية الحالات العادية alloc() كفاية وأأمن).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>ليه Buffer.byteLength() ممكن يديلك رقم مختلف عن string.length؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك للفرق بين تمثيل JavaScript الداخلي للـ String وتمثيلها الفعلي كـ Bytes بعد الـ Encoding.
+          <span class="iv-label">نفكر إزاي؟</span>فكري في حرف عربي أو Emoji: هل هو حرف واحد فعلًا من ناحية الـ Bytes؟
+          <span class="iv-label">الإجابة المختصرة</span><code>string.length</code> بتحسب عدد الـ UTF-16 code units، أما <code>Buffer.byteLength()</code> بترجع عدد الـ Bytes الفعلي بعد تحويل النص لـ UTF-8 (أو أي Encoding تانية)، وممكن يكونوا مختلفين.
+          <span class="iv-label">بالتفصيل</span>حرف إنجليزي بسيط زي <code>A</code> غالبًا Byte واحدة في UTF-8، فـ length وbyteLength بيتساووا. لكن حرف عربي زي <code>م</code> ممكن ياخد 2 Byte في UTF-8 رغم إن <code>"م".length</code> بيرجع 1. مع الـ Emoji الفرق أوضح أكتر (زي 😊ب اللي length بتاعها 2 وbyteLength بتاعها 4).
+          <span class="iv-label">ممكن يسأل Follow-up</span>إمتى الفرق ده يبقى مشكلة فعلية في الكود؟ (لو بتحسبي حدود لحجم نص بالـ Bytes — زي Limit على حقل في قاعدة بيانات أو حجم Request — لازم تستخدمي byteLength مش length، وإلا ممكن تقبلي نص أكبر من المسموح فعليًا).
+        </div>
+      </details>
+      <details class="interview">
+        <summary>ليه Buffer.concat() مهمة جدًا في التعامل مع Streams وHTTP؟</summary>
+        <div class="iv-body">
+          <span class="iv-label">بيسأل عن إيه؟</span>فهمك لإزاي الداتا بتوصل على أجزاء (Chunks) في Node، وإزاي نجمعها في مكان واحد.
+          <span class="iv-label">نفكر إزاي؟</span>فكري: لما Request Body تيجي على Event <code>'data'</code> أكتر من مرة، إزاي أضمن إني جمعت كل الأجزاء صح قبل ما أستخدم الداتا؟
+          <span class="iv-label">الإجابة المختصرة</span>لأن الـ Streams والـ Network بيبعتوا الداتا على شكل Buffer Chunks منفصلة، ولو عايزة تتعاملي مع الداتا الكاملة كوحدة واحدة (زي عمل JSON.parse على Request Body)، لازم تجمعي كل الـ Chunks دي في Buffer واحدة بـ Buffer.concat() الأول.
+          <span class="iv-label">بالتفصيل</span>النمط الشائع: نعمل Array فاضية <code>chunks</code>، في كل مرة الـ Event <code>'data'</code> يتطلق نعمل <code>chunks.push(chunk)</code>، ولما الـ Event <code>'end'</code> يتطلق نعمل <code>const body = Buffer.concat(chunks)</code> ونكمل بعدها بـ <code>toString()</code> ثم <code>JSON.parse()</code> لو محتاجين.
+          <span class="iv-label">ممكن يسأل Follow-up</span>ينفع نعمل concat لكل Chunk لوحدها أول ما توصل بدل ما نستنى الـ end؟ (تقنيًا ينفع بس مكلف في الأداء، لأن Buffer.concat بتعمل نسخة جديدة كل مرة؛ الأفضل نجمع الـ Chunks في Array ونعمل concat مرة واحدة بس في الآخر).
+        </div>
+      </details>
+
+      <div class="chsummary">
+        <h3>📌 Chapter Summary</h3>
+        <h4>أهم المفاهيم</h4>
+        <p>Binary Data، Bit وByte، Buffer كمساحة Memory مؤقتة للبيانات الخام، الفرق بين Buffer وString، Character Encoding (UTF-8، ASCII، Base64، Hex)، العلاقة بين Buffer والـ Streams والـ HTTP والـ File Uploads.</p>
+        <h4>أهم Syntax</h4>
+        <p><code>Buffer.from(data, encoding?)</code>، <code>Buffer.alloc(size)</code>، <code>Buffer.allocUnsafe(size)</code>، <code>buffer[i]</code>، <code>buffer.write(str, offset?)</code>، <code>buffer.toString(encoding?)</code>، <code>buffer.length</code>، <code>Buffer.byteLength(str, encoding?)</code>، <code>buffer.subarray(start, end)</code>، <code>Buffer.concat(arrayOfBuffers)</code>، <code>buffer.equals(other)</code>، <code>Buffer.compare(a, b)</code>، <code>Buffer.isBuffer(value)</code>.</p>
+        <h4>أهم الأخطاء</h4>
+        <p>الاعتماد على إن allocUnsafe() فاضية، الظن إن Base64 وسيلة تشفير، افتراض string.length = عدد Bytes دايمًا، التعامل مع نتيجة subarray() كأنها Copy مستقلة.</p>
+        <h4>أهم أسئلة الإنترفيو</h4>
+        <p>الفرق بين alloc وallocUnsafe، ليه byteLength ممكن يختلف عن string.length، ليه Buffer.concat() مهمة مع Streams وHTTP.</p>
+
+        <div class="qbank">
+          <b>🧪 Can You Answer These?</b>
+          <ol>
+            <li>إيه الفرق بين Buffer.from() وBuffer.alloc() وBuffer.allocUnsafe()؟</li>
+            <li>ليه Base64 مش وسيلة تشفير؟</li>
+            <li>إيه الفرق بين buffer.length وBuffer.byteLength()؟</li>
+            <li>إيه اللي بيحصل لو عدّلتِ في نتيجة buffer.subarray()؟</li>
+            <li>ليه chunk اللي بتوصل في req.on('data') بتكون Buffer مش String؟</li>
+          </ol>
+          <details class="reveal"><summary>👁️ اعرضي الإجابات</summary>
+            <div class="iv-body" style="padding-top:10px">
+              <p>1) from() بتحوّل Data موجودة فعلًا لـ Buffer. alloc() بتحجز مساحة فاضية متصفّرة بحجم معين. allocUnsafe() بتحجز نفس المساحة بسرعة أكبر لكن من غير تصفير.</p>
+              <p>2) لأنها مجرد Encoding (طريقة تمثيل Binary Data كنص)، مش تشفير — أي حد يقدر يرجّعها لأصلها بسهولة تامة من غير أي مفتاح.</p>
+              <p>3) buffer.length بيجيب حجم الـ Buffer نفسها بالـ Bytes. Buffer.byteLength() بتحسب كام Byte هيلزم لو حولتي String معينة لـ Buffer، حتى لو لسه ما عملتيش Buffer فعلية.</p>
+              <p>4) هتلاقي الـ Buffer الأصلية اتأثرت، لأن subarray() بترجع View على نفس الـ Memory مش نسخة منفصلة.</p>
+              <p>5) لأن الشبكة (Network) بتبعت البيانات أصلًا كـ Bytes خام، وNode بتمسك الـ Chunks دي كـ Buffer قبل أي تحويل — التحويل لـ String بيحصل بعدين لما إنتِ تعملي toString() أو تحددي Encoding.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="chapter" id="ch2" data-navlabel="🌊 Streams">
+      <div class="crumb">📗 Chapter 4</div>
       <h1 class="title">Streams — التعامل مع البيانات الكبيرة</h1>
       <p class="lede">اسم الموضوع وشكل الـ Documentation بتاعه ممكن يخض شوية أول مرة، بس الفكرة نفسها بسيطة جدًا. هنشرحها كأننا قاعدين بنتكلم مع بعض، من غير ما نفترض إنك عارفة حاجة عنها قبل كده.</p>
       <hr class="div">
@@ -1906,7 +2464,7 @@ res.end();</code></pre></div>
     </section>
 
     <section class="chapter" id="chpath" data-navlabel="🧭 path — File Paths">
-      <div class="crumb">📗 Chapter 4</div>
+      <div class="crumb">📗 Chapter 5</div>
       <h1 class="title">path — التعامل مع مسارات الملفات</h1>
       <p class="lede">قبل ما نكمّل في <code>fs</code> بالتفصيل، لازم نفهم <code>path</code> — الـ Module اللي بتخلينا نبني مسارات الملفات بشكل آمن ومتوافق مع أي نظام تشغيل، بدل ما نلزّق Strings بإيدينا ونتفاجئ إنها بتتكسر على جهاز تاني.</p>
       <hr class="div">
@@ -2222,7 +2780,7 @@ console.log(filePath);   // '/users/nada/photo.jpg'</code></pre></div>
 
 
     <section class="chapter" id="chfs" data-navlabel="📁 fs — File System">
-      <div class="crumb">📗 Chapter 5</div>
+      <div class="crumb">📗 Chapter 6</div>
       <h1 class="title">fs — التعامل مع الملفات والفولدرات</h1>
       <p class="lede"><code>fs</code> من أهم الـ Modules في Node.js، لأنه هو اللي بيخلي Node تتعامل مع الملفات والفولدرات الموجودة على الجهاز أو السيرفر: تقري File، تكتبيه، تعدليه، تمسحيه، تغيري اسمه، تعملي/تمسحي Folder، تعرفي حجمه، تعرفي هل الـ Path ده File ولا Folder، وتتعاملي مع Files كبيرة باستخدام Streams — كل ده بطريقة Sync أو Async. تعالي ناخدها واحدة واحدة من الصفر.</p>
       <hr class="div">
@@ -2971,7 +3529,7 @@ run();</code></pre></div>
 
 
     <section class="chapter" id="ch3" data-navlabel="🌐 HTTP Module">
-      <div class="crumb">📗 Chapter 6</div>
+      <div class="crumb">📗 Chapter 7</div>
       <h1 class="title">HTTP Module — إزاي Node.js بتتكلم مع العالم؟</h1>
       <p class="lede">قبل Express، لازم تفهمي موديول الـ HTTP الأساسي اللي جوه Node.js نفسها، لأن Express في الآخر مبني فوقه، وهو اللي بيوضح ليكي معنى كل الكلمات اللي هتقابليها بعد كده زي req وres.</p>
       <hr class="div">
@@ -3834,7 +4392,7 @@ function chargeCustomer(orderId, amount) {
     </section>
 
     <section class="chapter" id="ch4" data-navlabel="🚂 أساسيات Express">
-      <div class="crumb">📗 Chapter 7</div>
+      <div class="crumb">📗 Chapter 8</div>
       <h1 class="title">أساسيات Express — Routing وRequest/Response</h1>
       <p class="lede">دلوقتي وإحنا فاهمين HTTP الخام، هنشوف إزاي Express بيخلي حياتنا أسهل بكتير، وإزاي نتعامل مع req وres بشكل عملي في مشروع حقيقي.</p>
       <hr class="div">
@@ -4317,7 +4875,7 @@ module.exports = router;</code></pre></div>
     </section>
 
     <section class="chapter" id="ch5" data-navlabel="🛂 Middleware">
-      <div class="crumb">📗 Chapter 8</div>
+      <div class="crumb">📗 Chapter 9</div>
       <h1 class="title">Middleware — نقطة التفتيش قبل ما الطلب يوصل هدفه</h1>
       <p class="lede">الـ Middleware من أهم مفاهيم Express كله. لو فهمتيها كويس، هتفهمي إزاي Authentication وValidation والـ Error Handling وأي حاجة تانية بتتحط "في النص" شغالة بالظبط.</p>
       <hr class="div">
@@ -4732,7 +5290,7 @@ module.exports = router;</code></pre></div>
     </section>
 
     <section class="chapter" id="ch6" data-navlabel="📦 التعامل مع Request Body">
-      <div class="crumb">📗 Chapter 9</div>
+      <div class="crumb">📗 Chapter 10</div>
       <h1 class="title">التعامل مع Request Body</h1>
       <p class="lede">لما الـ Client (مثلًا الـ Frontend) عايز يبعتلنا بيانات (مش بس يطلب بيانات)، البيانات دي بتتحط في حاجة اسمها الـ Body. الفصل ده هيوضح إزاي Express بيقرأ الـ Body ده بأشكاله المختلفة.</p>
       <hr class="div">
@@ -4979,7 +5537,7 @@ app.post('/contact', (req, res) => {
     </section>
 
     <section class="chapter" id="ch7" data-navlabel="🧩 REST API وCRUD">
-      <div class="crumb">📗 Chapter 10</div>
+      <div class="crumb">📗 Chapter 11</div>
       <h1 class="title">تصميم REST API و CRUD</h1>
       <p class="lede">الفصل ده بيوضح إزاي نصمم شكل الـ API بطريقة منظمة ومتفق عليها عالميًا، بدل ما كل حد يخترع أسماء URLs بطريقته الخاصة.</p>
       <hr class="div">
@@ -5375,7 +5933,7 @@ module.exports = router;</code></pre></div>
     </section>
 
     <section class="chapter" id="chdb" data-navlabel="🗄️ Sequelize و SQL Databases">
-      <div class="crumb">📗 Chapter 11</div>
+      <div class="crumb">📗 Chapter 12</div>
       <h1 class="title">Sequelize و SQL Databases</h1>
       <p class="lede">لحد دلوقتي كل الأمثلة اللي شفناها كانت بتحاكي التعامل مع قاعدة بيانات بجمل زي <code>// save to database</code> أو Array عادي في الذاكرة، من غير ما نوضح إزاي بنوصل فعليًا لقاعدة بيانات حقيقية. الفصل ده هيوريكي إزاي تستخدمي <b>Sequelize</b> — مكتبة ORM بتخليكي تتعاملي مع قواعد بيانات SQL (زي MySQL أو PostgreSQL) باستخدام JavaScript Objects وMethods، بدل ما تكتبي SQL يدويًا في كل عملية.</p>
       <hr class="div">
@@ -6185,7 +6743,7 @@ try {
 
 
     <section class="chapter" id="ch8" data-navlabel="🚨 Error Handling">
-      <div class="crumb">📗 Chapter 12</div>
+      <div class="crumb">📗 Chapter 13</div>
       <h1 class="title">Error Handling — التعامل الصح مع الأخطاء</h1>
       <p class="lede">أي سيرفر حقيقي هيقابل أخطاء، سواء من غلط في الكود أو من مشكلة في قاعدة البيانات أو من طلب غلط من المستخدم. الفصل ده هيوريكي إزاي تتعاملي مع الأخطاء دي بشكل منظم من غير ما السيرفر يقع أو يسرّب معلومات حساسة.</p>
       <hr class="div">
@@ -6671,27 +7229,13 @@ app.listen(3000);</code></pre></div>
     </section>
 
     <section class="chapter" id="ch9" data-navlabel="⏳ Async Express">
-      <div class="crumb">📗 Chapter 13</div>
+      <div class="crumb">📗 Chapter 14</div>
       <h1 class="title">Async Express — التعامل مع async/await بشكل نظيف</h1>
       <p class="lede">أي مشروع حقيقي هتحتاجي فيه تكلمي قاعدة بيانات أو API خارجي، وده كله عمليات async. الفصل ده هيوضحلك إزاي تتعاملي معاها بشكل نظيف من غير ما تكرري نفس كود try/catch في كل Route.</p>
       <hr class="div">
 
-      <article class="topic" id="t9-asyncawait" data-navlabel="async/await">
-        <h2 class="t-title">1) async/await في سياق الـ Routes</h2>
-        <div class="box box--what">
-          <div class="box-h">🟣 تذكير سريع</div>
-          <p>لو عندك عملية بتاخد وقت زي طلب من قاعدة بيانات: <code>const user = await User.findById(id);</code> — إنتِ هنا بتقولي "استني نتيجة الـ Promise دي جوه الـ async function، ومتكمليش للسطر اللي بعده لحد ما تجهز النتيجة".</p>
-        </div>
-        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.get('/users/:id', async (req, res) => {
-  const user = await User.findById(req.params.id);
-
-  res.json(user);
-});</code></pre></div>
-        <div class="box box--note"><div class="box-h">🟪 لاحظي</div><p>الدالة اللي بتشيل <code>await</code> جواها لازم تتعرّف بكلمة <code>async</code> قبلها (زي ما شايفة في <code>async (req, res) => {...}</code>)، وده شرط أساسي في JavaScript.</p></div>
-      </article>
-
       <article class="topic" id="t9-promises" data-navlabel="Promises">
-        <h2 class="t-title">2) Promises — الطريقة التانية للتعامل مع الـ Async</h2>
+        <h2 class="t-title">1) Promises — الأساس اللي مبني عليه الـ Async كله</h2>
         <div class="box box--what">
           <div class="box-h">🟣 إيه ده؟</div>
           <p>أي عملية async (زي طلب من قاعدة بيانات) غالبًا بترجّع <b>Promise</b> (وعد بنتيجة هتيجي بعدين، إما نجاح أو فشل). مثلًا <code>User.findById(id)</code> بترجّع Promise، فممكن نتعامل معاها بطريقتين:</p>
@@ -6716,6 +7260,20 @@ app.listen(3000);</code></pre></div>
   next(error);
 }</code></pre></div>
         <p>الاتنين نفس الفكرة تقريبًا: لو نجحت العملية، نكمل شغلنا. لو فشلت، نمرر الخطأ لمكان يتعامل معاه. async/await بس بتخلي الكود شكله أقرب للكود العادي المتسلسل (أسهل في القراءة من سلسلة .then().then().catch() طويلة).</p>
+      </article>
+
+      <article class="topic" id="t9-asyncawait" data-navlabel="async/await">
+        <h2 class="t-title">2) async/await في سياق الـ Routes</h2>
+        <div class="box box--what">
+          <div class="box-h">🟣 تذكير سريع</div>
+          <p>لو عندك عملية بتاخد وقت زي طلب من قاعدة بيانات: <code>const user = await User.findById(id);</code> — إنتِ هنا بتقولي "استني نتيجة الـ Promise دي جوه الـ async function، ومتكمليش للسطر اللي بعده لحد ما تجهز النتيجة".</p>
+        </div>
+        <div class="codebox"><div class="clabel">example</div><pre><code data-lang="js">app.get('/users/:id', async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  res.json(user);
+});</code></pre></div>
+        <div class="box box--note"><div class="box-h">🟪 لاحظي</div><p>الدالة اللي بتشيل <code>await</code> جواها لازم تتعرّف بكلمة <code>async</code> قبلها (زي ما شايفة في <code>async (req, res) => {...}</code>)، وده شرط أساسي في JavaScript.</p></div>
       </article>
 
       <article class="topic" id="t9-asynchandler" data-navlabel="asyncHandler Wrapper">
@@ -6992,7 +7550,7 @@ router.post('/', asyncHandler(async (req, res) => {
     </section>
 
     <section class="chapter" id="ch10" data-navlabel="🔎 API Features">
-      <div class="crumb">📗 Chapter 14</div>
+      <div class="crumb">📗 Chapter 15</div>
       <h1 class="title">مميزات إضافية على الـ API — Pagination, Filtering, Sorting, Search</h1>
       <p class="lede">لحد دلوقتي كان الـ API بتاعنا بيرجّع كل البيانات مرة واحدة. لكن في تطبيق حقيقي، البيانات ممكن تكون آلاف أو مئات الآلاف من الـ Records، ومحتاجين طرق ذكية نتحكم بيها في اللي بيترجع، ونرتبه، ونبحث فيه. ده بالظبط موضوع الفصل ده.</p>
       <hr class="div">
@@ -7495,7 +8053,7 @@ app.use('/api/v2/products', productRoutesV2); // الشكل الجديد: price 
     </section>
 
     <section class="chapter" id="ch11" data-navlabel="🪵 Logging & Debugging">
-      <div class="crumb">📗 Chapter 15</div>
+      <div class="crumb">📗 Chapter 16</div>
       <h1 class="title">Logging & Debugging</h1>
       <p class="lede">ندخل بقى على حاجة مهمة جدًا في الشغل الحقيقي. لما حاجة تقع في الـ Production، مش هتقدري تفتحي الكود وتتفرجي عليه وهو شغال لحظة بلحظة. اللي هيساعدك تفهمي إيه اللي حصل هو الـ Logs، والـ Debugging هو إزاي تستخدمي المعلومات دي (وأدوات تانية) عشان توصلي لسبب المشكلة.</p>
       <hr class="div">
@@ -7933,7 +8491,7 @@ console.log('product from db:', product);</code></pre></div>
     </section>
 
     <section class="chapter" id="ch12" data-navlabel="🔐 Authentication">
-      <div class="crumb">📗 Chapter 16</div>
+      <div class="crumb">📗 Chapter 17</div>
       <h1 class="title">Authentication — إثبات هوية المستخدم</h1>
       <p class="lede">هنمشيها سوا خطوة خطوة من أول ما الـUser يعمل Register لحد ما يقدر يدخل Route محمية. احفظي الجملتين دول من الأول، لأنهم أساس الفصل ده والفصل اللي بعده: <b>Authentication = إنت مين؟</b> و <b>Authorization = بعد ما عرفتك، مسموحلك تعمل إيه؟</b></p>
       <hr class="div">
@@ -8620,7 +9178,7 @@ Controller</code></pre></div>
     </section>
 
     <section class="chapter" id="ch13" data-navlabel="🛂 Authorization">
-      <div class="crumb">📗 Chapter 17</div>
+      <div class="crumb">📗 Chapter 18</div>
       <h1 class="title">Authorization — تحديد الصلاحيات</h1>
       <p class="lede">دلوقتي عندنا نقطة مختلفة تمامًا عن الفصل اللي فات. بعد ما عرفنا "مين الشخص ده" في فصل الـ Authentication، جاي دور سؤال جديد: "مسموحله يعمل إيه بالظبط؟". هنمشي من الأساسيات (Roles) لحد مواضيع أعمق زي Permissions وRBAC وحتى ملكية الـ Resource.</p>
       <hr class="div">
@@ -9308,7 +9866,7 @@ Authorization SECOND</code></pre></div>
     </section>
 
     <section class="chapter" id="ch14" data-navlabel="🍪 Cookies & Sessions">
-      <div class="crumb">📗 Chapter 18</div>
+      <div class="crumb">📗 Chapter 19</div>
       <h1 class="title">Cookies & Sessions</h1>
       <p class="lede">اتعلمنا قبل كده إن السيرفر ممكن يخزن الـ Access Token في Cookie. دلوقتي هنفهم الـ Cookie نفسها إيه بالظبط، وهنتعرف على طريقة تانية شائعة جدًا لعمل Authentication اسمها Session، وهنقارن بينها وبين JWT، وهنشوف إعدادات الأمان المهمة اللي بتتحط على أي Cookie حساسة.</p>
       <hr class="div">
@@ -9626,7 +10184,7 @@ const session = sessionsStore[sessionId]; // { userId: 3, role: 'customer' }</co
     </section>
 
     <section class="chapter" id="ch15" data-navlabel="✅ Validation & Sanitization">
-      <div class="crumb">📗 Chapter 19</div>
+      <div class="crumb">📗 Chapter 20</div>
       <h1 class="title">Validation & Sanitization</h1>
       <p class="lede">لحد دلوقتي كنا بنفترض إن البيانات اللي جاية في req.body دايمًا كويسة وشكلها صح. لكن الحقيقة إن أي حد يقدر يبعتلك أي حاجة، غلط عمدًا أو من غير قصد. الفصل ده هيعلمك إزاي "تحرسي الباب" قبل ما أي بيانات تدخل نظامك أصلًا.</p>
       <hr class="div">
@@ -10243,7 +10801,7 @@ module.exports.listProductsQuerySchema = listProductsQuerySchema;</code></pre></
     </section>
 
     <section class="chapter" id="ch16" data-navlabel="📎 File Upload — Multer">
-      <div class="crumb">📗 Chapter 20</div>
+      <div class="crumb">📗 Chapter 21</div>
       <h1 class="title">File Upload with Multer</h1>
       <p class="lede">لحد دلوقتي كل البيانات اللي اتعاملنا معاها كانت نصوص وأرقام وObjects. لكن إيه اللي بيحصل لو اليوزر عايز يرفع صورة Profile أو ملف PDF؟ ده موضوع مختلف تمامًا محتاج أدوات مختلفة، وهنتعرف عليه بالتفصيل في الفصل ده.</p>
       <hr class="div">
